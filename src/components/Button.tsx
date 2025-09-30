@@ -19,29 +19,30 @@ export const Button: React.FC<ButtonProps> = ({
       case 'primary':
         return {
           backgroundColor: 'var(--accent-blue)',
-          color: 'white',
+          color: '#ffffff',
           border: 'none',
-          padding: size === 'sm' ? '6px 16px' : '8px 20px',
+          padding: size === 'sm' ? '8px 18px' : '10px 24px',
           fontSize: '13px',
-          fontWeight: '500'
+          fontWeight: '600',
+          boxShadow: '0 2px 6px rgba(59, 130, 246, 0.25)'
         };
       case 'secondary':
         return {
-          backgroundColor: 'transparent',
-          color: 'var(--text-secondary)',
-          border: '1px solid var(--border-primary)',
-          padding: size === 'sm' ? '6px 16px' : '8px 20px',
+          backgroundColor: 'var(--bg-card)',
+          color: 'var(--text-primary)',
+          border: '1px solid var(--border-subtle)',
+          padding: size === 'sm' ? '8px 18px' : '10px 24px',
           fontSize: '13px',
           fontWeight: '500'
         };
       case 'ghost':
         return {
           backgroundColor: 'transparent',
-          color: 'var(--text-muted)',
+          color: 'var(--text-secondary)',
           border: 'none',
           padding: size === 'sm' ? '6px 12px' : '8px 16px',
           fontSize: '13px',
-          fontWeight: '400'
+          fontWeight: '500'
         };
     }
   };
@@ -62,15 +63,27 @@ export const Button: React.FC<ButtonProps> = ({
       onMouseEnter={(e) => {
         if (variant === 'primary') {
           e.currentTarget.style.filter = 'brightness(1.1)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)';
+          e.currentTarget.style.transform = 'translateY(-1px)';
+        } else if (variant === 'secondary') {
+          e.currentTarget.style.borderColor = 'var(--accent-blue)';
+          e.currentTarget.style.color = 'var(--accent-blue)';
         } else if (variant === 'ghost') {
-          e.currentTarget.style.color = 'var(--text-secondary)';
+          e.currentTarget.style.color = 'var(--text-primary)';
+          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
         }
       }}
       onMouseLeave={(e) => {
         if (variant === 'primary') {
           e.currentTarget.style.filter = 'brightness(1)';
+          e.currentTarget.style.boxShadow = '0 2px 6px rgba(59, 130, 246, 0.25)';
+          e.currentTarget.style.transform = 'translateY(0)';
+        } else if (variant === 'secondary') {
+          e.currentTarget.style.borderColor = 'var(--border-subtle)';
+          e.currentTarget.style.color = 'var(--text-primary)';
         } else if (variant === 'ghost') {
-          e.currentTarget.style.color = 'var(--text-muted)';
+          e.currentTarget.style.color = 'var(--text-secondary)';
+          e.currentTarget.style.backgroundColor = 'transparent';
         }
       }}
       {...props}
