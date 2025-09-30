@@ -15,7 +15,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
 
   // Simulate loading when entering setup tab
   useEffect(() => {
-    if (hasUploadedFiles && setupReady) {
+    if (hasUploadedFiles) {
       setIsLoading(true);
       const timer = setTimeout(() => {
         setIsLoading(false);
@@ -23,7 +23,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
       }, 3000); // 3 second loading simulation
       return () => clearTimeout(timer);
     }
-  }, [hasUploadedFiles, setupReady]);
+  }, []); // Run once on mount
 
   if (!hasUploadedFiles) {
     return (

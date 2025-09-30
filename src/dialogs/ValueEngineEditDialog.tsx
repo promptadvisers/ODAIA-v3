@@ -84,20 +84,23 @@ export const ValueEngineEditDialog: React.FC = () => {
             <button
               onClick={() => toggleNode(node.id)}
               style={{
-                padding: '2px',
+                padding: '4px',
                 backgroundColor: 'transparent',
                 border: 'none',
                 cursor: 'pointer',
-                color: 'var(--text-secondary)',
+                color: 'var(--text-muted)',
                 display: 'flex',
-                alignItems: 'center'
+                alignItems: 'center',
+                transition: 'color 200ms'
               }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
             >
               <ChevronRight
-                size={16}
+                size={14}
                 style={{
                   transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                  transition: 'transform 200ms'
+                  transition: 'transform 200ms ease-in-out'
                 }}
               />
             </button>
@@ -112,9 +115,10 @@ export const ValueEngineEditDialog: React.FC = () => {
           />
 
           <span style={{
-            fontSize: '13px',
+            fontSize: '12px',
             color: 'var(--text-primary)',
-            cursor: 'pointer'
+            cursor: hasChildren ? 'pointer' : 'default',
+            fontWeight: level === 0 ? '500' : '400'
           }}
           onClick={() => hasChildren && toggleNode(node.id)}
           >
@@ -256,17 +260,19 @@ export const ValueEngineEditDialog: React.FC = () => {
           {/* Basket Configurations */}
           <div style={{ marginBottom: '24px' }}>
             <h3 style={{
-              fontSize: '14px',
+              fontSize: '13px',
               fontWeight: '600',
               color: 'var(--text-primary)',
-              marginBottom: '8px'
+              marginBottom: '8px',
+              letterSpacing: '-0.01em'
             }}>
               Basket Configurations
             </h3>
             <p style={{
-              fontSize: '12px',
-              color: 'var(--text-secondary)',
-              marginBottom: '16px'
+              fontSize: '11px',
+              color: 'var(--text-muted)',
+              marginBottom: '16px',
+              lineHeight: '1.5'
             }}>
               Assign items to the configurations below to view available metrics
             </p>
@@ -332,9 +338,19 @@ export const ValueEngineEditDialog: React.FC = () => {
               backgroundColor: 'var(--bg-card)',
               border: '1px solid var(--border-subtle)',
               borderRadius: '8px',
-              padding: '16px',
+              padding: '12px',
               marginBottom: '16px'
             }}>
+              <div style={{
+                fontSize: '11px',
+                color: 'var(--text-muted)',
+                marginBottom: '12px',
+                fontWeight: '500',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>
+                Indications
+              </div>
               {renderTreeNode(productTree)}
             </div>
           </div>

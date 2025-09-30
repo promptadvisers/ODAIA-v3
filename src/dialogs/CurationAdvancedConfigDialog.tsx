@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { Button } from '../components/Button';
@@ -9,7 +9,7 @@ const generateMockHCPs = (count: number) => {
   const names = ['Crystal Ball', 'Meridith Kvyst', 'George Smith', 'Samantha White', 'Alexander Lee', 'Olivia Johnson', 'Ethan Brown'];
   const specialties = ['Odaiazol Adopter', 'Odaiazol Expert', 'Lorem ipsum'];
   const segments = ['near_term_shrinker', 'growers', 'Lorem ipsum', 'Odaiazol...'];
-  
+
   return Array.from({ length: count }, (_, i) => ({
     id: 47248002 + i,
     name: names[i % names.length],
@@ -43,9 +43,49 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
   const [bucketCSize, setBucketCSize] = useState('15');
   
   const [selectedRegion, setSelectedRegion] = useState('median-65');
-  
-  const mockHCPsAll = generateMockHCPs(65);
-  const mockHCPsCurated = generateMockHCPs(30);
+
+  // Generate HCP lists based on selected region
+  const allHCPsCount = selectedRegion === 'median-100' ? 100 : 65;
+  const mockHCPsAll = useMemo(() => generateMockHCPs(allHCPsCount), [allHCPsCount]);
+
+  // Calculate curated list size based on bucket percentages
+  const curatedListSize = useMemo(() => {
+    const bucketA = parseInt(bucketASize) || 0;
+    const bucketB = parseInt(bucketBSize) || 0;
+    const bucketC = parseInt(bucketCSize) || 0;
+    const totalPercentage = Math.min(100, bucketA + bucketB + bucketC);
+    return Math.round((totalPercentage / 100) * 30); // Max 30 HCPs
+  }, [bucketASize, bucketBSize, bucketCSize]);
+
+  // Filter curated HCPs based on active signals
+  const mockHCPsCurated = useMemo(() => {
+    let baseHCPs = generateMockHCPs(100);
+
+    // Filter by PowerScore if enabled
+    if (powerScore) {
+      const minScore = powerScoreLevel === 'High' ? 8 : powerScoreLevel === 'Medium' ? 6 : 4;
+      baseHCPs = baseHCPs.filter(hcp => hcp.powerScore >= minScore);
+    }
+
+    // Filter by Nearby Anchor if enabled
+    if (nearbyAnchor && nearbyAnchorLevel === 'High') {
+      baseHCPs = baseHCPs.filter((_, i) => i % 2 === 0); // Simulate filtering
+    }
+
+    // Filter by time-based signals
+    const activeTimeSignals = [last7Days, lastMonth, lastQuarter].filter(Boolean).length;
+    if (activeTimeSignals > 0) {
+      baseHCPs = baseHCPs.slice(0, Math.max(10, baseHCPs.length - (3 - activeTimeSignals) * 5));
+    }
+
+    // Filter by segment scores
+    if (starters && startersLevel === 'High') {
+      baseHCPs = baseHCPs.filter(hcp => hcp.segment === 'growers' || hcp.segment === 'near_term_shrinker');
+    }
+
+    // Return the calculated number of HCPs
+    return baseHCPs.slice(0, Math.max(1, curatedListSize));
+  }, [nearbyAnchor, nearbyAnchorLevel, powerScore, powerScoreLevel, last7Days, lastMonth, lastQuarter, starters, startersLevel, curatedListSize]);
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && setActiveModal(null)}>
@@ -109,12 +149,13 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
             }}>
               
               {/* Curation Signals */}
-              <div style={{ marginBottom: '24px' }}>
+              <div style={{ marginBottom: '28px' }}>
                 <h3 style={{
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontWeight: '600',
                   color: 'var(--text-primary)',
-                  marginBottom: '12px'
+                  marginBottom: '16px',
+                  letterSpacing: '-0.01em'
                 }}>
                   Curation Signals
                 </h3>
@@ -131,13 +172,15 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
-                      fontSize: '13px',
-                      color: 'var(--text-primary)'
+                      fontSize: '12px',
+                      color: 'var(--text-primary)',
+                      cursor: 'pointer'
                     }}>
                       <input
                         type="checkbox"
                         checked={nearbyAnchor}
                         onChange={(e) => setNearbyAnchor(e.target.checked)}
+                        style={{ cursor: 'pointer' }}
                       />
                       Nearby Anchor
                     </label>
@@ -146,12 +189,13 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                       onChange={(e) => setNearbyAnchorLevel(e.target.value)}
                       disabled={!nearbyAnchor}
                       style={{
-                        padding: '4px 8px',
-                        fontSize: '12px',
+                        padding: '6px 10px',
+                        fontSize: '11px',
                         backgroundColor: 'var(--bg-card)',
                         color: 'var(--text-primary)',
                         border: '1px solid var(--border-subtle)',
-                        borderRadius: '4px'
+                        borderRadius: '4px',
+                        cursor: 'pointer'
                       }}
                     >
                       <option>Low</option>
@@ -173,13 +217,15 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
-                      fontSize: '13px',
-                      color: 'var(--text-primary)'
+                      fontSize: '12px',
+                      color: 'var(--text-primary)',
+                      cursor: 'pointer'
                     }}>
                       <input
                         type="checkbox"
                         checked={powerScore}
                         onChange={(e) => setPowerScore(e.target.checked)}
+                        style={{ cursor: 'pointer' }}
                       />
                       PowerScore
                     </label>
@@ -188,12 +234,13 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                       onChange={(e) => setPowerScoreLevel(e.target.value)}
                       disabled={!powerScore}
                       style={{
-                        padding: '4px 8px',
-                        fontSize: '12px',
+                        padding: '6px 10px',
+                        fontSize: '11px',
                         backgroundColor: 'var(--bg-card)',
                         color: 'var(--text-primary)',
                         border: '1px solid var(--border-subtle)',
-                        borderRadius: '4px'
+                        borderRadius: '4px',
+                        cursor: 'pointer'
                       }}
                     >
                       <option>Low</option>
@@ -205,11 +252,12 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
 
                 {/* Reach and Frequency */}
                 <h4 style={{
-                  fontSize: '13px',
+                  fontSize: '12px',
                   fontWeight: '600',
                   color: 'var(--text-primary)',
                   marginBottom: '12px',
-                  marginTop: '20px'
+                  marginTop: '20px',
+                  letterSpacing: '-0.01em'
                 }}>
                   Reach and Frequency Signals
                 </h4>
@@ -229,13 +277,15 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        fontSize: '13px',
-                        color: 'var(--text-primary)'
+                        fontSize: '12px',
+                        color: 'var(--text-primary)',
+                        cursor: 'pointer'
                       }}>
                         <input
                           type="checkbox"
                           checked={item.checked}
                           onChange={(e) => item.setChecked(e.target.checked)}
+                          style={{ cursor: 'pointer' }}
                         />
                         {item.label}
                       </label>
@@ -244,12 +294,13 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                         onChange={(e) => item.setLevel(e.target.value)}
                         disabled={!item.checked}
                         style={{
-                          padding: '4px 8px',
-                          fontSize: '12px',
+                          padding: '6px 10px',
+                          fontSize: '11px',
                           backgroundColor: 'var(--bg-card)',
                           color: 'var(--text-primary)',
                           border: '1px solid var(--border-subtle)',
-                          borderRadius: '4px'
+                          borderRadius: '4px',
+                          cursor: 'pointer'
                         }}
                       >
                         <option>Low</option>
@@ -409,10 +460,11 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
 
                 {/* All HCPs Table */}
                 <h4 style={{
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontWeight: '600',
                   color: 'var(--text-primary)',
-                  marginBottom: '12px'
+                  marginBottom: '12px',
+                  letterSpacing: '-0.01em'
                 }}>
                   Median Region ({selectedRegion === 'median-100' ? '100' : '65'} HCPs)
                 </h4>
@@ -423,49 +475,87 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                   overflow: 'hidden',
                   marginBottom: '24px'
                 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                     <thead>
-                      <tr style={{ backgroundColor: 'var(--bg-main)' }}>
-                        <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                          Power Score
+                      <tr style={{ backgroundColor: 'var(--bg-table-header)' }}>
+                        <th style={{
+                          padding: '10px 12px',
+                          textAlign: 'left',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          color: 'var(--text-muted)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
+                          PowerScore
                         </th>
-                        <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                        <th style={{
+                          padding: '10px 12px',
+                          textAlign: 'left',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          color: 'var(--text-muted)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
                           Entity ID
                         </th>
-                        <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                        <th style={{
+                          padding: '10px 12px',
+                          textAlign: 'left',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          color: 'var(--text-muted)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
                           Specialty
                         </th>
-                        <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                        <th style={{
+                          padding: '10px 12px',
+                          textAlign: 'left',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          color: 'var(--text-muted)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
                           Segment
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {mockHCPsAll.slice(0, 7).map((hcp, i) => (
-                        <tr key={i} style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                          <td style={{ padding: '12px' }}>
+                      {mockHCPsAll.slice(0, 10).map((hcp, i) => (
+                        <tr
+                          key={i}
+                          style={{
+                            backgroundColor: i % 2 === 0 ? 'transparent' : 'var(--bg-table-row-alt)',
+                            borderTop: '1px solid var(--border-subtle)'
+                          }}
+                        >
+                          <td style={{ padding: '10px 12px' }}>
                             <span style={{
-                              display: 'inline-block',
-                              width: '28px',
-                              height: '28px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '32px',
+                              height: '32px',
                               borderRadius: '50%',
-                              backgroundColor: hcp.powerScore === 10 ? '#f97316' : '#eab308',
-                              color: 'white',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              textAlign: 'center',
-                              lineHeight: '28px'
+                              backgroundColor: hcp.powerScore === 10 ? 'var(--accent-orange)' : 'var(--accent-yellow-badge)',
+                              color: '#ffffff',
+                              fontSize: '13px',
+                              fontWeight: '700'
                             }}>
                               {hcp.powerScore}
                             </span>
                           </td>
-                          <td style={{ padding: '12px', fontSize: '13px', color: 'var(--text-primary)' }}>
+                          <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--text-primary)', fontWeight: '500' }}>
                             {hcp.id}
                           </td>
-                          <td style={{ padding: '12px', fontSize: '13px', color: 'var(--text-primary)' }}>
+                          <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
                             {hcp.specialty}
                           </td>
-                          <td style={{ padding: '12px', fontSize: '13px', color: 'var(--text-primary)' }}>
+                          <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
                             {hcp.segment}
                           </td>
                         </tr>
@@ -476,12 +566,13 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
 
                 {/* Sample Curated List */}
                 <h4 style={{
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontWeight: '600',
                   color: 'var(--text-primary)',
-                  marginBottom: '12px'
+                  marginBottom: '12px',
+                  letterSpacing: '-0.01em'
                 }}>
-                  Sample Curated List (30 HCPs)
+                  Sample Curated List ({mockHCPsCurated.length} HCPs)
                 </h4>
                 <div style={{
                   backgroundColor: 'var(--bg-card)',
@@ -489,49 +580,87 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                   borderRadius: '8px',
                   overflow: 'hidden'
                 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                     <thead>
-                      <tr style={{ backgroundColor: 'var(--bg-main)' }}>
-                        <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                          Power Score
+                      <tr style={{ backgroundColor: 'var(--bg-table-header)' }}>
+                        <th style={{
+                          padding: '10px 12px',
+                          textAlign: 'left',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          color: 'var(--text-muted)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
+                          PowerScore
                         </th>
-                        <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                        <th style={{
+                          padding: '10px 12px',
+                          textAlign: 'left',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          color: 'var(--text-muted)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
                           Entity ID
                         </th>
-                        <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                        <th style={{
+                          padding: '10px 12px',
+                          textAlign: 'left',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          color: 'var(--text-muted)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
                           Specialty
                         </th>
-                        <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                        <th style={{
+                          padding: '10px 12px',
+                          textAlign: 'left',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          color: 'var(--text-muted)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
                           Segment
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {mockHCPsCurated.slice(0, 7).map((hcp, i) => (
-                        <tr key={i} style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                          <td style={{ padding: '12px' }}>
+                      {mockHCPsCurated.map((hcp, i) => (
+                        <tr
+                          key={i}
+                          style={{
+                            backgroundColor: i % 2 === 0 ? 'transparent' : 'var(--bg-table-row-alt)',
+                            borderTop: '1px solid var(--border-subtle)'
+                          }}
+                        >
+                          <td style={{ padding: '10px 12px' }}>
                             <span style={{
-                              display: 'inline-block',
-                              width: '28px',
-                              height: '28px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '32px',
+                              height: '32px',
                               borderRadius: '50%',
-                              backgroundColor: hcp.powerScore === 10 ? '#f97316' : '#eab308',
-                              color: 'white',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              textAlign: 'center',
-                              lineHeight: '28px'
+                              backgroundColor: hcp.powerScore === 10 ? 'var(--accent-orange)' : 'var(--accent-yellow-badge)',
+                              color: '#ffffff',
+                              fontSize: '13px',
+                              fontWeight: '700'
                             }}>
                               {hcp.powerScore}
                             </span>
                           </td>
-                          <td style={{ padding: '12px', fontSize: '13px', color: 'var(--text-primary)' }}>
+                          <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--text-primary)', fontWeight: '500' }}>
                             {hcp.id}
                           </td>
-                          <td style={{ padding: '12px', fontSize: '13px', color: 'var(--text-primary)' }}>
+                          <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
                             {hcp.specialty}
                           </td>
-                          <td style={{ padding: '12px', fontSize: '13px', color: 'var(--text-primary)' }}>
+                          <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
                             {hcp.segment}
                           </td>
                         </tr>

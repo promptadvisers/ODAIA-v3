@@ -252,28 +252,30 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
           {/* Notification Banner */}
           {activeTab === 'brand' && hasUploadedFiles && !isProcessingFile && (
             <div style={{
-              padding: '16px 20px',
-              backgroundColor: allItemsReady ? 'rgba(59, 130, 246, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+              padding: '18px 24px',
+              backgroundColor: allItemsReady ? 'rgba(59, 130, 246, 0.08)' : 'rgba(245, 158, 11, 0.08)',
               borderRadius: '8px',
-              border: `1px solid ${allItemsReady ? 'rgba(59, 130, 246, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
-              marginBottom: '20px',
+              border: `1px solid ${allItemsReady ? 'rgba(59, 130, 246, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`,
+              marginBottom: '24px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between'
             }}>
               <div>
                 <h3 style={{
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontWeight: '600',
                   color: 'var(--text-primary)',
-                  marginBottom: '4px'
+                  marginBottom: '6px',
+                  letterSpacing: '-0.01em'
                 }}>
                   {allItemsReady ? 'Ready to run setup' : 'Missing information to run setup'}
                 </h3>
                 <p style={{
-                  fontSize: '13px',
-                  color: 'var(--text-secondary)',
-                  margin: 0
+                  fontSize: '12px',
+                  color: 'var(--text-muted)',
+                  margin: 0,
+                  lineHeight: '1.5'
                 }}>
                   {allItemsReady
                     ? 'All the information that is required is ready.'
@@ -291,9 +293,10 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
                       color: 'var(--text-primary)',
                       border: '1px solid var(--border-subtle)',
                       borderRadius: '6px',
-                      fontSize: '13px',
+                      fontSize: '12px',
                       cursor: 'pointer',
-                      outline: 'none'
+                      outline: 'none',
+                      fontWeight: '500'
                     }}
                   >
                     <option value="sales">Sales</option>
@@ -305,7 +308,9 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
                   disabled={!allItemsReady}
                   style={{
                     opacity: allItemsReady ? 1 : 0.5,
-                    cursor: allItemsReady ? 'pointer' : 'not-allowed'
+                    cursor: allItemsReady ? 'pointer' : 'not-allowed',
+                    fontSize: '12px',
+                    fontWeight: '500'
                   }}
                 >
                   Run Setup
@@ -327,15 +332,16 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
               </CardHeader>
               <CardContent>
                 {item.tags && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
                     {item.tags.map((tag, tagIndex) => (
                       <span key={tagIndex} style={{
-                        padding: '6px 12px',
-                        backgroundColor: 'var(--border-primary)',
+                        padding: '4px 10px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
                         color: 'var(--text-secondary)',
-                        fontSize: '12px',
+                        fontSize: '11px',
                         fontWeight: '500',
-                        borderRadius: '4px'
+                        borderRadius: '4px',
+                        border: '1px solid var(--border-subtle)'
                       }}>
                         {tag}
                       </span>

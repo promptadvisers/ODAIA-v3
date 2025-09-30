@@ -125,43 +125,50 @@ export const SimulationReportDialog: React.FC = () => {
           </div>
 
           {/* PowerScore Chart */}
-          <div style={{ marginBottom: '32px' }}>
+          <div style={{
+            marginBottom: '32px',
+            padding: '24px',
+            backgroundColor: 'var(--bg-card)',
+            borderRadius: '8px',
+            border: '1px solid var(--border-subtle)'
+          }}>
             <h3 style={{
-              fontSize: '16px',
+              fontSize: '15px',
               fontWeight: '600',
               color: 'var(--text-primary)',
-              marginBottom: '16px',
-              textAlign: 'center'
+              marginBottom: '20px',
+              letterSpacing: '-0.01em'
             }}>
-              PowerScore by Segment
+              PowerScore by Segment - Comparison
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData}>
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={chartData} barGap={2}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
                 <XAxis
                   dataKey="segment"
-                  tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
-                  label={{ value: 'Segments', position: 'insideBottom', offset: -5, fill: 'var(--text-secondary)' }}
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
+                  label={{ value: 'Segment', position: 'insideBottom', offset: -5, fill: 'var(--text-muted)', fontSize: 11 }}
                 />
                 <YAxis
-                  tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
-                  label={{ value: 'PowerScore', angle: -90, position: 'insideLeft', fill: 'var(--text-secondary)' }}
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
+                  label={{ value: 'PowerScore', angle: -90, position: 'insideLeft', fill: 'var(--text-muted)', fontSize: 11 }}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'var(--bg-card)',
-                    border: '1px solid var(--border-subtle)',
+                    backgroundColor: 'var(--bg-modal)',
+                    border: '1px solid var(--border-primary)',
                     borderRadius: '6px',
                     fontSize: '12px'
                   }}
                 />
                 <Legend
                   wrapperStyle={{ fontSize: '12px', color: 'var(--text-secondary)' }}
+                  iconType="circle"
                 />
-                <Bar dataKey="A" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="B" fill="#60a5fa" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="C" fill="#93c5fd" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="D" fill="#bfdbfe" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="A" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Scenario A" />
+                <Bar dataKey="B" fill="#14b8a6" radius={[4, 4, 0, 0]} name="Scenario B" />
+                <Bar dataKey="C" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Scenario C" />
+                <Bar dataKey="D" fill="#10b981" radius={[4, 4, 0, 0]} name="Scenario D" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -170,23 +177,29 @@ export const SimulationReportDialog: React.FC = () => {
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            gap: '24px',
+            gap: '20px',
             marginBottom: '24px'
           }}>
             {/* Current Value */}
-            <div>
+            <div style={{
+              padding: '20px',
+              backgroundColor: 'var(--bg-card)',
+              borderRadius: '8px',
+              border: '1px solid var(--border-subtle)'
+            }}>
               <h4 style={{
                 fontSize: '14px',
                 fontWeight: '600',
                 color: 'var(--text-primary)',
-                marginBottom: '12px'
+                marginBottom: '8px',
+                letterSpacing: '-0.01em'
               }}>
                 Current Value: 70%
               </h4>
               <p style={{
                 fontSize: '12px',
-                color: 'var(--text-secondary)',
-                marginBottom: '12px',
+                color: 'var(--text-muted)',
+                marginBottom: '16px',
                 lineHeight: '1.5'
               }}>
                 Current value of an HCP based on historical writing of Odaiazol
@@ -196,12 +209,12 @@ export const SimulationReportDialog: React.FC = () => {
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'var(--bg-card)',
+                  padding: '10px',
+                  backgroundColor: 'var(--bg-secondary)',
                   borderRadius: '6px'
                 }}>
-                  <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <Check size={16} style={{ color: 'var(--accent-green)', flexShrink: 0, marginTop: '2px' }} />
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                     90% Odaiazol, Breast Cancer, HRE2+ 2L Therapy, XPO TRx Volume
                   </span>
                 </div>
@@ -209,12 +222,12 @@ export const SimulationReportDialog: React.FC = () => {
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'var(--bg-card)',
+                  padding: '10px',
+                  backgroundColor: 'var(--bg-secondary)',
                   borderRadius: '6px'
                 }}>
-                  <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <Check size={16} style={{ color: 'var(--accent-green)', flexShrink: 0, marginTop: '2px' }} />
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                     10% OncoThera Copay Card PSP Claims
                   </span>
                 </div>
@@ -222,19 +235,25 @@ export const SimulationReportDialog: React.FC = () => {
             </div>
 
             {/* Potential */}
-            <div>
+            <div style={{
+              padding: '20px',
+              backgroundColor: 'var(--bg-card)',
+              borderRadius: '8px',
+              border: '1px solid var(--border-subtle)'
+            }}>
               <h4 style={{
                 fontSize: '14px',
                 fontWeight: '600',
                 color: 'var(--text-primary)',
-                marginBottom: '12px'
+                marginBottom: '8px',
+                letterSpacing: '-0.01em'
               }}>
                 Potential: 30%
               </h4>
               <p style={{
                 fontSize: '12px',
-                color: 'var(--text-secondary)',
-                marginBottom: '12px',
+                color: 'var(--text-muted)',
+                marginBottom: '16px',
                 lineHeight: '1.5'
               }}>
                 Potential based on HCPs competitive writing and patient mix.
@@ -242,26 +261,32 @@ export const SimulationReportDialog: React.FC = () => {
             </div>
 
             {/* Competitive Strategy */}
-            <div>
+            <div style={{
+              padding: '20px',
+              backgroundColor: 'var(--bg-card)',
+              borderRadius: '8px',
+              border: '1px solid var(--border-subtle)'
+            }}>
               <h4 style={{
                 fontSize: '14px',
                 fontWeight: '600',
                 color: 'var(--text-primary)',
-                marginBottom: '12px'
+                marginBottom: '8px',
+                letterSpacing: '-0.01em'
               }}>
                 Competitive Strategy: 80%
               </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
                 <div style={{
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'var(--bg-card)',
+                  padding: '10px',
+                  backgroundColor: 'var(--bg-secondary)',
                   borderRadius: '6px'
                 }}>
-                  <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <Check size={16} style={{ color: 'var(--accent-green)', flexShrink: 0, marginTop: '2px' }} />
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                     20% importance on 2L Therapy HER+ Overall Market, XPO TRx
                   </span>
                 </div>
@@ -269,12 +294,12 @@ export const SimulationReportDialog: React.FC = () => {
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'var(--bg-card)',
+                  padding: '10px',
+                  backgroundColor: 'var(--bg-secondary)',
                   borderRadius: '6px'
                 }}>
-                  <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <Check size={16} style={{ color: 'var(--accent-green)', flexShrink: 0, marginTop: '2px' }} />
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                     50% importance on 2L Therapy HER+ submarket 1, XPO TRx
                   </span>
                 </div>
@@ -282,12 +307,12 @@ export const SimulationReportDialog: React.FC = () => {
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'var(--bg-card)',
+                  padding: '10px',
+                  backgroundColor: 'var(--bg-secondary)',
                   borderRadius: '6px'
                 }}>
-                  <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <Check size={16} style={{ color: 'var(--accent-green)', flexShrink: 0, marginTop: '2px' }} />
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                     30% importance on 2L Therapy HER+ submarket 2, XPO TRx
                   </span>
                 </div>
@@ -295,12 +320,12 @@ export const SimulationReportDialog: React.FC = () => {
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'var(--bg-card)',
+                  padding: '10px',
+                  backgroundColor: 'var(--bg-secondary)',
                   borderRadius: '6px'
                 }}>
-                  <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <Check size={16} style={{ color: 'var(--accent-green)', flexShrink: 0, marginTop: '2px' }} />
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                     10% importance on competitive brand PixelTron, XPO NBRx
                   </span>
                 </div>
@@ -308,26 +333,32 @@ export const SimulationReportDialog: React.FC = () => {
             </div>
 
             {/* Patient Mix */}
-            <div>
+            <div style={{
+              padding: '20px',
+              backgroundColor: 'var(--bg-card)',
+              borderRadius: '8px',
+              border: '1px solid var(--border-subtle)'
+            }}>
               <h4 style={{
                 fontSize: '14px',
                 fontWeight: '600',
                 color: 'var(--text-primary)',
-                marginBottom: '12px'
+                marginBottom: '8px',
+                letterSpacing: '-0.01em'
               }}>
                 Patient Mix: 20%
               </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
                 <div style={{
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'var(--bg-card)',
+                  padding: '10px',
+                  backgroundColor: 'var(--bg-secondary)',
                   borderRadius: '6px'
                 }}>
-                  <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <Check size={16} style={{ color: 'var(--accent-green)', flexShrink: 0, marginTop: '2px' }} />
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                     20% 1L Therapy HER+ Market, XPO TRx
                   </span>
                 </div>
@@ -335,12 +366,12 @@ export const SimulationReportDialog: React.FC = () => {
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'var(--bg-card)',
+                  padding: '10px',
+                  backgroundColor: 'var(--bg-secondary)',
                   borderRadius: '6px'
                 }}>
-                  <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <Check size={16} style={{ color: 'var(--accent-green)', flexShrink: 0, marginTop: '2px' }} />
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                     80% Payer mix, Medicaid, Medicare
                   </span>
                 </div>

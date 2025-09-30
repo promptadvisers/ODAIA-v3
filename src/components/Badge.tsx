@@ -16,35 +16,39 @@ export const Badge: React.FC<BadgeProps> = ({
     switch (variant) {
       case 'success':
         return {
-          backgroundColor: 'var(--accent-green)',
-          color: 'white',
-          padding: '4px 12px',
+          backgroundColor: 'var(--badge-success-bg)',
+          color: 'var(--badge-success-text)',
+          padding: '4px 10px',
           fontSize: '11px',
-          fontWeight: '600'
+          fontWeight: '600',
+          border: '1px solid rgba(16, 185, 129, 0.2)'
         };
       case 'warning':
         return {
-          backgroundColor: 'var(--accent-yellow)',
-          color: 'white',
-          padding: '4px 12px',
+          backgroundColor: 'var(--badge-warning-bg)',
+          color: 'var(--badge-warning-text)',
+          padding: '4px 10px',
           fontSize: '11px',
-          fontWeight: '600'
+          fontWeight: '600',
+          border: '1px solid rgba(245, 158, 11, 0.2)'
         };
       case 'info':
         return {
-          backgroundColor: 'var(--accent-blue)',
-          color: 'white',
-          padding: '4px 12px',
-          fontSize: '12px',
-          fontWeight: '500'
+          backgroundColor: 'var(--badge-info-bg)',
+          color: 'var(--badge-info-text)',
+          padding: '4px 10px',
+          fontSize: '11px',
+          fontWeight: '600',
+          border: '1px solid rgba(59, 130, 246, 0.2)'
         };
       default:
         return {
-          backgroundColor: 'var(--border-primary)',
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
           color: 'var(--text-secondary)',
-          padding: '4px 12px',
-          fontSize: '12px',
-          fontWeight: '500'
+          padding: '4px 10px',
+          fontSize: '11px',
+          fontWeight: '500',
+          border: '1px solid var(--border-subtle)'
         };
     }
   };

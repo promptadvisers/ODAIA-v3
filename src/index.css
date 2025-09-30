@@ -6,30 +6,47 @@
 
 /* Global dark theme styles with exact color values */
 :root[data-theme="dark"], :root {
-  /* Background colors */
-  --bg-main: #0a0c10;        /* Darkest - main app background */
-  --bg-secondary: #1a1a1a;    /* Assistant panel (slightly lighter) */
-  --bg-card: #15171d;        /* Card backgrounds (darker for better contrast) */
-  --bg-modal: #1a1f2e;       /* Modal backgrounds */
-  --bg-hover: #1e2330;       /* Hover states */
-  --bg-input: #0f1419;       /* Input field background */
-  --bg-header: #0f1117;      /* Header/tab bar background */
-  
+  /* Background colors - Refined for pixel-perfect match */
+  --bg-main: #0a0a0a;         /* Darkest - main app background */
+  --bg-secondary: #141414;    /* Sidebar/assistant panel */
+  --bg-card: #1a1a1a;         /* Card backgrounds */
+  --bg-modal: #1e1e1e;        /* Modal backgrounds */
+  --bg-hover: rgba(255, 255, 255, 0.03);  /* Hover states */
+  --bg-input: #0f1419;        /* Input field background */
+  --bg-header: #0f1117;       /* Header/tab bar background */
+  --bg-table-header: rgba(255, 255, 255, 0.02); /* Table headers */
+  --bg-table-row-alt: rgba(255, 255, 255, 0.02); /* Striped table rows */
+
   /* Text colors */
   --text-primary: #ffffff;    /* Primary white text */
-  --text-secondary: #8b92a3;  /* Secondary gray text (more muted) */
+  --text-secondary: #9ca3af;  /* Secondary gray text */
   --text-muted: #6b7280;      /* Muted text and icons */
-  
+
   /* Border colors */
-  --border-primary: #2a2f3e;  /* Primary borders */
-  --border-subtle: #1e293b;   /* Very subtle borders */
-  --border-secondary: #1a1f2e; /* Secondary borders */
-  
+  --border-primary: rgba(255, 255, 255, 0.1);  /* Primary borders */
+  --border-subtle: rgba(255, 255, 255, 0.05);   /* Very subtle borders */
+  --border-focus: rgba(59, 130, 246, 0.5);      /* Focus state borders */
+
   /* Accent colors */
   --accent-blue: #3b82f6;     /* Primary blue */
+  --accent-blue-hover: #2563eb; /* Blue hover state */
   --accent-teal: #14b8a6;     /* Success/Ready state */
-  --accent-yellow: #f59e0b;   /* Warning/Missing info state (more orange) */
-  --accent-green: #10b981;    /* Green state */
+  --accent-green: #10b981;    /* Green badge */
+  --accent-yellow: #f59e0b;   /* Warning/Missing info state */
+  --accent-orange: #f97316;   /* Orange (PowerScore 10) */
+  --accent-yellow-badge: #eab308; /* Yellow (PowerScore 9) */
+  --accent-red: #ef4444;      /* Error/negative difference */
+  --accent-pink: #f87171;     /* Light red */
+
+  /* Badge specific colors */
+  --badge-success-bg: rgba(16, 185, 129, 0.1);
+  --badge-success-text: #10b981;
+  --badge-warning-bg: rgba(245, 158, 11, 0.1);
+  --badge-warning-text: #f59e0b;
+  --badge-error-bg: rgba(239, 68, 68, 0.1);
+  --badge-error-text: #ef4444;
+  --badge-info-bg: rgba(59, 130, 246, 0.1);
+  --badge-info-text: #3b82f6;
 }
 
 /* Light theme */
@@ -77,27 +94,37 @@ body, #root {
   box-sizing: border-box;
 }
 
-/* Typography system */
+/* Typography system - Exact specifications */
 h1 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 h2 {
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.3;
+  letter-spacing: -0.01em;
 }
 
 h3 {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+h4 {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
 }
 
 p {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 400;
   line-height: 1.5;
 }
