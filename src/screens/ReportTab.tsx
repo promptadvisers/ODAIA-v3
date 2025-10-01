@@ -123,7 +123,41 @@ const mockDataRepository = {
         { score: '9', diff: 1 },
         { score: '10', diff: 0 }
       ]
-    }
+    },
+    inflowOutflow: [
+      { score: '1', inflow: 12, outflow: 15 },
+      { score: '2', inflow: 30, outflow: 33 },
+      { score: '3', inflow: 91, outflow: 90 },
+      { score: '4', inflow: 160, outflow: 159 },
+      { score: '5', inflow: 247, outflow: 248 },
+      { score: '6', inflow: 279, outflow: 279 },
+      { score: '7', inflow: 246, outflow: 246 },
+      { score: '8', inflow: 157, outflow: 157 },
+      { score: '9', inflow: 84, outflow: 84 },
+      { score: '10', inflow: 20, outflow: 20 }
+    ],
+    membershipChange: [
+      { entityId: '47198527', original: 6, simulated: 6, scoreDiff: -1 },
+      { entityId: '47198858', original: 2, simulated: 3, scoreDiff: -1 },
+      { entityId: '47198960', original: 6, simulated: 5, scoreDiff: 1 },
+      { entityId: '47199044', original: 6, simulated: 8, scoreDiff: -2 },
+      { entityId: '47199047', original: 7, simulated: 8, scoreDiff: -1 },
+      { entityId: '47199121', original: 6, simulated: 4, scoreDiff: 2 },
+      { entityId: '47199203', original: 10, simulated: 9, scoreDiff: 1 },
+      { entityId: '47199358', original: 9, simulated: 8, scoreDiff: 1 },
+      { entityId: '47199636', original: 7, simulated: 8, scoreDiff: -2 },
+      { entityId: '47199723', original: 8, simulated: 9, scoreDiff: -1 },
+      { entityId: '47199775', original: 7, simulated: 9, scoreDiff: -1 },
+      { entityId: '47200304', original: 6, simulated: 7, scoreDiff: -1 },
+      { entityId: '47200470', original: 4, simulated: 5, scoreDiff: -1 },
+      { entityId: '47200710', original: 5, simulated: 6, scoreDiff: -1 },
+      { entityId: '47201130', original: 5, simulated: 5, scoreDiff: 2 },
+      { entityId: '47201133', original: 4, simulated: 5, scoreDiff: -1 },
+      { entityId: '47201139', original: 8, simulated: 9, scoreDiff: -1 },
+      { entityId: '47201149', original: 4, simulated: 5, scoreDiff: -1 },
+      { entityId: '47201554', original: 5, simulated: 6, scoreDiff: 1 },
+      { entityId: '47201697', original: 7, simulated: 6, scoreDiff: 1 }
+    ]
   },
   'Value Engine: HCP Targeting v2.1': {
     infoCards: {
@@ -243,7 +277,41 @@ const mockDataRepository = {
         { score: '9', diff: 0 },
         { score: '10', diff: 0 }
       ]
-    }
+    },
+    inflowOutflow: [
+      { score: '1', inflow: 10, outflow: 12 },
+      { score: '2', inflow: 28, outflow: 30 },
+      { score: '3', inflow: 85, outflow: 88 },
+      { score: '4', inflow: 155, outflow: 152 },
+      { score: '5', inflow: 240, outflow: 245 },
+      { score: '6', inflow: 275, outflow: 272 },
+      { score: '7', inflow: 242, outflow: 240 },
+      { score: '8', inflow: 150, outflow: 155 },
+      { score: '9', inflow: 80, outflow: 82 },
+      { score: '10', inflow: 18, outflow: 19 }
+    ],
+    membershipChange: [
+      { entityId: '48198527', original: 5, simulated: 6, scoreDiff: -1 },
+      { entityId: '48198858', original: 3, simulated: 4, scoreDiff: -1 },
+      { entityId: '48198960', original: 7, simulated: 6, scoreDiff: 1 },
+      { entityId: '48199044', original: 5, simulated: 7, scoreDiff: -2 },
+      { entityId: '48199047', original: 6, simulated: 7, scoreDiff: -1 },
+      { entityId: '48199121', original: 7, simulated: 5, scoreDiff: 2 },
+      { entityId: '48199203', original: 9, simulated: 8, scoreDiff: 1 },
+      { entityId: '48199358', original: 8, simulated: 7, scoreDiff: 1 },
+      { entityId: '48199636', original: 6, simulated: 8, scoreDiff: -2 },
+      { entityId: '48199723', original: 7, simulated: 8, scoreDiff: -1 },
+      { entityId: '48199775', original: 6, simulated: 8, scoreDiff: -1 },
+      { entityId: '48200304', original: 5, simulated: 6, scoreDiff: -1 },
+      { entityId: '48200470', original: 3, simulated: 4, scoreDiff: -1 },
+      { entityId: '48200710', original: 4, simulated: 5, scoreDiff: -1 },
+      { entityId: '48201130', original: 4, simulated: 4, scoreDiff: 2 },
+      { entityId: '48201133', original: 3, simulated: 4, scoreDiff: -1 },
+      { entityId: '48201139', original: 7, simulated: 8, scoreDiff: -1 },
+      { entityId: '48201149', original: 3, simulated: 4, scoreDiff: -1 },
+      { entityId: '48201554', original: 4, simulated: 5, scoreDiff: 1 },
+      { entityId: '48201697', original: 6, simulated: 5, scoreDiff: 1 }
+    ]
   }
 };
 
@@ -390,6 +458,14 @@ export const ReportTab: React.FC = () => {
     const regionKey = selectedRegion as keyof typeof currentData.scoreDiff;
     return currentData.scoreDiff[regionKey] || currentData.scoreDiff.National;
   }, [currentData, selectedRegion]);
+
+  const inflowOutflowData = useMemo(() => {
+    return currentData.inflowOutflow || [];
+  }, [currentData]);
+
+  const membershipChangeData = useMemo(() => {
+    return currentData.membershipChange || [];
+  }, [currentData]);
 
   return (
     <div style={{ display: 'flex', height: '100%', backgroundColor: 'var(--bg-main)' }}>
@@ -889,16 +965,19 @@ export const ReportTab: React.FC = () => {
           </Card>
         </div>
 
-        {/* Chart Grid - Row 3 (Score Distribution) */}
+        {/* Chart Grid - Row 3 (Inflow & Outflow and Membership Change) */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-          {/* Score Distribution Count Chart */}
+          {/* Inflow & Outflow Chart */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xs">Score Distribution Count: Original vs Simulated (All Simulated Projects )</CardTitle>
+              <CardTitle className="text-xs">Inflow & Outflow</CardTitle>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Simulation = Original + Inflow - Outflow
+              </div>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={scoreDistributionData}>
+                <BarChart data={inflowOutflowData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
                   <XAxis dataKey="score" tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} />
                   <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} />
@@ -911,39 +990,55 @@ export const ReportTab: React.FC = () => {
                     }}
                   />
                   <Legend wrapperStyle={{ fontSize: '11px' }} />
-                  <Bar dataKey="original" fill="#60a5fa" name="Original Powerscores Count" />
-                  <Bar dataKey="simulated" fill="#f87171" name="Simulated Powerscores Cou..." />
+                  <Bar dataKey="inflow" fill="#60a5fa" name="Inflow" label={{ position: 'inside', fill: '#000', fontSize: 11 }} />
+                  <Bar dataKey="outflow" fill="#f87171" name="Outflow" label={{ position: 'inside', fill: '#000', fontSize: 11 }} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          {/* Score Distribution Summary (Difference) */}
+          {/* Change In Membership Table */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xs">Score Distribution Summary: Difference</CardTitle>
+              <CardTitle className="text-xs">Change In Membership</CardTitle>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Entities with +/- Score Difference
+              </div>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={scoreDiffData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
-                  <XAxis dataKey="score" tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} />
-                  <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} domain={[-5, 5]} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'var(--bg-modal)',
-                      border: '1px solid var(--border-primary)',
-                      borderRadius: '6px',
-                      fontSize: '11px'
-                    }}
-                  />
-                  <Bar dataKey="diff" name="Score Difference">
-                    {scoreDiffData.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={entry.diff >= 0 ? '#60a5fa' : '#60a5fa'} />
+              <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '280px' }}>
+                <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse' }}>
+                  <thead style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-card)' }}>
+                    <tr style={{ backgroundColor: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-subtle)' }}>
+                      <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Day of Created At</th>
+                      <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Entity ID</th>
+                      <th style={{ padding: '8px', textAlign: 'right', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>ORIGINAL_VALUE</th>
+                      <th style={{ padding: '8px', textAlign: 'right', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>SIMULATED_VALUE</th>
+                      <th style={{ padding: '8px', textAlign: 'right', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Score Diff</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {membershipChangeData.map((row: any, idx: number) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                        <td style={{ padding: '8px', color: 'var(--text-secondary)', fontSize: '10px' }}>2025-09-16</td>
+                        <td style={{ padding: '8px', color: 'var(--text-primary)' }}>{row.entityId}</td>
+                        <td style={{ padding: '8px', textAlign: 'right', color: 'var(--text-secondary)' }}>{row.original}</td>
+                        <td style={{ padding: '8px', textAlign: 'right', color: 'var(--text-primary)' }}>{row.simulated}</td>
+                        <td style={{
+                          padding: '8px',
+                          textAlign: 'right',
+                          color: '#fff',
+                          backgroundColor: row.scoreDiff > 0 ? '#10b981' : '#ef4444',
+                          fontWeight: '500'
+                        }}>
+                          {row.scoreDiff}
+                        </td>
+                      </tr>
                     ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+                  </tbody>
+                </table>
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '10px', color: 'var(--text-muted)' }}>{membershipChangeData.length} rows × 5 columns</div>
             </CardContent>
           </Card>
         </div>

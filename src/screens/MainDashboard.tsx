@@ -21,6 +21,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
   const [editingCard, setEditingCard] = React.useState<string | null>(null);
   const [editValues, setEditValues] = React.useState<{ [key: string]: string }>({});
   const [originalValues, setOriginalValues] = React.useState<{ [key: string]: string }>({});
+  const [approvedCards, setApprovedCards] = React.useState<Set<string>>(new Set());
 
   const brandItems = [
     {
@@ -74,6 +75,18 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
       onTabChange('setup');
     }
   };
+
+  const handleApproveCard = (cardTitle: string) => {
+    setApprovedCards(prev => new Set(prev).add(cardTitle));
+  };
+
+  const handleApproveAll = () => {
+    const allTitles = brandItems.map(item => item.title);
+    setApprovedCards(new Set(allTitles));
+  };
+
+  // Filter out approved cards
+  const visibleBrandItems = brandItems.filter(item => !approvedCards.has(item.title));
 
   return (
     <div style={{ display: 'flex', height: '100%' }}>
@@ -252,71 +265,90 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
 
           {/* Notification Banner */}
           {activeTab === 'brand' && hasUploadedFiles && !isProcessingFile && (
-            <div style={{
-              padding: '18px 24px',
-              backgroundColor: allItemsReady ? 'rgba(59, 130, 246, 0.08)' : 'rgba(245, 158, 11, 0.08)',
-              borderRadius: '8px',
-              border: `1px solid ${allItemsReady ? 'rgba(59, 130, 246, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`,
-              marginBottom: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <div>
-                <h3 style={{
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)',
-                  marginBottom: '6px',
-                  letterSpacing: '-0.01em'
-                }}>
-                  {allItemsReady ? 'Ready to run setup' : 'Missing information to run setup'}
-                </h3>
-                <p style={{
-                  fontSize: '12px',
-                  color: 'var(--text-muted)',
-                  margin: 0,
-                  lineHeight: '1.5'
-                }}>
-                  {allItemsReady
-                    ? 'All the information that is required is ready.'
-                    : 'Add the missing information so that we can run setup.'}
-                </p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                {allItemsReady && (
-                  <select
-                    value={selectedWorkflow}
-                    onChange={(e) => setSelectedWorkflow(e.target.value as 'sales' | 'marketing')}
-                    style={{
-                      padding: '8px 12px',
-                      backgroundColor: 'var(--bg-card)',
-                      color: 'var(--text-primary)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      outline: 'none',
-                      fontWeight: '500'
-                    }}
+            <>
+              <div style={{
+                padding: '18px 24px',
+                backgroundColor: allItemsReady ? 'rgba(59, 130, 246, 0.08)' : 'rgba(245, 158, 11, 0.08)',
+                borderRadius: '8px',
+                border: `1px solid ${allItemsReady ? 'rgba(59, 130, 246, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`,
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div>
+                  <h3 style={{
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: 'var(--text-primary)',
+                    marginBottom: '6px',
+                    letterSpacing: '-0.01em'
+                  }}>
+                    {allItemsReady ? 'Ready to run setup' : 'Missing information to run setup'}
+                  </h3>
+                  <p style={{
+                    fontSize: '12px',
+                    color: 'var(--text-muted)',
+                    margin: 0,
+                    lineHeight: '1.5'
+                  }}>
+                    {allItemsReady
+                      ? 'All the information that is required is ready.'
+                      : 'Add the missing information so that we can run setup.'}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  {allItemsReady && (
+                    <select
+                      value={selectedWorkflow}
+                      onChange={(e) => setSelectedWorkflow(e.target.value as 'sales' | 'marketing')}
+                      style={{
+                        padding: '8px 12px',
+                        backgroundColor: 'var(--bg-card)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-subtle)',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        outline: 'none',
+                        fontWeight: '500'
+                      }}
+                    >
+                      <option value="sales">Sales</option>
+                      <option value="marketing">Marketing</option>
+                    </select>
+                  )}
+                  <Button
+                    onClick={handleRunSetup}
+                    disabled={!allItemsReady}
+                    size="sm"
                   >
-                    <option value="sales">Sales</option>
-                    <option value="marketing">Marketing</option>
-                  </select>
-                )}
-                <Button
-                  onClick={handleRunSetup}
-                  disabled={!allItemsReady}
-                  size="sm"
-                >
-                  Run Setup
-                </Button>
+                    Run Setup
+                  </Button>
+                </div>
               </div>
-            </div>
+
+              {/* Approve All Button - Only show if there are visible cards */}
+              {visibleBrandItems.length > 0 && (
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  marginBottom: '16px'
+                }}>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleApproveAll}
+                  >
+                    Approve All
+                  </Button>
+                </div>
+              )}
+            </>
           )}
 
           {/* Show brand items only after file upload */}
-          {activeTab === 'brand' && hasUploadedFiles && !isProcessingFile && brandItems.map((item, index) => (
+          {activeTab === 'brand' && hasUploadedFiles && !isProcessingFile && visibleBrandItems.map((item, index) => (
             <Card key={index}>
               <CardHeader>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
@@ -422,19 +454,11 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
                   >{item.description}</p>
                 ) : null}
                 <div style={{ display: 'flex', gap: '12px' }}>
-                  <Button 
-                    variant="primary" 
+                  <Button
+                    variant="primary"
                     size="sm"
                     onClick={() => {
-                      if (item.onClick) {
-                        item.onClick();
-                      } else if (item.title === 'Brand Access Strategy' && item.status === 'Missing info') {
-                        // If Brand Access Strategy has missing info, open the form dialog
-                        setActiveModal('brand-access');
-                      } else if (item.title === 'Brand Access Strategy') {
-                        // Otherwise, approve normally
-                        setActiveModal('brand-access');
-                      }
+                      handleApproveCard(item.title);
                     }}
                   >
                     Approve
