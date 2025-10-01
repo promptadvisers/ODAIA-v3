@@ -4,32 +4,51 @@ import { ChatMessage } from './ChatMessage';
 import { PrePromptedButton } from './PrePromptedButton';
 import { Send } from 'lucide-react';
 
-export const ChatInterface: React.FC = () => {
-  const { 
-    messages, 
-    prePrompts, 
+export const ChatInterface: React.FC<{ activeTab?: string }> = ({ activeTab = 'brand' }) => {
+  const {
+    messages,
+    prePrompts,
     isTyping,
     isThinking,
     isExecutingTask,
-    executingMessage, 
+    executingMessage,
     executeDemoStep,
     sendUserMessage,
-    currentStep 
+    currentStep,
+    generateSetupPrePrompts,
+    currentActiveTab,
+    setCurrentActiveTab
   } = useChatStore();
   const [inputValue, setInputValue] = React.useState('');
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, prePrompts]);
-  
-  // Start the demo on first load
+
+  // Update current active tab and generate appropriate prompts
   useEffect(() => {
-    if (currentStep === 0 && messages.length === 0) {
-      // Start the demo flow after a short delay
+    if (activeTab !== currentActiveTab) {
+      setCurrentActiveTab(activeTab);
+
+      if (activeTab === 'setup') {
+        // Generate setup-specific pre-prompts
+        generateSetupPrePrompts();
+      } else if (activeTab === 'brand' && currentStep === 0 && messages.length === 0) {
+        // Start the brand demo flow
+        setTimeout(() => {
+          executeDemoStep(0);
+        }, 1000);
+      }
+    }
+  }, [activeTab, currentActiveTab]);
+
+  // Start the demo on first load (Brand tab)
+  useEffect(() => {
+    if (activeTab === 'brand' && currentStep === 0 && messages.length === 0) {
       setTimeout(() => {
         executeDemoStep(0);
       }, 1000);

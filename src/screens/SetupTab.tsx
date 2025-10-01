@@ -2,16 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
-import { useAppStore } from '../store/appStore';
+import { useAppStore, type SimulationScenario } from '../store/appStore';
+import { useChatStore } from '../store/chatStore';
+import { AddSimulationModal } from '../dialogs/AddSimulationModal';
+import { Plus } from 'lucide-react';
 
 interface SetupTabProps {
   onNavigateToReport?: () => void;
 }
 
 export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
-  const { hasUploadedFiles, selectedWorkflow, setActiveModal } = useAppStore();
+  const { hasUploadedFiles, selectedWorkflow, setActiveModal, simulations } = useAppStore();
+  const { setSimulationTriggered } = useChatStore();
   const [isLoading, setIsLoading] = useState(true);
   const [setupComplete, setSetupComplete] = useState(false);
+  const [showAddSimulationModal, setShowAddSimulationModal] = useState(false);
+  const [highlightedSimId, setHighlightedSimId] = useState<string | null>(null);
 
   // Simulate loading when entering setup tab
   useEffect(() => {
@@ -144,7 +150,10 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
         </div>
         <Button
           disabled={!setupComplete}
-          onClick={onNavigateToReport}
+          onClick={() => {
+            setSimulationTriggered(true);
+            onNavigateToReport?.();
+          }}
           style={{
             opacity: setupComplete ? 1 : 0.5,
             cursor: setupComplete ? 'pointer' : 'not-allowed',
@@ -163,8 +172,8 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
         </Button>
       </div>
 
-      {/* Configuration Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px' }}>
+      {/* All Configuration Cards - Original + Dynamic Simulations in ONE grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px', marginBottom: '20px' }}>
         {/* Value Engine Card */}
         <Card>
           <CardHeader>
@@ -292,7 +301,233 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
             </CardContent>
           </Card>
         )}
+
+        {/* Dynamic Simulation Cards */}
+        {simulations.map((simulation, index) => (
+          <Card
+            key={simulation.id}
+            style={{
+              animation: highlightedSimId === simulation.id ? 'highlightPulse 1s ease-in-out' : 'none'
+            }}
+          >
+            <CardHeader>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                    <CardTitle>{simulation.name}</CardTitle>
+                    <span style={{
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      color: 'var(--text-secondary)',
+                      padding: '3px 10px',
+                      backgroundColor: 'var(--bg-secondary)',
+                      borderRadius: '4px',
+                      border: '1px solid var(--border-subtle)'
+                    }}>
+                      {simulation.product.name}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
+                    <span style={{
+                      padding: '4px 8px',
+                      backgroundColor: 'var(--border-primary)',
+                      color: 'var(--text-secondary)',
+                      fontSize: '11px',
+                      fontWeight: '500',
+                      borderRadius: '4px'
+                    }}>
+                      {simulation.product.therapeuticArea}
+                    </span>
+                    <span style={{
+                      padding: '4px 8px',
+                      backgroundColor: 'var(--border-primary)',
+                      color: 'var(--text-secondary)',
+                      fontSize: '11px',
+                      fontWeight: '500',
+                      borderRadius: '4px'
+                    }}>
+                      {simulation.product.launchStatus}
+                    </span>
+                    <span style={{
+                      padding: '4px 8px',
+                      backgroundColor: 'var(--border-primary)',
+                      color: 'var(--text-secondary)',
+                      fontSize: '11px',
+                      fontWeight: '500',
+                      borderRadius: '4px'
+                    }}>
+                      {simulation.valueEngine.metrics.filter(m => m.weight > 0).length} Active Metrics
+                    </span>
+                    {selectedWorkflow === 'sales' && simulation.curationEngine && (
+                      <span style={{
+                        padding: '4px 8px',
+                        backgroundColor: 'var(--border-primary)',
+                        color: 'var(--text-secondary)',
+                        fontSize: '11px',
+                        fontWeight: '500',
+                        borderRadius: '4px'
+                      }}>
+                        {simulation.curationEngine.suggestionsPerWeek} Suggestions/week
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <Badge variant="warning">Review</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {/* Value Engine Section */}
+              <div style={{ marginBottom: selectedWorkflow === 'sales' && simulation.curationEngine ? '24px' : '0' }}>
+                <h4 style={{
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  color: 'var(--text-primary)',
+                  marginBottom: '12px',
+                  borderBottom: '1px solid var(--border-subtle)',
+                  paddingBottom: '8px'
+                }}>
+                  Value Engine Configuration
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Product</div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500' }}>
+                      {simulation.valueEngine.product}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Indication</div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500' }}>
+                      {simulation.valueEngine.indication}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Basket Weight</div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500' }}>
+                      {simulation.valueEngine.basketWeight}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Active Metrics</div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500' }}>
+                      {simulation.valueEngine.metrics.filter(m => m.weight > 0).length} configured
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Curation Engine Section (Sales only) */}
+              {selectedWorkflow === 'sales' && simulation.curationEngine && (
+                <div style={{ marginBottom: '20px' }}>
+                  <h4 style={{
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: 'var(--text-primary)',
+                    marginBottom: '12px',
+                    borderBottom: '1px solid var(--border-subtle)',
+                    paddingBottom: '8px'
+                  }}>
+                    Curation Engine Configuration
+                  </h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                    <div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Suggestions per Week</div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500' }}>
+                        {simulation.curationEngine.suggestionsPerWeek}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Signals</div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500' }}>
+                        {simulation.curationEngine.signals}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Strategy</div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500' }}>
+                        {simulation.curationEngine.strategy}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Reach & Frequency</div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500' }}>
+                        {simulation.curationEngine.reachFrequency}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <Button
+                  variant="primary"
+                  onClick={() => setActiveModal('value-engine-review')}
+                >
+                  Review
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setActiveModal('value-engine-edit')}
+                >
+                  Edit
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
+
+      {/* Add Simulation Bar */}
+      <div
+        onClick={() => setShowAddSimulationModal(true)}
+        style={{
+          padding: '20px',
+          border: '2px dashed var(--border-subtle)',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px',
+          cursor: 'pointer',
+          backgroundColor: 'transparent',
+          transition: 'all 200ms',
+          marginTop: '20px'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = 'var(--accent-blue)';
+          e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = 'var(--border-subtle)';
+          e.currentTarget.style.backgroundColor = 'transparent';
+        }}
+      >
+        <Plus size={20} color="var(--accent-blue)" />
+        <span style={{
+          fontSize: '14px',
+          fontWeight: '500',
+          color: 'var(--accent-blue)'
+        }}>
+          Add Simulation
+        </span>
+      </div>
+
+      {/* Add Simulation Modal */}
+      <AddSimulationModal
+        isOpen={showAddSimulationModal}
+        onClose={() => setShowAddSimulationModal(false)}
+      />
+
+      <style>{`
+        @keyframes highlightPulse {
+          0%, 100% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+          }
+          50% {
+            box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.3);
+          }
+        }
+      `}</style>
     </div>
   );
 };

@@ -24,7 +24,8 @@ interface ChatState {
   isExecutingTask: boolean;
   executingMessage: string;
   simulationTriggered: boolean;
-  
+  currentActiveTab: string;
+
   // Actions
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
   setPrePrompts: (prompts: PrePrompt[]) => void;
@@ -33,11 +34,14 @@ interface ChatState {
   setIsThinking: (thinking: boolean) => void;
   setIsExecutingTask: (executing: boolean, message?: string) => void;
   setSimulationTriggered: (triggered: boolean) => void;
+  setCurrentActiveTab: (tab: string) => void;
   clearChat: () => void;
   sendUserMessage: (content: string) => void;
-  
+
   // Demo flow actions
   executeDemoStep: (step: number, userMessage?: string) => void;
+  executeSetupStep: (step: number, userMessage?: string, targetSimId?: string) => void;
+  generateSetupPrePrompts: () => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -49,7 +53,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   isExecutingTask: false,
   executingMessage: '',
   simulationTriggered: false,
-  
+  currentActiveTab: 'brand',
+
   addMessage: (message) => set((state) => ({
     messages: [...state.messages, {
       ...message,
@@ -72,7 +77,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
   }),
   
   setSimulationTriggered: (triggered) => set({ simulationTriggered: triggered }),
-  
+
+  setCurrentActiveTab: (tab) => set({ currentActiveTab: tab }),
+
   clearChat: () => set({ messages: [], prePrompts: [], currentStep: 0 }),
   
   sendUserMessage: (content: string) => {
@@ -531,6 +538,178 @@ Would you like me to help configure any of these items?`;
             }, applyConfigTime);
             break;
         }
+      }, 500);
+    }, thinkingTime);
+  },
+
+  // Setup tab specific actions
+  generateSetupPrePrompts: () => {
+    const appStore = useAppStore.getState();
+    const simulations = appStore.simulations;
+
+    if (simulations.length === 0) {
+      // No simulations yet, suggest adding one
+      set({
+        prePrompts: [{
+          id: 'setup-1',
+          text: 'Add a new simulation scenario',
+          action: () => {},
+          visible: true
+        }]
+      });
+      return;
+    }
+
+    // Generate context-aware prompts for existing simulations
+    const prompts: PrePrompt[] = [];
+
+    // Example prompts that modify specific simulations
+    if (simulations.length >= 1) {
+      prompts.push({
+        id: 'setup-2',
+        text: `In ${simulations[0].name}, change TRx indication weight to 0.5`,
+        action: () => get().executeSetupStep(1, `In ${simulations[0].name}, change TRx indication weight to 0.5`, simulations[0].id),
+        visible: true
+      });
+    }
+
+    if (simulations.length >= 2) {
+      prompts.push({
+        id: 'setup-3',
+        text: `Copy configuration from ${simulations[0].name} to ${simulations[1].name}`,
+        action: () => get().executeSetupStep(2, `Copy configuration from ${simulations[0].name} to ${simulations[1].name}`, simulations[1].id),
+        visible: true
+      });
+    }
+
+    if (simulations.length >= 1) {
+      prompts.push({
+        id: 'setup-4',
+        text: `Add XPO dollars metric to ${simulations[0].name} with weight 0.3`,
+        action: () => get().executeSetupStep(3, `Add XPO dollars metric to ${simulations[0].name} with weight 0.3`, simulations[0].id),
+        visible: true
+      });
+    }
+
+    prompts.push({
+      id: 'setup-5',
+      text: 'Update basket weights in all simulations',
+      action: () => get().executeSetupStep(4, 'Update basket weights in all simulations'),
+      visible: true
+    });
+
+    set({ prePrompts: prompts });
+  },
+
+  executeSetupStep: (step, userMessage, targetSimId) => {
+    const { addMessage, setIsThinking, setIsExecutingTask, setIsTyping } = get();
+    const appStore = useAppStore.getState();
+
+    const loadingMessages = [
+      'Updating simulation parameters...',
+      'Recalculating metric weights...',
+      'Applying configuration changes...',
+      'Syncing simulation data...',
+      'Optimizing PowerScore settings...'
+    ];
+
+    const thinkingTime = 1000 + Math.random() * 1500;
+
+    setIsThinking(true);
+
+    setTimeout(() => {
+      setIsThinking(false);
+      setIsTyping(true);
+
+      setTimeout(() => {
+        setIsTyping(false);
+
+        if (userMessage) {
+          addMessage({ type: 'user', content: userMessage });
+        }
+
+        const executeTime = 2000 + Math.random() * 2000;
+        setIsExecutingTask(true, loadingMessages[Math.floor(Math.random() * loadingMessages.length)]);
+
+        setTimeout(() => {
+          setIsExecutingTask(false);
+
+          let responseContent = '';
+          let updatePerformed = false;
+
+          switch (step) {
+            case 1:
+              // Change metric weight
+              if (targetSimId) {
+                const simulation = appStore.simulations.find(s => s.id === targetSimId);
+                if (simulation) {
+                  const updatedMetrics = simulation.valueEngine.metrics.map(m =>
+                    m.name === 'XPO TRx Volume' ? { ...m, weight: 50 } : m
+                  );
+                  appStore.updateSimulation(targetSimId, {
+                    valueEngine: { ...simulation.valueEngine, metrics: updatedMetrics }
+                  });
+                  responseContent = `Done. The weight for TRx indication has been updated to 0.5 in ${simulation.name}. The card has been updated with the new configuration.`;
+                  updatePerformed = true;
+                }
+              }
+              break;
+
+            case 2:
+              // Copy configuration
+              if (targetSimId && appStore.simulations.length >= 2) {
+                const sourceSimulation = appStore.simulations[0];
+                appStore.updateSimulation(targetSimId, {
+                  valueEngine: { ...sourceSimulation.valueEngine }
+                });
+                responseContent = `Configuration copied from ${sourceSimulation.name} to the target simulation. All metric weights and basket settings have been synchronized.`;
+                updatePerformed = true;
+              }
+              break;
+
+            case 3:
+              // Add metric
+              if (targetSimId) {
+                const simulation = appStore.simulations.find(s => s.id === targetSimId);
+                if (simulation) {
+                  const hasMetric = simulation.valueEngine.metrics.some(m => m.name === 'XPO dollars');
+                  if (!hasMetric) {
+                    const updatedMetrics = [
+                      ...simulation.valueEngine.metrics,
+                      { name: 'XPO dollars', weight: 30, visualize: true }
+                    ];
+                    appStore.updateSimulation(targetSimId, {
+                      valueEngine: { ...simulation.valueEngine, metrics: updatedMetrics }
+                    });
+                  }
+                  responseContent = `XPO dollars metric added to ${simulation.name} with a weight of 0.3. The PowerScore calculation has been updated.`;
+                  updatePerformed = true;
+                }
+              }
+              break;
+
+            case 4:
+              // Update all baskets
+              appStore.simulations.forEach(sim => {
+                appStore.updateSimulation(sim.id, {
+                  valueEngine: { ...sim.valueEngine, basketWeight: '8' }
+                });
+              });
+              responseContent = `Basket weights updated to 8 across all ${appStore.simulations.length} simulation scenarios. Changes applied successfully.`;
+              updatePerformed = true;
+              break;
+          }
+
+          addMessage({
+            type: 'agent',
+            content: responseContent || 'Configuration updated successfully.'
+          });
+
+          // Regenerate prompts for next actions
+          setTimeout(() => {
+            get().generateSetupPrePrompts();
+          }, 500);
+        }, executeTime);
       }, 500);
     }, thinkingTime);
   }

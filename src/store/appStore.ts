@@ -67,6 +67,39 @@ interface ProductConfiguration {
   analog: any[];
 }
 
+export interface Product {
+  id: string;
+  name: string;
+  indication: string;
+  therapeuticArea: string;
+  launchStatus: 'Established' | 'New Launch' | 'Pre-Launch';
+}
+
+export interface SimulationScenario {
+  id: string;
+  name: string;
+  product: Product;
+  valueEngine: {
+    product: string;
+    therapeuticArea: string;
+    indication: string;
+    metrics: Array<{
+      name: string;
+      weight: number;
+      visualize: boolean;
+    }>;
+    basketWeight: string;
+  };
+  curationEngine?: {
+    suggestionsPerWeek: string;
+    signals: number;
+    strategy: string;
+    reachFrequency: string;
+  };
+  status: 'draft' | 'configured';
+  createdAt: Date;
+}
+
 interface AppState {
   // File management
   uploadedFiles: UploadedFile[];
@@ -106,6 +139,13 @@ interface AppState {
   setSelectedWorkflow: (workflow: 'sales' | 'marketing') => void;
   setupReady: boolean;
   setSetupReady: (ready: boolean) => void;
+
+  // Simulations
+  simulations: SimulationScenario[];
+  addSimulation: (simulation: Omit<SimulationScenario, 'id' | 'createdAt'>) => void;
+  updateSimulation: (id: string, updates: Partial<SimulationScenario>) => void;
+  removeSimulation: (id: string) => void;
+  getSimulationById: (id: string) => SimulationScenario | undefined;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -258,5 +298,76 @@ export const useAppStore = create<AppState>((set) => ({
   selectedWorkflow: 'sales',
   setSelectedWorkflow: (workflow) => set({ selectedWorkflow: workflow }),
   setupReady: false,
-  setSetupReady: (ready) => set({ setupReady: ready })
+  setSetupReady: (ready) => set({ setupReady: ready }),
+
+  // Simulations
+  simulations: [],
+  addSimulation: (simulation) => set((state) => ({
+    simulations: [
+      ...state.simulations,
+      {
+        ...simulation,
+        id: `sim-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: new Date()
+      }
+    ]
+  })),
+  updateSimulation: (id, updates) => set((state) => ({
+    simulations: state.simulations.map(sim =>
+      sim.id === id ? { ...sim, ...updates } : sim
+    )
+  })),
+  removeSimulation: (id) => set((state) => ({
+    simulations: state.simulations.filter(sim => sim.id !== id)
+  })),
+  getSimulationById: (id) => {
+    const state = useAppStore.getState();
+    return state.simulations.find(sim => sim.id === id);
+  }
 }));
+
+// Mock products data
+export const MOCK_PRODUCTS: Product[] = [
+  {
+    id: 'prod-1',
+    name: 'Odaiazol',
+    indication: '2L HER2+ Metastatic Breast Cancer',
+    therapeuticArea: 'Oncology',
+    launchStatus: 'Established'
+  },
+  {
+    id: 'prod-2',
+    name: 'Nucala',
+    indication: 'Severe Eosinophilic Asthma',
+    therapeuticArea: 'Respiratory',
+    launchStatus: 'Established'
+  },
+  {
+    id: 'prod-3',
+    name: 'Fasenra',
+    indication: 'Severe Eosinophilic Asthma',
+    therapeuticArea: 'Respiratory',
+    launchStatus: 'Established'
+  },
+  {
+    id: 'prod-4',
+    name: 'Xolair',
+    indication: 'Chronic Spontaneous Urticaria',
+    therapeuticArea: 'Immunology',
+    launchStatus: 'Established'
+  },
+  {
+    id: 'prod-5',
+    name: 'Dupixent',
+    indication: 'Moderate-to-Severe Atopic Dermatitis',
+    therapeuticArea: 'Dermatology',
+    launchStatus: 'New Launch'
+  },
+  {
+    id: 'prod-6',
+    name: 'Keytruda',
+    indication: 'Non-Small Cell Lung Cancer',
+    therapeuticArea: 'Oncology',
+    launchStatus: 'Established'
+  }
+];

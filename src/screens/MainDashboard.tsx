@@ -143,15 +143,15 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
           )}
           
           {/* Chat Interface - Replace suggestions and input area when files are uploaded */}
-          {uploadedFiles.length > 0 && activeTab === 'brand' ? (
-            <div style={{ 
-              marginTop: '24px', 
+          {uploadedFiles.length > 0 ? (
+            <div style={{
+              marginTop: '24px',
               flex: 1,
               display: 'flex',
               flexDirection: 'column',
               minHeight: 0
             }}>
-              <ChatInterface />
+              <ChatInterface activeTab={activeTab} />
             </div>
           ) : (
             /* Original Input Area for when no files uploaded */

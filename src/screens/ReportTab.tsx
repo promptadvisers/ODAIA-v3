@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
 import { Settings } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { SimulationRunner } from '../components/Report/SimulationRunner';
+import { useChatStore } from '../store/chatStore';
 
 // Mock data repository for different simulation scenarios
 const mockDataRepository = {
@@ -316,6 +318,9 @@ const mockDataRepository = {
 };
 
 export const ReportTab: React.FC = () => {
+  // Check if simulations are running
+  const { simulationTriggered } = useChatStore();
+
   // Control Panel state
   const [selectedClientDB, setSelectedClientDB] = useState('p3s_globcubes_curated');
   const [selectedClientName, setSelectedClientName] = useState('p3kesimDd');
@@ -466,6 +471,14 @@ export const ReportTab: React.FC = () => {
   const membershipChangeData = useMemo(() => {
     return currentData.membershipChange || [];
   }, [currentData]);
+
+  // Debug: Check if simulations should be shown
+  console.log('[ReportTab] simulationTriggered:', simulationTriggered);
+
+  // If simulations are triggered, show SimulationRunner
+  if (simulationTriggered) {
+    return <SimulationRunner />;
+  }
 
   return (
     <div style={{ display: 'flex', height: '100%', backgroundColor: 'var(--bg-main)' }}>
