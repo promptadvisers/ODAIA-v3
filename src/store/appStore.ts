@@ -148,7 +148,7 @@ interface AppState {
   getSimulationById: (id: string) => SimulationScenario | undefined;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set): AppState => ({
   // File management
   uploadedFiles: JSON.parse(localStorage.getItem('uploadedFiles') || '[]'),
   isProcessingFile: false,
@@ -318,11 +318,11 @@ export const useAppStore = create<AppState>((set) => ({
     )
   })),
   removeSimulation: (id) => set((state) => ({
-    simulations: state.simulations.filter(sim => sim.id !== id)
+    simulations: state.simulations.filter((sim: SimulationScenario) => sim.id !== id)
   })),
-  getSimulationById: (id) => {
-    const state = useAppStore.getState();
-    return state.simulations.find(sim => sim.id === id);
+  getSimulationById: (id): SimulationScenario | undefined => {
+    const state: AppState = useAppStore.getState();
+    return state.simulations.find((sim: SimulationScenario) => sim.id === id);
   }
 }));
 

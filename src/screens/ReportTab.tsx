@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
 import { Settings } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { SimulationRunner } from '../components/Report/SimulationRunner';
 import { useChatStore } from '../store/chatStore';
 
@@ -451,18 +451,10 @@ export const ReportTab: React.FC = () => {
   const basketDiffTableData = useMemo(() => currentData.basketDiffTable, [currentData]);
   const metricDiffTableData = useMemo(() => currentData.metricDiffTable, [currentData]);
 
-  // Score distribution data based on selected region
-  const scoreDistributionData = useMemo(() => {
-    const regionKey = selectedRegion as keyof typeof currentData.scoreDistribution;
-    console.log('Selected Region:', selectedRegion);
-    console.log('Score Distribution for', regionKey, ':', currentData.scoreDistribution[regionKey]);
-    return currentData.scoreDistribution[regionKey] || currentData.scoreDistribution.National;
-  }, [currentData, selectedRegion]);
-
-  const scoreDiffData = useMemo(() => {
-    const regionKey = selectedRegion as keyof typeof currentData.scoreDiff;
-    return currentData.scoreDiff[regionKey] || currentData.scoreDiff.National;
-  }, [currentData, selectedRegion]);
+  // Score distribution data based on selected region (for future use)
+  const regionKey = selectedRegion as keyof typeof currentData.scoreDistribution;
+  console.log('Selected Region:', selectedRegion);
+  console.log('Score Distribution for', regionKey, ':', currentData.scoreDistribution[regionKey]);
 
   const inflowOutflowData = useMemo(() => {
     return currentData.inflowOutflow || [];

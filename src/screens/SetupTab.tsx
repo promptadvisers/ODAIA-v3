@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
-import { useAppStore, type SimulationScenario } from '../store/appStore';
+import { useAppStore } from '../store/appStore';
 import { useChatStore } from '../store/chatStore';
 import { AddSimulationModal } from '../dialogs/AddSimulationModal';
 import { Plus } from 'lucide-react';
@@ -17,7 +17,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [setupComplete, setSetupComplete] = useState(false);
   const [showAddSimulationModal, setShowAddSimulationModal] = useState(false);
-  const [highlightedSimId, setHighlightedSimId] = useState<string | null>(null);
+  const [highlightedSimId] = useState<string | null>(null);
 
   // Simulate loading when entering setup tab
   useEffect(() => {
@@ -303,7 +303,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
         )}
 
         {/* Dynamic Simulation Cards */}
-        {simulations.map((simulation, index) => (
+        {simulations.map((simulation) => (
           <Card
             key={simulation.id}
             style={{
@@ -356,7 +356,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                       fontWeight: '500',
                       borderRadius: '4px'
                     }}>
-                      {simulation.valueEngine.metrics.filter(m => m.weight > 0).length} Active Metrics
+                      {simulation.valueEngine.metrics.filter((m: any) => m.weight > 0).length} Active Metrics
                     </span>
                     {selectedWorkflow === 'sales' && simulation.curationEngine && (
                       <span style={{
@@ -410,7 +410,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                   <div>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Active Metrics</div>
                     <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500' }}>
-                      {simulation.valueEngine.metrics.filter(m => m.weight > 0).length} configured
+                      {simulation.valueEngine.metrics.filter((m: any) => m.weight > 0).length} configured
                     </div>
                   </div>
                 </div>

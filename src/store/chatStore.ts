@@ -311,7 +311,7 @@ Would you like me to help configure any of these items?`;
               
               // Actually update the metric in the store
               const currentMetrics = appStore.productConfig.metrics;
-              const updatedMetrics = currentMetrics.map(m => 
+              const updatedMetrics = currentMetrics.map((m: any) =>
                 m.name === 'XPO TRx Volume' ? { ...m, weight: 50 } : m
               );
               appStore.updateProductConfig({ metrics: updatedMetrics });
@@ -393,7 +393,7 @@ Would you like me to help configure any of these items?`;
                 
                 // Update the metric weight
                 const currentMetrics = appStore.productConfig.metrics;
-                const updatedMetrics = currentMetrics.map(m => 
+                const updatedMetrics = currentMetrics.map((m: any) =>
                   m.name === 'xpo_dollars' ? { ...m, weight: 20 } : m
                 );
                 appStore.updateProductConfig({ metrics: updatedMetrics });
@@ -527,7 +527,7 @@ Would you like me to help configure any of these items?`;
               
               // Update configuration with winning parameters
               const currentMetrics = appStore.productConfig.metrics;
-              const updatedMetrics = currentMetrics.map(m => {
+              const updatedMetrics = currentMetrics.map((m: any) => {
                 if (m.name === 'xpo_dollars') return { ...m, weight: 40 };
                 if (m.name === 'XPO TRx Volume') return { ...m, weight: 30 };
                 return m;
@@ -635,22 +635,20 @@ Would you like me to help configure any of these items?`;
           setIsExecutingTask(false);
 
           let responseContent = '';
-          let updatePerformed = false;
 
           switch (step) {
             case 1:
               // Change metric weight
               if (targetSimId) {
-                const simulation = appStore.simulations.find(s => s.id === targetSimId);
+                const simulation = appStore.simulations.find((s: any) => s.id === targetSimId);
                 if (simulation) {
-                  const updatedMetrics = simulation.valueEngine.metrics.map(m =>
+                  const updatedMetrics = simulation.valueEngine.metrics.map((m: any) =>
                     m.name === 'XPO TRx Volume' ? { ...m, weight: 50 } : m
                   );
                   appStore.updateSimulation(targetSimId, {
                     valueEngine: { ...simulation.valueEngine, metrics: updatedMetrics }
                   });
                   responseContent = `Done. The weight for TRx indication has been updated to 0.5 in ${simulation.name}. The card has been updated with the new configuration.`;
-                  updatePerformed = true;
                 }
               }
               break;
@@ -663,16 +661,15 @@ Would you like me to help configure any of these items?`;
                   valueEngine: { ...sourceSimulation.valueEngine }
                 });
                 responseContent = `Configuration copied from ${sourceSimulation.name} to the target simulation. All metric weights and basket settings have been synchronized.`;
-                updatePerformed = true;
               }
               break;
 
             case 3:
               // Add metric
               if (targetSimId) {
-                const simulation = appStore.simulations.find(s => s.id === targetSimId);
+                const simulation = appStore.simulations.find((s: any) => s.id === targetSimId);
                 if (simulation) {
-                  const hasMetric = simulation.valueEngine.metrics.some(m => m.name === 'XPO dollars');
+                  const hasMetric = simulation.valueEngine.metrics.some((m: any) => m.name === 'XPO dollars');
                   if (!hasMetric) {
                     const updatedMetrics = [
                       ...simulation.valueEngine.metrics,
@@ -683,20 +680,18 @@ Would you like me to help configure any of these items?`;
                     });
                   }
                   responseContent = `XPO dollars metric added to ${simulation.name} with a weight of 0.3. The PowerScore calculation has been updated.`;
-                  updatePerformed = true;
                 }
               }
               break;
 
             case 4:
               // Update all baskets
-              appStore.simulations.forEach(sim => {
+              appStore.simulations.forEach((sim: any) => {
                 appStore.updateSimulation(sim.id, {
                   valueEngine: { ...sim.valueEngine, basketWeight: '8' }
                 });
               });
               responseContent = `Basket weights updated to 8 across all ${appStore.simulations.length} simulation scenarios. Changes applied successfully.`;
-              updatePerformed = true;
               break;
           }
 
