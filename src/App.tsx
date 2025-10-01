@@ -25,17 +25,19 @@ import { ValueEngineEditDialog } from './dialogs/ValueEngineEditDialog';
 import { CurationReviewDialog } from './dialogs/CurationReviewDialog';
 import { SimulationReportDialog } from './dialogs/SimulationReportDialog';
 import { CurationAdvancedConfigDialog } from './dialogs/CurationAdvancedConfigDialog';
+import { SimulationLoadingScreen } from './components/SimulationLoadingScreen';
 
 function App() {
   const [activeTab, setActiveTab] = useState('brand');
   const [editingItem, setEditingItem] = useState<any>(null);
-  const { 
-    activeSidebarItem, 
-    setActiveSidebarItem, 
-    activeModal, 
+  const [isSimulationRunning, setIsSimulationRunning] = useState(false);
+  const {
+    activeSidebarItem,
+    setActiveSidebarItem,
+    activeModal,
     setActiveModal,
     editingCardType,
-    theme: _theme 
+    theme: _theme
   } = useAppStore();
 
   // Initialize theme on mount
@@ -65,6 +67,17 @@ function App() {
     setActiveModal(screen);
   };
 
+  // Function to handle simulation start from Setup tab
+  const handleStartSimulation = () => {
+    setIsSimulationRunning(true);
+  };
+
+  // Function to complete simulation and navigate to Report tab
+  const handleSimulationComplete = () => {
+    setIsSimulationRunning(false);
+    setActiveTab('report');
+  };
+
   const renderContent = () => {
     // If sidebar item is selected, show that screen
     if (activeSidebarItem === 'team') {
@@ -88,7 +101,13 @@ function App() {
           {activeTab === 'report' ? (
             <ReportTab />
           ) : (
-            <MainDashboard onNavigate={handleNavigate} activeTab={activeTab} onEdit={setEditingItem} onTabChange={setActiveTab} />
+            <MainDashboard
+              onNavigate={handleNavigate}
+              activeTab={activeTab}
+              onEdit={setEditingItem}
+              onTabChange={setActiveTab}
+              onStartSimulation={handleStartSimulation}
+            />
           )}
         </div>
       </div>
@@ -150,6 +169,11 @@ function App() {
         <CurationReviewDialog />
         <SimulationReportDialog />
         <CurationAdvancedConfigDialog />
+
+        {/* Simulation Loading Screen */}
+        {isSimulationRunning && (
+          <SimulationLoadingScreen onComplete={handleSimulationComplete} />
+        )}
       </div>
     </Router>
   );

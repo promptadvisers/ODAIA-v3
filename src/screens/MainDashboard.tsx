@@ -13,9 +13,10 @@ interface MainDashboardProps {
   activeTab?: string;
   onEdit?: (item: string) => void;
   onTabChange?: (tab: string) => void;
+  onStartSimulation?: () => void;
 }
 
-export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, activeTab = 'brand', onEdit, onTabChange }) => {
+export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, activeTab = 'brand', onEdit, onTabChange, onStartSimulation }) => {
   const { uploadedFiles, brandConfig, setActiveModal, isProcessingFile, hasUploadedFiles, setEditingCardType, updateBrandConfig, selectedWorkflow, setSelectedWorkflow, setupReady, setSetupReady } = useAppStore();
   const [editingCard, setEditingCard] = React.useState<string | null>(null);
   const [editValues, setEditValues] = React.useState<{ [key: string]: string }>({});
@@ -306,12 +307,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
                 <Button
                   onClick={handleRunSetup}
                   disabled={!allItemsReady}
-                  style={{
-                    opacity: allItemsReady ? 1 : 0.5,
-                    cursor: allItemsReady ? 'pointer' : 'not-allowed',
-                    fontSize: '12px',
-                    fontWeight: '500'
-                  }}
+                  size="sm"
                 >
                   Run Setup
                 </Button>
@@ -509,7 +505,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
           )}
           
           {activeTab === 'setup' && (
-            <SetupTab onNavigateToReport={() => onTabChange && onTabChange('report')} />
+            <SetupTab onNavigateToReport={onStartSimulation || (() => onTabChange && onTabChange('report'))} />
           )}
         </div>
       </div>

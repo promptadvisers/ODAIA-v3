@@ -67,6 +67,10 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
 
   // Visual feedback state
   const [isFiltering, setIsFiltering] = useState(false);
+  const [previousCount, setPreviousCount] = useState(0);
+  const [countChange, setCountChange] = useState<number | null>(null);
+  const [changeMessage, setChangeMessage] = useState<string | null>(null);
+  const [highlightedRows, setHighlightedRows] = useState<Set<number>>(new Set());
 
   // Active tab state
   const [activeTab, setActiveTab] = useState<'objective1' | 'objective2'>('objective1');
@@ -281,10 +285,62 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
 
   // Trigger visual feedback when curated list changes
   React.useEffect(() => {
+    if (previousCount > 0) {
+      const change = mockHCPsCurated.length - previousCount;
+      if (change !== 0) {
+        setCountChange(change);
+        setIsFiltering(true);
+
+        // Highlight all rows temporarily
+        const rowIndices = new Set(mockHCPsCurated.map((_, i) => i));
+        setHighlightedRows(rowIndices);
+
+        // Generate change message
+        const absChange = Math.abs(change);
+        if (change > 0) {
+          setChangeMessage(`+${absChange} HCP${absChange > 1 ? 's' : ''} added`);
+        } else {
+          setChangeMessage(`${absChange} HCP${absChange > 1 ? 's' : ''} removed`);
+        }
+
+        // Clear feedback after animation
+        const timer1 = setTimeout(() => setIsFiltering(false), 600);
+        const timer2 = setTimeout(() => {
+          setCountChange(null);
+          setChangeMessage(null);
+          setHighlightedRows(new Set());
+        }, 2000);
+
+        return () => {
+          clearTimeout(timer1);
+          clearTimeout(timer2);
+        };
+      }
+    }
+    setPreviousCount(mockHCPsCurated.length);
+  }, [mockHCPsCurated.length]);
+
+  // Trigger visual feedback when bucket configurations change
+  React.useEffect(() => {
     setIsFiltering(true);
-    const timer = setTimeout(() => setIsFiltering(false), 400);
-    return () => clearTimeout(timer);
-  }, [mockHCPsCurated.length, selectedRegion]);
+
+    // Highlight all rows to show bucket reassignment
+    const rowIndices = new Set(mockHCPsWithBuckets.map((_, i) => i));
+    setHighlightedRows(rowIndices);
+    setChangeMessage('Bucket assignments updated');
+
+    // Clear feedback after animation
+    const timer1 = setTimeout(() => setIsFiltering(false), 600);
+    const timer2 = setTimeout(() => {
+      setHighlightedRows(new Set());
+      setChangeMessage(null);
+    }, 1500);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, [bucketASize, bucketBSize, bucketCSize, bucketDSize, bucketAFreq, bucketBFreq, bucketCFreq, bucketDFreq, maxListSize, overflowFreq]);
 
   // Helper to get PowerScore badge color
   const getPowerScoreColor = (score: number) => {
@@ -948,6 +1004,20 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                       Updating...
                     </span>
                   )}
+                  {changeMessage && (
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      color: countChange && countChange > 0 ? '#10b981' : '#ef4444',
+                      padding: '3px 8px',
+                      backgroundColor: countChange && countChange > 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                      borderRadius: '6px',
+                      animation: 'slideIn 0.3s ease-out',
+                      border: `1px solid ${countChange && countChange > 0 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+                    }}>
+                      {changeMessage}
+                    </span>
+                  )}
                 </h4>
                 <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '8px', overflow: 'hidden' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
@@ -971,57 +1041,93 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {mockHCPsWithBuckets.map((hcp, i) => (
-                        <tr key={i} style={{ backgroundColor: i % 2 === 0 ? 'transparent' : 'var(--bg-table-row-alt)', borderTop: '1px solid var(--border-subtle)' }}>
-                          <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--text-primary)', fontWeight: '500' }}>
-                            {hcp.name}
-                          </td>
-                          <td style={{ padding: '10px 12px' }}>
-                            <span style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              width: '32px',
-                              height: '32px',
-                              borderRadius: '50%',
-                              backgroundColor: getPowerScoreColor(hcp.powerScore),
-                              color: '#ffffff',
-                              fontSize: '13px',
-                              fontWeight: '700'
-                            }}>
-                              {hcp.powerScore}
-                            </span>
-                          </td>
-                          <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                            {hcp.specialty}
-                          </td>
-                          <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                            {hcp.segment}
-                          </td>
-                          <td style={{ padding: '10px 12px' }}>
-                            <span style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              padding: '4px 10px',
-                              borderRadius: '6px',
-                              backgroundColor: getBucketColor(hcp.bucket),
-                              color: '#ffffff',
-                              fontSize: '11px',
-                              fontWeight: '700',
-                              letterSpacing: '0.02em'
-                            }}>
-                              {hcp.bucket}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
+                      {mockHCPsWithBuckets.map((hcp, i) => {
+                        const isHighlighted = highlightedRows.has(i);
+                        const baseColor = i % 2 === 0 ? 'transparent' : 'var(--bg-table-row-alt)';
+                        const highlightColor = countChange && countChange > 0
+                          ? 'rgba(16, 185, 129, 0.15)' // Green for added
+                          : 'rgba(239, 68, 68, 0.15)'; // Red for removed
+
+                        return (
+                          <tr key={i} style={{
+                            backgroundColor: isHighlighted ? highlightColor : baseColor,
+                            borderTop: '1px solid var(--border-subtle)',
+                            transition: 'background-color 0.4s ease',
+                            animation: isHighlighted ? 'rowFlash 0.6s ease-out' : 'none'
+                          }}>
+                            <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--text-primary)', fontWeight: '500' }}>
+                              {hcp.name}
+                            </td>
+                            <td style={{ padding: '10px 12px' }}>
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '50%',
+                                backgroundColor: getPowerScoreColor(hcp.powerScore),
+                                color: '#ffffff',
+                                fontSize: '13px',
+                                fontWeight: '700'
+                              }}>
+                                {hcp.powerScore}
+                              </span>
+                            </td>
+                            <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                              {hcp.specialty}
+                            </td>
+                            <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                              {hcp.segment}
+                            </td>
+                            <td style={{ padding: '10px 12px' }}>
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '4px 10px',
+                                borderRadius: '6px',
+                                backgroundColor: getBucketColor(hcp.bucket),
+                                color: '#ffffff',
+                                fontSize: '11px',
+                                fontWeight: '700',
+                                letterSpacing: '0.02em'
+                              }}>
+                                {hcp.bucket}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* CSS Animations */}
+          <style>{`
+            @keyframes rowFlash {
+              0% {
+                box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.4);
+              }
+              100% {
+                box-shadow: none;
+              }
+            }
+
+            @keyframes slideIn {
+              0% {
+                opacity: 0;
+                transform: translateX(-10px);
+              }
+              100% {
+                opacity: 1;
+                transform: translateX(0);
+              }
+            }
+          `}</style>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
