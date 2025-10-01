@@ -9,7 +9,7 @@ interface SetupTabProps {
 }
 
 export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
-  const { hasUploadedFiles, selectedWorkflow, setupReady, setActiveModal } = useAppStore();
+  const { hasUploadedFiles, selectedWorkflow, setActiveModal } = useAppStore();
   const [isLoading, setIsLoading] = useState(true);
   const [setupComplete, setSetupComplete] = useState(false);
 

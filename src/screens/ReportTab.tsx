@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
-import { Button } from '../components/Button';
 import { Settings } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 
@@ -696,31 +695,31 @@ export const ReportTab: React.FC = () => {
         {/* Info Cards Row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '20px' }}>
           <Card>
-            <CardContent style={{ padding: '16px' }}>
+            <CardContent className="p-4">
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Start Date</div>
               <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>{infoCards.startDate}</div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent style={{ padding: '16px' }}>
+            <CardContent className="p-4">
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>End Date</div>
               <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>{infoCards.endDate}</div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent style={{ padding: '16px' }}>
+            <CardContent className="p-4">
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Market Name</div>
               <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>{infoCards.marketName}</div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent style={{ padding: '16px' }}>
+            <CardContent className="p-4">
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Top Scored Metric - Original</div>
               <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>{infoCards.topMetricOriginal}</div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent style={{ padding: '16px' }}>
+            <CardContent className="p-4">
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Top Scored Metric - Simulated</div>
               <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>{infoCards.topMetricSimulated}</div>
             </CardContent>
@@ -744,7 +743,7 @@ export const ReportTab: React.FC = () => {
           {/* Basket Weight Stacked Chart */}
           <Card>
             <CardHeader>
-              <CardTitle style={{ fontSize: '13px' }}>Original Basket Weight vs Simulated Basket Weight</CardTitle>
+              <CardTitle className="text-xs">Original Basket Weight vs Simulated Basket Weight</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={280}>
@@ -772,7 +771,7 @@ export const ReportTab: React.FC = () => {
           {/* Basket Weight Diff Table */}
           <Card>
             <CardHeader>
-              <CardTitle style={{ fontSize: '13px' }}>Basket Weight Diff: Original vs Simulated</CardTitle>
+              <CardTitle className="text-xs">Basket Weight Diff: Original vs Simulated</CardTitle>
             </CardHeader>
             <CardContent>
               <div style={{ overflowX: 'auto' }}>
@@ -787,7 +786,7 @@ export const ReportTab: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {basketDiffTableData.map((row, idx) => (
+                    {basketDiffTableData.map((row: any, idx: number) => (
                       <tr key={idx} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                         <td style={{ padding: '8px', color: 'var(--text-secondary)' }}>{row.date}</td>
                         <td style={{ padding: '8px', color: 'var(--text-primary)' }}>{row.basket}</td>
@@ -817,7 +816,7 @@ export const ReportTab: React.FC = () => {
           {/* Metric Weight Stacked Chart */}
           <Card>
             <CardHeader>
-              <CardTitle style={{ fontSize: '13px' }}>Original Metric Weight vs Simulated Metric Weight</CardTitle>
+              <CardTitle className="text-xs">Original Metric Weight vs Simulated Metric Weight</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={280}>
@@ -848,7 +847,7 @@ export const ReportTab: React.FC = () => {
           {/* Metric Weight Diff Table */}
           <Card>
             <CardHeader>
-              <CardTitle style={{ fontSize: '13px' }}>Scoring Metric Weight Diff: Original vs Simulated</CardTitle>
+              <CardTitle className="text-xs">Scoring Metric Weight Diff: Original vs Simulated</CardTitle>
             </CardHeader>
             <CardContent>
               <div style={{ overflowX: 'auto', maxHeight: '280px' }}>
@@ -864,7 +863,7 @@ export const ReportTab: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {metricDiffTableData.map((row, idx) => (
+                    {metricDiffTableData.map((row: any, idx: number) => (
                       <tr key={idx} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                         <td style={{ padding: '8px', color: 'var(--text-secondary)', fontSize: '10px' }}>{row.date}</td>
                         <td style={{ padding: '8px', color: 'var(--text-primary)' }}>{row.metric}</td>
@@ -895,7 +894,7 @@ export const ReportTab: React.FC = () => {
           {/* Score Distribution Count Chart */}
           <Card>
             <CardHeader>
-              <CardTitle style={{ fontSize: '13px' }}>Score Distribution Count: Original vs Simulated (All Simulated Projects )</CardTitle>
+              <CardTitle className="text-xs">Score Distribution Count: Original vs Simulated (All Simulated Projects )</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={280}>
@@ -922,7 +921,7 @@ export const ReportTab: React.FC = () => {
           {/* Score Distribution Summary (Difference) */}
           <Card>
             <CardHeader>
-              <CardTitle style={{ fontSize: '13px' }}>Score Distribution Summary: Difference</CardTitle>
+              <CardTitle className="text-xs">Score Distribution Summary: Difference</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={280}>
@@ -939,7 +938,7 @@ export const ReportTab: React.FC = () => {
                     }}
                   />
                   <Bar dataKey="diff" name="Score Difference">
-                    {scoreDiffData.map((entry, index) => (
+                    {scoreDiffData.map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={entry.diff >= 0 ? '#60a5fa' : '#60a5fa'} />
                     ))}
                   </Bar>

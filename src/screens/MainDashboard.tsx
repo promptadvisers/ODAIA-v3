@@ -17,7 +17,7 @@ interface MainDashboardProps {
 }
 
 export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, activeTab = 'brand', onEdit, onTabChange, onStartSimulation }) => {
-  const { uploadedFiles, brandConfig, setActiveModal, isProcessingFile, hasUploadedFiles, setEditingCardType, updateBrandConfig, selectedWorkflow, setSelectedWorkflow, setupReady, setSetupReady } = useAppStore();
+  const { uploadedFiles, brandConfig, setActiveModal, isProcessingFile, hasUploadedFiles, setEditingCardType, updateBrandConfig, selectedWorkflow, setSelectedWorkflow, setSetupReady } = useAppStore();
   const [editingCard, setEditingCard] = React.useState<string | null>(null);
   const [editValues, setEditValues] = React.useState<{ [key: string]: string }>({});
   const [originalValues, setOriginalValues] = React.useState<{ [key: string]: string }>({});

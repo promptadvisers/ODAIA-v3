@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X, User, Settings, Grid3X3, Users, FileText, ChevronDown, ChevronRight } from 'lucide-react';
+import { User, Settings, Grid3X3, Users, FileText, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '../components/Button';
 import { useAppStore } from '../store/appStore';
 
