@@ -196,10 +196,10 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
       baseHCPs = baseHCPs.slice(0, Math.max(10, baseHCPs.length - (3 - activeTimeSignals) * 5));
     }
 
-    // Apply Segment Scores filter
-    if (starters && startersLevel === 'High') {
-      baseHCPs = baseHCPs.filter(hcp => hcp.segment.includes('Starter') || hcp.segment.includes('growers'));
-    }
+    // Apply Segment Scores filter (removed - replaced with Suggestions section)
+    // if (starters && startersLevel === 'High') {
+    //   baseHCPs = baseHCPs.filter(hcp => hcp.segment.includes('Starter') || hcp.segment.includes('growers'));
+    // }
 
     // Apply Specialty filters (if any checked)
     const activeSpecialties = [
@@ -252,7 +252,7 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
     return baseHCPs.slice(0, Math.max(1, curatedListSize));
   }, [
     selectedRegion, nearbyAnchor, nearbyAnchorLevel, powerScore, powerScoreLevel,
-    last7Days, lastMonth, lastQuarter, starters, startersLevel, curatedListSize,
+    last7Days, lastMonth, lastQuarter, curatedListSize,
     specialtyA, specialtyB, specialtyC, specialtyD, specialtyE, specialtyF,
     segmentA, segmentB, segmentC, segmentD, segmentE, segmentF
   ]);
