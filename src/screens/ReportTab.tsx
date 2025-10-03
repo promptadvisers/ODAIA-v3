@@ -354,7 +354,7 @@ const SIMULATION_DATA = {
       { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand PixelTron - XPO TRx', origWeight: 0.9, simWeight: 0.2, diff: -3.1 },
       { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: '2L Therapy HER+ Overall Market - XPO TRx', origWeight: 0.8, simWeight: 0.4, diff: 0 },
       { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand Pix: Breast Market', origWeight: 0.2, simWeight: 0.4, diff: -1 },
-      { date: '2025-09-16 15:26:11', metric: 'Patient Potential (Precursor)', type: 'Payer mix, Medicaid, Medicare', origWeight: 09, simWeight: 08, diff: 09 }
+      { date: '2025-09-16 15:26:11', metric: 'Patient Potential (Precursor)', type: 'Payer mix, Medicaid, Medicare', origWeight: 0.9, simWeight: 0.8, diff: 0.9 }
     ],
     scoreDistribution: {
       National: [
