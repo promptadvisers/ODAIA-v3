@@ -1,6 +1,6 @@
 import React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X, Check } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from '../components/Button';
 import { useAppStore } from '../store/appStore';
 

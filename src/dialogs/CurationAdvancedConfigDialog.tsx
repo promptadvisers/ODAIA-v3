@@ -50,16 +50,16 @@ const calculateFrequency = (sliderValue: string | number): number => {
   return Math.max(1, Math.round(8 - (value / 100) * 7));
 };
 
-// Helper function to get bucket color
-const getBucketColor = (bucket: string): string => {
-  const colors: Record<string, string> = {
-    'A': '#3b82f6', // Blue
-    'B': '#10b981', // Green
-    'C': '#f59e0b', // Yellow/Orange
-    'D': '#ef4444'  // Red
-  };
-  return colors[bucket] || '#6b7280';
-};
+// Helper function to get bucket color (unused but kept for future use)
+// const getBucketColor = (bucket: string): string => {
+//   const colors: Record<string, string> = {
+//     'A': '#3b82f6', // Blue
+//     'B': '#10b981', // Green
+//     'C': '#f59e0b', // Yellow/Orange
+//     'D': '#ef4444'  // Red
+//   };
+//   return colors[bucket] || '#6b7280';
+// };
 
 export const CurationAdvancedConfigDialog: React.FC = () => {
   const { activeModal, setActiveModal } = useAppStore();
@@ -96,15 +96,15 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
   const [lastQuarter, setLastQuarter] = useState(true);
   const [lastQuarterLevel, setLastQuarterLevel] = useState('Medium');
 
-  // Segment Scores Signal
-  const [starters, setStarters] = useState(true);
-  const [startersLevel, setStartersLevel] = useState('Medium');
-  const [shrinkers, setShrinkers] = useState(false);
-  const [switchIn, setSwitchIn] = useState(false);
-  const [switchOut, setSwitchOut] = useState(false);
-  const [believer, setBeleiver] = useState(false);
-  const [loremSegment, setLoremSegment] = useState(false);
-  const [reliever, setReliever] = useState(false);
+  // Segment Scores Signal (removed - replaced with Suggestions section)
+  // const [starters, setStarters] = useState(true);
+  // const [startersLevel, setStartersLevel] = useState('Medium');
+  // const [shrinkers, setShrinkers] = useState(false);
+  // const [switchIn, setSwitchIn] = useState(false);
+  // const [switchOut, setSwitchOut] = useState(false);
+  // const [believer, setBeleiver] = useState(false);
+  // const [loremSegment, setLoremSegment] = useState(false);
+  // const [reliever, setReliever] = useState(false);
 
   // Event Activity Signal
   const [lookbackPeriod, setLookbackPeriod] = useState('1');
@@ -259,14 +259,7 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
 
   // Assign buckets to curated HCPs based on bucket size percentages
   const mockHCPsWithBuckets = useMemo(() => {
-    return mockHCPsCurated.map((hcp, index) => {
-      const bucketSizes = [
-        parseInt(bucketASize) || 0,
-        parseInt(bucketBSize) || 0,
-        parseInt(bucketCSize) || 0,
-        parseInt(bucketDSize) || 0
-      ];
-
+    return mockHCPsCurated.map((hcp) => {
       // Assign bucket based on PowerScore for better distribution
       let bucket = 'A';
       const powerScore = hcp.powerScore;
