@@ -802,16 +802,16 @@ export const ReportTab: React.FC = () => {
                 width: '100%',
                 padding: '8px',
                 backgroundColor: 'var(--bg-card)',
-                color: SIMULATION_DATA[selectedSimulation as keyof typeof SIMULATION_DATA]?.nameColor || 'var(--text-primary)',
+                color: 'var(--text-primary)',
                 border: '1px solid var(--border-subtle)',
                 borderRadius: '4px',
                 fontSize: '12px',
                 cursor: 'pointer'
               }}
             >
-              <option value="Simulation (Odaiazol 70/30)" style={{ color: '#eab308' }}>Simulation (Odaiazol 70/30)</option>
-              <option value="Simulation (Odaiazol 60/40)" style={{ color: '#a855f7' }}>Simulation (Odaiazol 60/40)</option>
-              <option value="Simulation (Odaiazol 80/20)" style={{ color: '#a855f7' }}>Simulation (Odaiazol 80/20)</option>
+              <option value="Simulation (Odaiazol 70/30)">Simulation (Odaiazol 70/30)</option>
+              <option value="Simulation (Odaiazol 60/40)">Simulation (Odaiazol 60/40)</option>
+              <option value="Simulation (Odaiazol 80/20)">Simulation (Odaiazol 80/20)</option>
             </select>
           </div>
 
@@ -832,14 +832,14 @@ export const ReportTab: React.FC = () => {
                 width: '100%',
                 padding: '8px',
                 backgroundColor: 'var(--bg-card)',
-                color: '#eab308', // Always yellow
+                color: 'var(--text-primary)',
                 border: '1px solid var(--border-subtle)',
                 borderRadius: '4px',
                 fontSize: '12px',
                 cursor: 'pointer'
               }}
             >
-              <option value="Odaiazol (Sept 16, 2025)" style={{ color: '#eab308' }}>Odaiazol (Sept 16, 2025)</option>
+              <option value="Odaiazol (Sept 16, 2025)">Odaiazol (Sept 16, 2025)</option>
             </select>
           </div>
 
@@ -860,14 +860,14 @@ export const ReportTab: React.FC = () => {
                 width: '100%',
                 padding: '8px',
                 backgroundColor: 'var(--bg-card)',
-                color: '#eab308', // Always yellow
+                color: 'var(--text-primary)',
                 border: '1px solid var(--border-subtle)',
                 borderRadius: '4px',
                 fontSize: '12px',
                 cursor: 'pointer'
               }}
             >
-              <option value="Odaiazol vs 2L Therapy HER+" style={{ color: '#eab308' }}>Odaiazol vs 2L Therapy HER+</option>
+              <option value="Odaiazol vs 2L Therapy HER+">Odaiazol vs 2L Therapy HER+</option>
             </select>
           </div>
         </div>
@@ -947,19 +947,19 @@ export const ReportTab: React.FC = () => {
           <Card>
             <CardContent className="p-4">
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Market Name</div>
-              <div style={{ fontSize: '16px', fontWeight: '600', color: '#eab308' }}>{infoCards.marketName}</div>
+              <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>{infoCards.marketName}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Top Scored Metric - Original</div>
-              <div style={{ fontSize: '16px', fontWeight: '600', color: '#eab308' }}>{infoCards.topMetricOriginal}</div>
+              <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>{infoCards.topMetricOriginal}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Top Scored Metric - Simulated</div>
-              <div style={{ fontSize: '16px', fontWeight: '600', color: '#eab308' }}>{infoCards.topMetricSimulated}</div>
+              <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>{infoCards.topMetricSimulated}</div>
             </CardContent>
           </Card>
         </div>
