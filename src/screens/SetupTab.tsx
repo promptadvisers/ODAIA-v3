@@ -18,6 +18,10 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
   const [setupComplete, setSetupComplete] = useState(false);
   const [showAddSimulationModal, setShowAddSimulationModal] = useState(false);
   const [highlightedSimId] = useState<string | null>(null);
+  const [simulationCount, setSimulationCount] = useState(3);
+  const [isRunningSimulations, setIsRunningSimulations] = useState(false);
+  const [currentSimulation, setCurrentSimulation] = useState(0);
+  const [progress, setProgress] = useState(0);
 
   // Simulate loading when entering setup tab
   useEffect(() => {
@@ -30,6 +34,36 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
       return () => clearTimeout(timer);
     }
   }, []); // Run once on mount
+
+  // Handle running simulations
+  const handleRunSimulations = () => {
+    setIsRunningSimulations(true);
+    setCurrentSimulation(1);
+    setProgress(0);
+    setSimulationTriggered(true);
+
+    const totalDuration = 30000; // 30 seconds total
+    const durationPerSimulation = totalDuration / simulationCount;
+    const progressInterval = 100; // Update every 100ms
+
+    let elapsed = 0;
+    const interval = setInterval(() => {
+      elapsed += progressInterval;
+      const newProgress = Math.min((elapsed / totalDuration) * 100, 100);
+      const newCurrentSim = Math.min(Math.floor((elapsed / durationPerSimulation)) + 1, simulationCount);
+
+      setProgress(newProgress);
+      setCurrentSimulation(newCurrentSim);
+
+      if (elapsed >= totalDuration) {
+        clearInterval(interval);
+        setTimeout(() => {
+          setIsRunningSimulations(false);
+          onNavigateToReport?.();
+        }, 500);
+      }
+    }, progressInterval);
+  };
 
   if (!hasUploadedFiles) {
     return (
@@ -145,31 +179,49 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
             color: 'var(--text-secondary)',
             margin: 0
           }}>
-            Approve setup to launch project.
+            Approve an run reports; {simulationCount} Variants on your setup will be performed
           </p>
         </div>
-        <Button
-          disabled={!setupComplete}
-          onClick={() => {
-            setSimulationTriggered(true);
-            onNavigateToReport?.();
-          }}
-          style={{
-            opacity: setupComplete ? 1 : 0.5,
-            cursor: setupComplete ? 'pointer' : 'not-allowed',
-            padding: '10px 20px',
-            fontSize: '13px',
-            fontWeight: '600',
-            borderRadius: '6px',
-            backgroundColor: setupComplete ? 'var(--accent-blue)' : 'var(--bg-secondary)',
-            color: setupComplete ? '#ffffff' : 'var(--text-muted)',
-            border: 'none',
-            transition: 'all 0.2s ease',
-            boxShadow: setupComplete ? '0 2px 8px rgba(59, 130, 246, 0.3)' : 'none'
-          }}
-        >
-          Run Simulation
-        </Button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <select
+            value={simulationCount}
+            onChange={(e) => setSimulationCount(parseInt(e.target.value))}
+            style={{
+              padding: '10px 16px',
+              fontSize: '13px',
+              fontWeight: '500',
+              backgroundColor: 'var(--bg-card)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              outline: 'none'
+            }}
+          >
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+              <option key={num} value={num}>{num} Simulation{num > 1 ? 's' : ''}</option>
+            ))}
+          </select>
+          <Button
+            disabled={!setupComplete}
+            onClick={handleRunSimulations}
+            style={{
+              opacity: setupComplete ? 1 : 0.5,
+              cursor: setupComplete ? 'pointer' : 'not-allowed',
+              padding: '10px 20px',
+              fontSize: '13px',
+              fontWeight: '600',
+              borderRadius: '6px',
+              backgroundColor: setupComplete ? 'var(--accent-blue)' : 'var(--bg-secondary)',
+              color: setupComplete ? '#ffffff' : 'var(--text-muted)',
+              border: 'none',
+              transition: 'all 0.2s ease',
+              boxShadow: setupComplete ? '0 2px 8px rgba(59, 130, 246, 0.3)' : 'none'
+            }}
+          >
+            Run
+          </Button>
+        </div>
       </div>
 
       {/* All Configuration Cards - Original + Dynamic Simulations in ONE grid */}
@@ -517,6 +569,67 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
         isOpen={showAddSimulationModal}
         onClose={() => setShowAddSimulationModal(false)}
       />
+
+      {/* Running Simulations Modal */}
+      {isRunningSimulations && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: 'var(--bg-modal)',
+            borderRadius: '12px',
+            padding: '48px 64px',
+            maxWidth: '600px',
+            width: '90%',
+            textAlign: 'center'
+          }}>
+            <h2 style={{
+              fontSize: '28px',
+              fontWeight: '600',
+              color: 'var(--text-primary)',
+              marginBottom: '32px'
+            }}>
+              Running Simulations
+            </h2>
+
+            {/* Progress Bar */}
+            <div style={{
+              width: '100%',
+              height: '12px',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '6px',
+              overflow: 'hidden',
+              marginBottom: '20px'
+            }}>
+              <div style={{
+                width: `${progress}%`,
+                height: '100%',
+                backgroundColor: '#3b82f6',
+                borderRadius: '6px',
+                transition: 'width 0.1s linear'
+              }} />
+            </div>
+
+            {/* Progress Text */}
+            <p style={{
+              fontSize: '16px',
+              color: 'var(--text-secondary)',
+              margin: 0
+            }}>
+              Running Simulation {currentSimulation} of {simulationCount}
+            </p>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes highlightPulse {

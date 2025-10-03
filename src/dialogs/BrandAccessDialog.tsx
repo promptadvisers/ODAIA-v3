@@ -12,9 +12,11 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
   const [formData, setFormData] = useState({
     pspProgram: brandConfig.brandAccess.pspProgram || 'OncoConnect PSP',
     finicalSupport: brandConfig.brandAccess.finicalSupport || 'OncoThera Copay Card',
-    webPortal: brandConfig.brandAccess.webPortal || '',
-    marketAccess: brandConfig.brandAccess.marketAccess || ''
+    webPortal: brandConfig.brandAccess.webPortal || 'AIM XR',
+    marketAccess: brandConfig.brandAccess.marketAccess || 'MITT Quarterly'
   });
+  const [editingWebPortal, setEditingWebPortal] = useState(false);
+  const [editingMarketAccess, setEditingMarketAccess] = useState(false);
 
   const handleSubmit = () => {
     updateBrandAccess({
@@ -166,23 +168,49 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
           </div>
 
           {/* Web Portal */}
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ 
-              fontSize: '12px', 
-              color: formData.webPortal ? 'var(--text-secondary)' : '#ef4444', 
-              display: 'block', 
+          <div style={{ marginBottom: '8px' }}>
+            <label style={{
+              fontSize: '12px',
+              color: '#ef4444',
+              display: 'block',
               marginBottom: '8px',
               fontWeight: '500'
             }}>
               Web Portal
             </label>
-            <div style={{ position: 'relative' }}>
-              {!formData.webPortal && (
+            {editingWebPortal ? (
+              <input
+                type="text"
+                value={formData.webPortal}
+                onChange={(e) => setFormData({...formData, webPortal: e.target.value})}
+                onBlur={() => setEditingWebPortal(false)}
+                autoFocus
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  backgroundColor: 'var(--bg-input)',
+                  border: '1px solid #ef4444',
+                  borderRadius: '6px',
+                  color: 'var(--text-primary)',
+                  fontSize: '13px',
+                  outline: 'none'
+                }}
+              />
+            ) : (
+              <div
+                onClick={() => setEditingWebPortal(true)}
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '10px 12px',
+                  backgroundColor: 'var(--bg-input)',
+                  border: '1px solid #ef4444',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
                 <span style={{
-                  position: 'absolute',
-                  left: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
                   width: '16px',
                   height: '16px',
                   borderRadius: '50%',
@@ -194,49 +222,82 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
                   color: '#ef4444',
                   fontWeight: 'bold',
                   backgroundColor: 'transparent',
-                  zIndex: 1
+                  marginRight: '8px',
+                  flexShrink: 0
                 }}>
                   !
                 </span>
-              )}
-              <input
-                type="text"
-                value={formData.webPortal}
-                onChange={(e) => setFormData({...formData, webPortal: e.target.value})}
-                placeholder="None"
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  paddingLeft: !formData.webPortal ? '36px' : '12px',
-                  backgroundColor: 'var(--bg-input)',
-                  border: `1px solid ${formData.webPortal ? 'var(--border-subtle)' : '#ef4444'}`,
-                  borderRadius: '6px',
-                  color: formData.webPortal ? 'var(--text-primary)' : '#ef4444',
-                  fontSize: '13px',
-                  outline: 'none'
-                }}
-              />
+                <span style={{
+                  flex: 1,
+                  color: 'var(--text-primary)',
+                  fontSize: '13px'
+                }}>
+                  {formData.webPortal}
+                </span>
+                <Check
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    color: 'var(--text-primary)',
+                    flexShrink: 0
+                  }}
+                />
+              </div>
+            )}
+            <div style={{
+              fontSize: '11px',
+              color: '#ef4444',
+              marginTop: '4px',
+              paddingLeft: '2px'
+            }}>
+              Confirm selection
             </div>
           </div>
 
           {/* Market Access */}
           <div style={{ marginBottom: '32px' }}>
-            <label style={{ 
-              fontSize: '12px', 
-              color: formData.marketAccess ? 'var(--text-secondary)' : '#ef4444', 
-              display: 'block', 
+            <label style={{
+              fontSize: '12px',
+              color: '#ef4444',
+              display: 'block',
               marginBottom: '8px',
               fontWeight: '500'
             }}>
               Market Access
             </label>
-            <div style={{ position: 'relative' }}>
-              {!formData.marketAccess && (
+            {editingMarketAccess ? (
+              <input
+                type="text"
+                value={formData.marketAccess}
+                onChange={(e) => setFormData({...formData, marketAccess: e.target.value})}
+                onBlur={() => setEditingMarketAccess(false)}
+                autoFocus
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  backgroundColor: 'var(--bg-input)',
+                  border: '1px solid #ef4444',
+                  borderRadius: '6px',
+                  color: 'var(--text-primary)',
+                  fontSize: '13px',
+                  outline: 'none'
+                }}
+              />
+            ) : (
+              <div
+                onClick={() => setEditingMarketAccess(true)}
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '10px 12px',
+                  backgroundColor: 'var(--bg-input)',
+                  border: '1px solid #ef4444',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
                 <span style={{
-                  position: 'absolute',
-                  left: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
                   width: '16px',
                   height: '16px',
                   borderRadius: '50%',
@@ -248,28 +309,35 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
                   color: '#ef4444',
                   fontWeight: 'bold',
                   backgroundColor: 'transparent',
-                  zIndex: 1
+                  marginRight: '8px',
+                  flexShrink: 0
                 }}>
                   !
                 </span>
-              )}
-              <input
-                type="text"
-                value={formData.marketAccess}
-                onChange={(e) => setFormData({...formData, marketAccess: e.target.value})}
-                placeholder="None"
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  paddingLeft: !formData.marketAccess ? '36px' : '12px',
-                  backgroundColor: 'var(--bg-input)',
-                  border: `1px solid ${formData.marketAccess ? 'var(--border-subtle)' : '#ef4444'}`,
-                  borderRadius: '6px',
-                  color: formData.marketAccess ? 'var(--text-primary)' : '#ef4444',
-                  fontSize: '13px',
-                  outline: 'none'
-                }}
-              />
+                <span style={{
+                  flex: 1,
+                  color: 'var(--text-primary)',
+                  fontSize: '13px'
+                }}>
+                  {formData.marketAccess}
+                </span>
+                <Check
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    color: 'var(--text-primary)',
+                    flexShrink: 0
+                  }}
+                />
+              </div>
+            )}
+            <div style={{
+              fontSize: '11px',
+              color: '#ef4444',
+              marginTop: '4px',
+              paddingLeft: '2px'
+            }}>
+              Confirm selection
             </div>
           </div>
 

@@ -16,10 +16,17 @@ export const ValueEngineEditDialog: React.FC = () => {
   const [selectedIndications, setSelectedIndications] = useState<string[]>(['odaiazol']);
 
   const [metrics, setMetrics] = useState([
-    { name: 'XPO TRx Volume', weight: 100, visualize: true },
+    { name: 'XPO TRx Volume', weight: 90, visualize: true },
     { name: 'XPO NRx Volume', weight: 0, visualize: false },
-    { name: 'XPO NBRx Volume', weight: 0, visualize: false }
+    { name: 'XPO NBRx Volume', weight: 0, visualize: false },
+    { name: 'OncoThera Copay Card PSP Claims', weight: 10, visualize: true }
   ]);
+
+  const [openSections, setOpenSections] = useState({
+    competitive: false,
+    patient: false,
+    analog: false
+  });
 
   const productTree = {
     id: 'tumor-agnostic',
@@ -374,37 +381,38 @@ export const ValueEngineEditDialog: React.FC = () => {
             </p>
 
             <div style={{
-              backgroundColor: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
+              backgroundColor: 'transparent',
               borderRadius: '8px',
               overflow: 'hidden'
             }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ backgroundColor: 'var(--bg-main)' }}>
+                  <tr style={{
+                    backgroundColor: '#1a1a1a'
+                  }}>
                     <th style={{
-                      padding: '12px',
+                      padding: '16px 20px',
                       textAlign: 'left',
-                      fontSize: '12px',
-                      fontWeight: '600',
+                      fontSize: '13px',
+                      fontWeight: '500',
                       color: 'var(--text-secondary)'
                     }}>
                       Metric name
                     </th>
                     <th style={{
-                      padding: '12px',
+                      padding: '16px 20px',
                       textAlign: 'center',
-                      fontSize: '12px',
-                      fontWeight: '600',
+                      fontSize: '13px',
+                      fontWeight: '500',
                       color: 'var(--text-secondary)'
                     }}>
                       Scoring weight
                     </th>
                     <th style={{
-                      padding: '12px',
+                      padding: '16px 20px',
                       textAlign: 'center',
-                      fontSize: '12px',
-                      fontWeight: '600',
+                      fontSize: '13px',
+                      fontWeight: '500',
                       color: 'var(--text-secondary)'
                     }}>
                       Visualize
@@ -413,47 +421,63 @@ export const ValueEngineEditDialog: React.FC = () => {
                 </thead>
                 <tbody>
                   {metrics.map((metric, index) => (
-                    <tr key={index} style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                    <tr key={index}>
                       <td style={{
-                        padding: '12px',
-                        fontSize: '13px',
-                        color: 'var(--text-primary)'
+                        padding: '16px 20px',
+                        fontSize: '15px',
+                        color: 'var(--text-primary)',
+                        backgroundColor: 'transparent'
                       }}>
                         {metric.name}
                       </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <input
-                          type="number"
-                          value={metric.weight}
-                          onChange={(e) => updateMetricWeight(index, parseInt(e.target.value) || 0)}
-                          min="0"
-                          max="100"
-                          style={{
-                            width: '80px',
-                            padding: '6px 12px',
-                            backgroundColor: 'var(--bg-main)',
-                            color: 'var(--text-primary)',
-                            border: '1px solid var(--border-subtle)',
-                            borderRadius: '4px',
-                            fontSize: '13px',
-                            textAlign: 'center',
-                            outline: 'none'
-                          }}
-                        />
-                        <span style={{
-                          marginLeft: '4px',
-                          fontSize: '13px',
-                          color: 'var(--text-secondary)'
-                        }}>
-                          %
-                        </span>
+                      <td style={{
+                        padding: '16px 20px',
+                        textAlign: 'right',
+                        backgroundColor: 'transparent'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                          <input
+                            type="number"
+                            value={metric.weight}
+                            onChange={(e) => updateMetricWeight(index, parseInt(e.target.value) || 0)}
+                            min="0"
+                            max="100"
+                            style={{
+                              width: '100px',
+                              padding: '10px 16px',
+                              backgroundColor: '#1a1a1a',
+                              color: 'var(--text-primary)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              borderRadius: '6px',
+                              fontSize: '14px',
+                              textAlign: 'center',
+                              outline: 'none'
+                            }}
+                          />
+                          <span style={{
+                            fontSize: '14px',
+                            color: 'var(--text-secondary)',
+                            minWidth: '20px'
+                          }}>
+                            %
+                          </span>
+                        </div>
                       </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
+                      <td style={{
+                        padding: '16px 20px',
+                        textAlign: 'center',
+                        backgroundColor: 'transparent'
+                      }}>
                         <input
                           type="checkbox"
                           checked={metric.visualize}
                           onChange={() => toggleMetricVisualize(index)}
-                          style={{ cursor: 'pointer' }}
+                          style={{
+                            cursor: 'pointer',
+                            width: '18px',
+                            height: '18px',
+                            accentColor: '#3b82f6'
+                          }}
                         />
                       </td>
                     </tr>
@@ -464,57 +488,425 @@ export const ValueEngineEditDialog: React.FC = () => {
           </div>
 
           {/* Collapsible Sections */}
-          <details style={{ marginBottom: '16px' }}>
+          <details
+            style={{ marginBottom: '16px' }}
+            onToggle={(e) => setOpenSections({...openSections, competitive: (e.target as HTMLDetailsElement).open})}
+          >
             <summary style={{
-              padding: '12px',
-              backgroundColor: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '6px',
+              padding: '14px 16px',
+              backgroundColor: '#1a1a1a',
+              border: 'none',
+              borderRadius: '8px',
               cursor: 'pointer',
               fontSize: '14px',
               fontWeight: '500',
-              color: 'var(--text-primary)'
+              color: 'var(--text-primary)',
+              listStyle: 'none',
+              display: 'flex',
+              alignItems: 'center'
             }}>
-              Competitive Opportunities
+              <span style={{
+                marginRight: '8px',
+                display: 'inline-block',
+                transform: openSections.competitive ? 'rotate(90deg)' : 'rotate(0deg)',
+                transition: 'transform 200ms ease'
+              }}>
+                ▶
+              </span>
+              Competitive Potential
             </summary>
-            <div style={{ padding: '12px 16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-              Configure competitive opportunity metrics...
+            <div style={{
+              backgroundColor: '#0d0d0d',
+              borderRadius: '8px',
+              padding: '16px',
+              marginTop: '8px'
+            }}>
+              <div style={{
+                fontSize: '13px',
+                color: 'var(--text-primary)',
+                marginBottom: '16px',
+                padding: '12px 16px',
+                backgroundColor: '#1a1a1a',
+                borderRadius: '6px'
+              }}>
+                Basket weight: 2
+              </div>
+
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{
+                      padding: '12px 16px',
+                      textAlign: 'left',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      color: 'var(--text-secondary)'
+                    }}>
+                      Markets
+                    </th>
+                    <th style={{
+                      padding: '12px 16px',
+                      textAlign: 'center',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      color: 'var(--text-secondary)'
+                    }}>
+                      Scoring weight
+                    </th>
+                    <th style={{
+                      padding: '12px 16px',
+                      textAlign: 'center',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      color: 'var(--text-secondary)'
+                    }}>
+                      Visualize
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{
+                      padding: '12px 16px',
+                      fontSize: '14px',
+                      color: 'var(--text-primary)'
+                    }}>
+                      2L Therapy HER+ Overall Market, XPO TRx
+                    </td>
+                    <td style={{
+                      padding: '12px 16px',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <input
+                          type="number"
+                          value="80"
+                          readOnly
+                          style={{
+                            width: '80px',
+                            padding: '8px 12px',
+                            backgroundColor: '#1a1a1a',
+                            color: 'var(--text-primary)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            textAlign: 'center',
+                            outline: 'none'
+                          }}
+                        />
+                        <span style={{
+                          fontSize: '14px',
+                          color: 'var(--text-secondary)'
+                        }}>
+                          %
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{
+                      padding: '12px 16px',
+                      textAlign: 'center'
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked
+                        readOnly
+                        style={{
+                          cursor: 'pointer',
+                          width: '18px',
+                          height: '18px',
+                          accentColor: '#3b82f6'
+                        }}
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{
+                      padding: '12px 16px',
+                      fontSize: '14px',
+                      color: 'var(--text-primary)'
+                    }}>
+                      Competitive brand PixelTron, XPO NBRx
+                    </td>
+                    <td style={{
+                      padding: '12px 16px',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <input
+                          type="number"
+                          value="20"
+                          readOnly
+                          style={{
+                            width: '80px',
+                            padding: '8px 12px',
+                            backgroundColor: '#1a1a1a',
+                            color: 'var(--text-primary)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            textAlign: 'center',
+                            outline: 'none'
+                          }}
+                        />
+                        <span style={{
+                          fontSize: '14px',
+                          color: 'var(--text-secondary)'
+                        }}>
+                          %
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{
+                      padding: '12px 16px',
+                      textAlign: 'center'
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked
+                        readOnly
+                        style={{
+                          cursor: 'pointer',
+                          width: '18px',
+                          height: '18px',
+                          accentColor: '#3b82f6'
+                        }}
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </details>
 
-          <details style={{ marginBottom: '16px' }}>
+          <details
+            style={{ marginBottom: '16px' }}
+            onToggle={(e) => setOpenSections({...openSections, patient: (e.target as HTMLDetailsElement).open})}
+          >
             <summary style={{
-              padding: '12px',
-              backgroundColor: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '6px',
+              padding: '14px 16px',
+              backgroundColor: '#1a1a1a',
+              border: 'none',
+              borderRadius: '8px',
               cursor: 'pointer',
               fontSize: '14px',
               fontWeight: '500',
-              color: 'var(--text-primary)'
+              color: 'var(--text-primary)',
+              listStyle: 'none',
+              display: 'flex',
+              alignItems: 'center'
             }}>
-              Precursor
+              <span style={{
+                marginRight: '8px',
+                display: 'inline-block',
+                transform: openSections.patient ? 'rotate(90deg)' : 'rotate(0deg)',
+                transition: 'transform 200ms ease'
+              }}>
+                ▶
+              </span>
+              Patient Potential (precursor)
             </summary>
-            <div style={{ padding: '12px 16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-              Configure precursor metrics...
+            <div style={{
+              backgroundColor: '#0d0d0d',
+              borderRadius: '8px',
+              padding: '16px',
+              marginTop: '8px'
+            }}>
+              <div style={{
+                fontSize: '13px',
+                color: 'var(--text-primary)',
+                marginBottom: '16px',
+                padding: '12px 16px',
+                backgroundColor: '#1a1a1a',
+                borderRadius: '6px'
+              }}>
+                Basket weight: 1
+              </div>
+
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{
+                      padding: '12px 16px',
+                      textAlign: 'left',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      color: 'var(--text-secondary)'
+                    }}>
+                    </th>
+                    <th style={{
+                      padding: '12px 16px',
+                      textAlign: 'center',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      color: 'var(--text-secondary)'
+                    }}>
+                      Scoring weight
+                    </th>
+                    <th style={{
+                      padding: '12px 16px',
+                      textAlign: 'center',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      color: 'var(--text-secondary)'
+                    }}>
+                      Visualize
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{
+                      padding: '12px 16px',
+                      fontSize: '14px',
+                      color: 'var(--text-primary)'
+                    }}>
+                      PSP Claims
+                    </td>
+                    <td style={{
+                      padding: '12px 16px',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <input
+                          type="number"
+                          value="20"
+                          readOnly
+                          style={{
+                            width: '80px',
+                            padding: '8px 12px',
+                            backgroundColor: '#1a1a1a',
+                            color: 'var(--text-primary)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            textAlign: 'center',
+                            outline: 'none'
+                          }}
+                        />
+                        <span style={{
+                          fontSize: '14px',
+                          color: 'var(--text-secondary)'
+                        }}>
+                          %
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{
+                      padding: '12px 16px',
+                      textAlign: 'center'
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked
+                        readOnly
+                        style={{
+                          cursor: 'pointer',
+                          width: '18px',
+                          height: '18px',
+                          accentColor: '#3b82f6'
+                        }}
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{
+                      padding: '12px 16px',
+                      fontSize: '14px',
+                      color: 'var(--text-primary)'
+                    }}>
+                      Payer mix, Medicaid, Medicare
+                    </td>
+                    <td style={{
+                      padding: '12px 16px',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <input
+                          type="number"
+                          value="80"
+                          readOnly
+                          style={{
+                            width: '80px',
+                            padding: '8px 12px',
+                            backgroundColor: '#1a1a1a',
+                            color: 'var(--text-primary)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            textAlign: 'center',
+                            outline: 'none'
+                          }}
+                        />
+                        <span style={{
+                          fontSize: '14px',
+                          color: 'var(--text-secondary)'
+                        }}>
+                          %
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{
+                      padding: '12px 16px',
+                      textAlign: 'center'
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked
+                        readOnly
+                        style={{
+                          cursor: 'pointer',
+                          width: '18px',
+                          height: '18px',
+                          accentColor: '#3b82f6'
+                        }}
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </details>
 
-          <details style={{ marginBottom: '24px' }}>
+          <details
+            style={{ marginBottom: '24px' }}
+            onToggle={(e) => setOpenSections({...openSections, analog: (e.target as HTMLDetailsElement).open})}
+          >
             <summary style={{
-              padding: '12px',
-              backgroundColor: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '6px',
+              padding: '14px 16px',
+              backgroundColor: '#1a1a1a',
+              border: 'none',
+              borderRadius: '8px',
               cursor: 'pointer',
               fontSize: '14px',
               fontWeight: '500',
-              color: 'var(--text-primary)'
+              color: 'var(--text-primary)',
+              listStyle: 'none',
+              display: 'flex',
+              alignItems: 'center'
             }}>
+              <span style={{
+                marginRight: '8px',
+                display: 'inline-block',
+                transform: openSections.analog ? 'rotate(90deg)' : 'rotate(0deg)',
+                transition: 'transform 200ms ease'
+              }}>
+                ▶
+              </span>
               Analog
             </summary>
-            <div style={{ padding: '12px 16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-              Configure analog metrics...
+            <div style={{
+              backgroundColor: '#0d0d0d',
+              borderRadius: '8px',
+              padding: '20px',
+              marginTop: '8px'
+            }}>
+              <p style={{
+                fontSize: '14px',
+                color: 'var(--text-muted)',
+                margin: 0
+              }}>
+                Not required
+              </p>
             </div>
           </details>
 

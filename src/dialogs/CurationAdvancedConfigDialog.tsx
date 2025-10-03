@@ -7,25 +7,25 @@ import { useAppStore } from '../store/appStore';
 // Mock HCP data with names - Regional variations
 const mockHCPDataRepository = {
   'Median Region (100 HCPs)': [
-    { id: 47248002, name: 'Crystal Ball', powerScore: 10, specialty: 'Odaiazol Adopter', segment: 'Odaiazol Adopter' },
-    { id: 47248003, name: 'Meridith Kvyst', powerScore: 10, specialty: 'Odaiazol Expert', segment: 'Odaiazol Expert' },
-    { id: 47248004, name: 'George Smith', powerScore: 10, specialty: 'Lorem ipsum', segment: 'Grower' },
-    { id: 47248005, name: 'Samantha White', powerScore: 9, specialty: 'Odaiazol Adopter', segment: 'Starter' },
-    { id: 47248006, name: 'Alexander Lee', powerScore: 9, specialty: 'Odaiazol Expert', segment: 'Lorem ipsum' },
-    { id: 47248007, name: 'Olivia Johnson', powerScore: 9, specialty: 'Lorem ipsum', segment: 'Odaiazol...' },
-    { id: 47248008, name: 'Ethan Brown', powerScore: 9, specialty: 'Odaiazol Adopter', segment: 'near_term_shrinker' },
-    { id: 47248009, name: 'Crystal Ball', powerScore: 8, specialty: 'Odaiazol Adopter', segment: 'growers' },
-    { id: 47248010, name: 'Meridith Kvyst', powerScore: 8, specialty: 'Lorem ipsum', segment: 'Odaiazol Adopter' },
-    { id: 47248011, name: 'George Smith', powerScore: 7, specialty: 'Odaiazol Adopter', segment: 'Odaiazol Expert' },
+    { id: 47248002, name: 'Crystal Ball', powerScore: 10, specialty: 'Breast Cancer', segment: 'Loyalist' },
+    { id: 47248003, name: 'Meridith Kvyst', powerScore: 10, specialty: 'Breast Cancer', segment: 'Loyalist' },
+    { id: 47248004, name: 'George Smith', powerScore: 10, specialty: 'Breast Cancer', segment: 'Loyalist' },
+    { id: 47248005, name: 'Samantha White', powerScore: 9, specialty: 'Breast Cancer', segment: 'Loyalist' },
+    { id: 47248006, name: 'Alexander Lee', powerScore: 9, specialty: 'Breast Cancer', segment: 'Loyalist' },
+    { id: 47248007, name: 'Olivia Johnson', powerScore: 9, specialty: 'Breast Cancer', segment: 'Loyalist' },
+    { id: 47248008, name: 'Ethan Brown', powerScore: 9, specialty: 'Breast Cancer', segment: 'Loyalist' },
+    { id: 47248009, name: 'Crystal Ball', powerScore: 8, specialty: 'Breast Cancer', segment: 'Grower' },
+    { id: 47248010, name: 'Meridith Kvyst', powerScore: 8, specialty: 'Breast Cancer', segment: 'Grower' },
+    { id: 47248011, name: 'George Smith', powerScore: 7, specialty: 'Medical Oncologists', segment: 'Grower' },
   ],
   'Top Region (65 HCPs)': [
-    { id: 47248012, name: 'Crystal Ball', powerScore: 10, specialty: 'Odaiazol Adopter', segment: 'Odaiazol Adopter' },
-    { id: 47248013, name: 'Meridith Kvyst', powerScore: 10, specialty: 'Odaiazol Expert', segment: 'Grower' },
-    { id: 47248014, name: 'George Smith', powerScore: 9, specialty: 'Lorem ipsum', segment: 'Starter' },
-    { id: 47248015, name: 'Samantha White', powerScore: 9, specialty: 'Odaiazol Adopter', segment: 'Odaiazol Expert' },
-    { id: 47248016, name: 'Alexander Lee', powerScore: 8, specialty: 'Odaiazol Expert', segment: 'growers' },
-    { id: 47248017, name: 'Olivia Johnson', powerScore: 8, specialty: 'Lorem ipsum', segment: 'Lorem ipsum' },
-    { id: 47248018, name: 'Ethan Brown', powerScore: 7, specialty: 'Odaiazol Adopter', segment: 'Odaiazol...' },
+    { id: 47248012, name: 'Crystal Ball', powerScore: 10, specialty: 'Breast Cancer', segment: 'Loyalist' },
+    { id: 47248013, name: 'Meridith Kvyst', powerScore: 10, specialty: 'Breast Cancer', segment: 'Grower' },
+    { id: 47248014, name: 'George Smith', powerScore: 9, specialty: 'Breast Cancer', segment: 'Loyalist' },
+    { id: 47248015, name: 'Samantha White', powerScore: 9, specialty: 'Breast Cancer', segment: 'Loyalist' },
+    { id: 47248016, name: 'Alexander Lee', powerScore: 8, specialty: 'Breast Cancer', segment: 'Grower' },
+    { id: 47248017, name: 'Olivia Johnson', powerScore: 8, specialty: 'Breast Cancer', segment: 'Grower' },
+    { id: 47248018, name: 'Ethan Brown', powerScore: 7, specialty: 'Breast Cancer', segment: 'Grower' },
   ]
 };
 
@@ -267,16 +267,19 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
         parseInt(bucketDSize) || 0
       ];
 
+      // Assign bucket based on PowerScore for better distribution
       let bucket = 'A';
-      let cumulative = 0;
-      const percentile = (index / Math.max(1, mockHCPsCurated.length)) * 100;
+      const powerScore = hcp.powerScore;
 
-      for (let i = 0; i < bucketSizes.length; i++) {
-        cumulative += bucketSizes[i];
-        if (percentile < cumulative) {
-          bucket = String.fromCharCode(65 + i); // A, B, C, D
-          break;
-        }
+      // Map PowerScore to bucket: 10-9 -> A, 8-7 -> B, 6-5 -> C, 4-below -> D
+      if (powerScore >= 9) {
+        bucket = 'A';
+      } else if (powerScore >= 7) {
+        bucket = 'B';
+      } else if (powerScore >= 5) {
+        bucket = 'C';
+      } else {
+        bucket = 'D';
       }
 
       return { ...hcp, bucket };
@@ -575,36 +578,37 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                     </div>
                   ))}
 
-                  {/* Segment Scores Signal */}
+                  {/* Suggestions */}
                   <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '12px', marginTop: '20px' }}>
-                    Segment Scores Signal
+                    Suggestions
                   </h4>
                   <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '12px' }}>
-                    Specifies how much a segment score influences the curated list.
+                    Specifies how much a suggestion influences the curated list
                   </p>
 
                   {[
-                    { label: 'Starters', checked: starters, setChecked: setStarters, level: startersLevel, setLevel: setStartersLevel },
-                    { label: 'Shrinkers', checked: shrinkers, setChecked: setShrinkers },
-                    { label: 'Switch-In', checked: switchIn, setChecked: setSwitchIn },
-                    { label: 'Switch-Out', checked: switchOut, setChecked: setSwitchOut },
-                    { label: 'Believer', checked: believer, setChecked: setBeleiver },
-                    { label: 'Lorem ipsum', checked: loremSegment, setChecked: setLoremSegment },
-                    { label: 'Reliever', checked: reliever, setChecked: setReliever }
+                    { label: 'New writer identified for Odaiazol', checked: true },
+                    { label: 'Significant increase in Odaiazol writing', checked: true },
+                    { label: 'Significant decrease in Odaiazol writing', checked: true },
+                    { label: 'New writer identified for Pixeltron', checked: true },
+                    { label: 'Significant increase in Pixeltron writing', checked: true }
                   ].map((item, i) => (
                     <div key={i} style={{ marginBottom: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={item.checked} onChange={(e) => item.setChecked(e.target.checked)} style={{ cursor: 'pointer' }} />
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-primary)', cursor: 'pointer', flex: 1 }}>
+                          <input
+                            type="checkbox"
+                            checked={item.checked}
+                            readOnly
+                            style={{ cursor: 'pointer' }}
+                          />
                           {item.label}
                         </label>
-                        {i === 0 && (
-                          <select value={item.level} onChange={(e) => item.setLevel && item.setLevel(e.target.value)} disabled={!item.checked} style={{ padding: '4px 8px', fontSize: '11px', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', borderRadius: '4px', cursor: 'pointer' }}>
-                            <option>Low</option>
-                            <option>Medium</option>
-                            <option>High</option>
-                          </select>
-                        )}
+                        <select defaultValue="Medium" style={{ padding: '6px 10px', fontSize: '11px', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', borderRadius: '4px', cursor: 'pointer' }}>
+                          <option>Low</option>
+                          <option>Medium</option>
+                          <option>High</option>
+                        </select>
                       </div>
                     </div>
                   ))}
@@ -651,7 +655,7 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                   {[
                     { label: 'Phone Call', checked: phoneCall, setChecked: setPhoneCall, level: phoneCallLevel, setLevel: setPhoneCallLevel },
                     { label: 'Email Opened', checked: emailOpened, setChecked: setEmailOpened, level: emailOpenedLevel, setLevel: setEmailOpenedLevel },
-                    { label: 'Website Search', checked: websiteSearch, setChecked: setWebsiteSearch, level: websiteSearchLevel, setLevel: setWebsiteSearchLevel },
+                    { label: 'Website Search (AIM XR)', checked: websiteSearch, setChecked: setWebsiteSearch, level: websiteSearchLevel, setLevel: setWebsiteSearchLevel },
                     { label: 'Event Attendance', checked: eventAttendance, setChecked: setEventAttendance, level: eventAttendanceLevel, setLevel: setEventAttendanceLevel },
                     { label: 'Request s-rep', checked: requestSrep, setChecked: setRequestSrep, level: requestSrepLevel, setLevel: setRequestSrepLevel },
                     { label: 'Lorem ipsum', checked: loremEvent, setChecked: setLoremEvent, level: loremEventLevel, setLevel: setLoremEventLevel }
@@ -967,10 +971,10 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                               {hcp.powerScore}
                             </span>
                           </td>
-                          <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                          <td style={{ padding: '10px 12px', fontSize: '12px', color: '#eab308' }}>
                             {hcp.specialty}
                           </td>
-                          <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                          <td style={{ padding: '10px 12px', fontSize: '12px', color: '#eab308' }}>
                             {hcp.segment}
                           </td>
                         </tr>
@@ -1074,10 +1078,10 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                                 {hcp.powerScore}
                               </span>
                             </td>
-                            <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                            <td style={{ padding: '10px 12px', fontSize: '12px', color: '#eab308' }}>
                               {hcp.specialty}
                             </td>
-                            <td style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                            <td style={{ padding: '10px 12px', fontSize: '12px', color: '#eab308' }}>
                               {hcp.segment}
                             </td>
                             <td style={{ padding: '10px 12px' }}>
@@ -1087,8 +1091,8 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                                 justifyContent: 'center',
                                 padding: '4px 10px',
                                 borderRadius: '6px',
-                                backgroundColor: getBucketColor(hcp.bucket),
-                                color: '#ffffff',
+                                backgroundColor: '#d4d4d8',
+                                color: '#18181b',
                                 fontSize: '11px',
                                 fontWeight: '700',
                                 letterSpacing: '0.02em'

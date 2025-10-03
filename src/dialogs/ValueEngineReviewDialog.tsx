@@ -113,31 +113,33 @@ export const ValueEngineReviewDialog: React.FC = () => {
           {/* Circular Gauge */}
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <div style={{
-              width: '200px',
-              height: '200px',
-              margin: '0 auto 20px',
+              width: '220px',
+              height: '220px',
+              margin: '0 auto 24px',
               position: 'relative'
             }}>
               {/* Outer circle */}
-              <svg width="200" height="200" viewBox="0 0 200 200">
+              <svg width="220" height="220" viewBox="0 0 220 220">
+                {/* Background circle */}
                 <circle
-                  cx="100"
-                  cy="100"
-                  r="90"
+                  cx="110"
+                  cy="110"
+                  r="95"
                   fill="none"
-                  stroke="rgba(59, 130, 246, 0.2)"
-                  strokeWidth="20"
+                  stroke="rgba(59, 130, 246, 0.15)"
+                  strokeWidth="24"
                 />
+                {/* Progress circle - 70% */}
                 <circle
-                  cx="100"
-                  cy="100"
-                  r="90"
+                  cx="110"
+                  cy="110"
+                  r="95"
                   fill="none"
                   stroke="#3b82f6"
-                  strokeWidth="20"
-                  strokeDasharray="395 565"
+                  strokeWidth="24"
+                  strokeDasharray="418.88 596.97"
                   strokeDashoffset="0"
-                  transform="rotate(-90 100 100)"
+                  transform="rotate(-90 110 110)"
                   strokeLinecap="round"
                 />
               </svg>
@@ -149,15 +151,18 @@ export const ValueEngineReviewDialog: React.FC = () => {
                 textAlign: 'center'
               }}>
                 <div style={{
-                  fontSize: '48px',
+                  fontSize: '42px',
                   fontWeight: '700',
-                  color: 'var(--text-primary)'
+                  color: 'var(--text-primary)',
+                  lineHeight: '1',
+                  marginBottom: '8px'
                 }}>
                   70/30
                 </div>
                 <div style={{
-                  fontSize: '12px',
-                  color: 'var(--text-secondary)'
+                  fontSize: '13px',
+                  color: 'var(--text-secondary)',
+                  lineHeight: '1.3'
                 }}>
                   Current Value /<br />Potential
                 </div>
@@ -223,45 +228,39 @@ export const ValueEngineReviewDialog: React.FC = () => {
             {/* Current Value */}
             <div>
               <h4 style={{
-                fontSize: '14px',
+                fontSize: '15px',
                 fontWeight: '600',
                 color: 'var(--text-primary)',
-                marginBottom: '12px'
+                marginBottom: '8px'
               }}>
                 Current Value: 70%
               </h4>
               <p style={{
-                fontSize: '12px',
+                fontSize: '13px',
                 color: 'var(--text-secondary)',
-                marginBottom: '12px',
+                marginBottom: '16px',
                 lineHeight: '1.5'
               }}>
                 Current value of an HCP based on historical writing of Odaiazol
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div style={{
                   display: 'flex',
                   alignItems: 'flex-start',
-                  gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'var(--bg-card)',
-                  borderRadius: '6px'
+                  gap: '10px'
                 }}>
                   <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                     90% Odaiazol, Breast Cancer, HRE2+ 2L Therapy, XPO TRx Volume
                   </span>
                 </div>
                 <div style={{
                   display: 'flex',
                   alignItems: 'flex-start',
-                  gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'var(--bg-card)',
-                  borderRadius: '6px'
+                  gap: '10px'
                 }}>
                   <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                     10% OncoThera Copay Card PSP Claims
                   </span>
                 </div>
@@ -271,126 +270,87 @@ export const ValueEngineReviewDialog: React.FC = () => {
             {/* Potential */}
             <div>
               <h4 style={{
-                fontSize: '14px',
+                fontSize: '15px',
                 fontWeight: '600',
                 color: 'var(--text-primary)',
-                marginBottom: '12px'
+                marginBottom: '8px'
               }}>
                 Potential: 30%
               </h4>
               <p style={{
-                fontSize: '12px',
+                fontSize: '13px',
                 color: 'var(--text-secondary)',
-                marginBottom: '12px',
+                marginBottom: '20px',
                 lineHeight: '1.5'
               }}>
                 Potential based on HCPs competitive writing and patient mix.
               </p>
-              {/* Empty for now - can add items later */}
-            </div>
 
-            {/* Competitive Strategy */}
-            <div>
-              <h4 style={{
-                fontSize: '14px',
-                fontWeight: '600',
-                color: 'var(--text-primary)',
-                marginBottom: '12px'
-              }}>
-                Competitive Strategy: 80%
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'var(--bg-card)',
-                  borderRadius: '6px'
+              {/* Competitive Potential */}
+              <div style={{ marginBottom: '24px' }}>
+                <h5 style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: 'var(--text-primary)',
+                  marginBottom: '12px'
                 }}>
-                  <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    20% importance on 2L Therapy HER+ Overall Market, XPO TRx
-                  </span>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'var(--bg-card)',
-                  borderRadius: '6px'
-                }}>
-                  <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    50% importance on 2L Therapy HER+ submarket 1, XPO TRx
-                  </span>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'var(--bg-card)',
-                  borderRadius: '6px'
-                }}>
-                  <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    30% importance on 2L Therapy HER+ submarket 2, XPO TRx
-                  </span>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'var(--bg-card)',
-                  borderRadius: '6px'
-                }}>
-                  <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    10% importance on competitive brand PixelTron, XPO NBRx
-                  </span>
+                  Competitive Potential: 80%
+                </h5>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px'
+                  }}>
+                    <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
+                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                      80% importance on 2L Therapy HER+ Overall Market,  XPO TRx
+                    </span>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px'
+                  }}>
+                    <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
+                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                      20% importance on competitive brand PixelTron, XPO NBRx
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Patient Potential */}
-            <div>
-              <h4 style={{
-                fontSize: '14px',
-                fontWeight: '600',
-                color: 'var(--text-primary)',
-                marginBottom: '12px'
-              }}>
-                Patient Mix: 20%
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'var(--bg-card)',
-                  borderRadius: '6px'
+              {/* Patient Potential */}
+              <div>
+                <h5 style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: 'var(--text-primary)',
+                  marginBottom: '12px'
                 }}>
-                  <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    20% 1L Therapy HER+ Market, XPO TRx
-                  </span>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '8px',
-                  padding: '8px',
-                  backgroundColor: 'var(--bg-card)',
-                  borderRadius: '6px'
-                }}>
-                  <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    80% Payer mix, Medicaid, Medicare
-                  </span>
+                  Patient Potential: 20%
+                </h5>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px'
+                  }}>
+                    <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
+                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                      20% PSP Claims
+                    </span>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px'
+                  }}>
+                    <Check size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
+                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                      80% Payer mix, Medicaid, Medicare
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -400,18 +360,18 @@ export const ValueEngineReviewDialog: React.FC = () => {
           <div style={{
             display: 'flex',
             gap: '12px',
-            justifyContent: 'flex-end',
+            justifyContent: 'flex-start',
             paddingTop: '20px',
             borderTop: '1px solid var(--border-subtle)'
           }}>
-            <Button variant="secondary" onClick={() => setActiveModal(null)}>
-              Cancel
+            <Button variant="primary" onClick={handleApprove}>
+              Approve
             </Button>
             <Button variant="secondary" onClick={handleEdit}>
               Edit
             </Button>
-            <Button variant="primary" onClick={handleApprove}>
-              Approve
+            <Button variant="secondary" onClick={() => setActiveModal(null)}>
+              Cancel
             </Button>
           </div>
         </Dialog.Content>
