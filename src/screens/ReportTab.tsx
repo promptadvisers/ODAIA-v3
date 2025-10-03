@@ -5,15 +5,19 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { SimulationRunner } from '../components/Report/SimulationRunner';
 import { useChatStore } from '../store/chatStore';
 
-// Mock data repository for different simulation scenarios
-const mockDataRepository = {
-  'Simulation (Simulation) SPCA NUCALA template - Sept 22 202...': {
+// Simulation data repository - 3 product-based simulations
+const SIMULATION_DATA = {
+  'Simulation (Odaiazol 70/30)': {
+    displayName: 'Simulation (Odaiazol 70/30)',
+    nameColor: '#eab308', // Yellow
+    productName: 'Odaiazol (Sept 16, 2025)',
+    objective: 'Odaiazol vs 2L Therapy HER+',
     infoCards: {
-      startDate: '2025-09-13',
+      startDate: '2025-09-23',
       endDate: '2025-09-23',
-      marketName: 'P3: SPCA (NUCALA)',
-      topMetricOriginal: 'nbrxxpd_indication',
-      topMetricSimulated: 'trx_indication'
+      marketName: 'Odaiazol',
+      topMetricOriginal: 'XPO TRx Volume',
+      topMetricSimulated: 'XPO TRx Volume'
     },
     basketWeightData: [
       { date: '2025-09-16', competitor: 12, precursor: 2, target: 1 }
@@ -29,20 +33,18 @@ const mockDataRepository = {
       }
     ],
     basketDiffTable: [
-      { date: '2025-09-16', basket: 'competitor', original: 2, simulated: 2, diff: 0 },
-      { date: '2025-09-16', basket: 'precursor', original: 1, simulated: 1, diff: 0 },
-      { date: '2025-09-16', basket: 'target', original: 10, simulated: 10, diff: 0 }
+      { date: '2025-09-16', basket: 'Competitive Potential', original: 2, simulated: 2, diff: 0 },
+      { date: '2025-09-16', basket: 'Patient Potential (precursor)', original: 1, simulated: 1, diff: -1 },
+      { date: '2025-09-16', basket: 'Current Value (target)', original: 7, simulated: 7, diff: 2 }
     ],
     metricDiffTable: [
-      { date: '2025-09-16 15:26:11', metric: 'competitor', type: 'apidot_claims', origWeight: 0.25, simWeight: 0.25, diff: 0 },
-      { date: '2025-09-16 15:26:11', metric: 'competitor', type: 'nbrrxxpd_indication', origWeight: 1, simWeight: 1, diff: 0 },
-      { date: '2025-09-16 15:26:11', metric: 'competitor', type: 'trx_indication', origWeight: 0.5, simWeight: 0.5, diff: 0 },
-      { date: '2025-09-16 15:26:11', metric: 'precursor', type: 'apidot_diagnosis', origWeight: 0.5, simWeight: 0.5, diff: 0 },
-      { date: '2025-09-16 15:26:11', metric: 'precursor', type: 'apidot', origWeight: 1, simWeight: 1, diff: 0 },
-      { date: '2025-09-16 15:26:11', metric: 'precursor', type: 'unconditioned_asthma_pa...', origWeight: 0.99, simWeight: 0.99, diff: 0 },
-      { date: '2025-09-16 15:26:11', metric: 'target', type: 'apidot_claims', origWeight: 0.25, simWeight: 0.25, diff: -0.25 },
-      { date: '2025-09-16 15:26:11', metric: 'target', type: 'nbrrxxpd_indication', origWeight: 1, simWeight: 1, diff: 0.75 },
-      { date: '2025-09-16 15:26:11', metric: 'target', type: 'trx_indication', origWeight: 0.5, simWeight: 0.5, diff: -0.5 }
+      { date: '2025-09-16 15:26:11', metric: 'Current Value (target)', type: 'XPO TRx Volume', origWeight: 0.9, simWeight: 0.9, diff: 0 },
+      { date: '2025-09-16 15:26:11', metric: 'Current Value (target)', type: 'OncoThera Copay Card PSP Claims', origWeight: 0.1, simWeight: 0.1, diff: 0 },
+      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand PixelTron - XPO TRx', origWeight: 0.9, simWeight: 0.2, diff: -1 },
+      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand PixelTron - XPO NBRx', origWeight: 0.2, simWeight: 0.8, diff: 0 },
+      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: '2L Therapy HER+ Overall Market - XPO TRx', origWeight: 0.8, simWeight: 0.8, diff: 0.6 },
+      { date: '2025-09-16 15:26:11', metric: 'Patient Potential (Precursor)', type: 'PSP Claims', origWeight: 0.2, simWeight: 0.2, diff: 0 },
+      { date: '2025-09-16 15:26:11', metric: 'Patient Potential (Precursor)', type: 'Payer mix, Medicaid, Medicare', origWeight: 0.8, simWeight: 0.8, diff: 0 }
     ],
     scoreDistribution: {
       National: [
@@ -161,13 +163,17 @@ const mockDataRepository = {
       { entityId: '47201697', original: 7, simulated: 6, scoreDiff: 1 }
     ]
   },
-  'Value Engine: HCP Targeting v2.1': {
+  'Simulation (Odaiazol 60/40)': {
+    displayName: 'Simulation (Odaiazol 60/40)',
+    nameColor: '#a855f7', // Purple
+    productName: 'Odaiazol (Sept 16, 2025)',
+    objective: 'Odaiazol vs 2L Therapy HER+',
     infoCards: {
-      startDate: '2025-08-01',
-      endDate: '2025-08-15',
-      marketName: 'US Market - Oncology',
-      topMetricOriginal: 'trx_volume',
-      topMetricSimulated: 'nbrx_volume'
+      startDate: '2025-09-23',
+      endDate: '2025-09-23',
+      marketName: 'Odaiazol',
+      topMetricOriginal: 'XPO TRx Volume',
+      topMetricSimulated: 'XPO TRx Volume'
     },
     basketWeightData: [
       { date: '2025-08-01', competitor: 8, precursor: 5, target: 3 }
@@ -183,20 +189,17 @@ const mockDataRepository = {
       }
     ],
     basketDiffTable: [
-      { date: '2025-08-01', basket: 'competitor', original: 8, simulated: 9, diff: 1 },
-      { date: '2025-08-01', basket: 'precursor', original: 5, simulated: 4, diff: -1 },
-      { date: '2025-08-01', basket: 'target', original: 3, simulated: 5, diff: 2 }
+      { date: '2025-09-16', basket: 'Competitive Potential', original: 2, simulated: 1, diff: -1 },
+      { date: '2025-09-16', basket: 'Patient Potential (precursor)', original: 1, simulated: 2, diff: 1 },
+      { date: '2025-09-16', basket: 'Current Value (target)', original: 7, simulated: 8, diff: -1 }
     ],
     metricDiffTable: [
-      { date: '2025-08-01 10:15:22', metric: 'competitor', type: 'apidot_claims', origWeight: 0.5, simWeight: 0.6, diff: 0.1 },
-      { date: '2025-08-01 10:15:22', metric: 'competitor', type: 'nbrrxxpd_indication', origWeight: 0.8, simWeight: 0.9, diff: 0.1 },
-      { date: '2025-08-01 10:15:22', metric: 'competitor', type: 'trx_indication', origWeight: 0.7, simWeight: 0.6, diff: -0.1 },
-      { date: '2025-08-01 10:15:22', metric: 'precursor', type: 'apidot_diagnosis', origWeight: 0.6, simWeight: 0.7, diff: 0.1 },
-      { date: '2025-08-01 10:15:22', metric: 'precursor', type: 'apidot', origWeight: 0.9, simWeight: 0.8, diff: -0.1 },
-      { date: '2025-08-01 10:15:22', metric: 'precursor', type: 'unconditioned_asthma_pa...', origWeight: 0.75, simWeight: 0.85, diff: 0.1 },
-      { date: '2025-08-01 10:15:22', metric: 'target', type: 'apidot_claims', origWeight: 0.4, simWeight: 0.5, diff: 0.1 },
-      { date: '2025-08-01 10:15:22', metric: 'target', type: 'nbrrxxpd_indication', origWeight: 0.9, simWeight: 1.2, diff: 0.3 },
-      { date: '2025-08-01 10:15:22', metric: 'target', type: 'trx_indication', origWeight: 0.6, simWeight: 0.4, diff: -0.2 }
+      { date: '2025-09-16 15:26:11', metric: 'Current Value (target)', type: 'XPO TRx Volume', origWeight: 0.6, simWeight: 0.9, diff: 0 },
+      { date: '2025-09-16 15:26:11', metric: 'Current Value (target)', type: 'OncoThera Copay Card PSP Claims', origWeight: 0.1, simWeight: 0.1, diff: 0 },
+      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand PixelTron - XPO TRx', origWeight: 0.9, simWeight: 0.2, diff: -3 },
+      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand PixelTron - XPO NBRx', origWeight: 0.2, simWeight: 0.8, diff: 0 },
+      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: '2L Therapy HER+ Overall Market - XPO TRx', origWeight: 0.8, simWeight: 0.4, diff: -1 },
+      { date: '2025-09-16 15:26:11', metric: 'Patient Potential (Precursor)', type: 'Payer mix, Medicaid, Medicare', origWeight: 0.9, simWeight: 0.8, diff: 0.9 }
     ],
     scoreDistribution: {
       National: [
@@ -314,6 +317,161 @@ const mockDataRepository = {
       { entityId: '48201554', original: 4, simulated: 5, scoreDiff: 1 },
       { entityId: '48201697', original: 6, simulated: 5, scoreDiff: 1 }
     ]
+  },
+  'Simulation (Odaiazol 80/20)': {
+    displayName: 'Simulation (Odaiazol 80/20)',
+    nameColor: '#a855f7', // Purple
+    productName: 'Odaiazol (Sept 16, 2025)',
+    objective: 'Odaiazol vs 2L Therapy HER+',
+    infoCards: {
+      startDate: '2025-09-23',
+      endDate: '2025-09-23',
+      marketName: 'Odaiazol',
+      topMetricOriginal: 'XPO TRx Volume',
+      topMetricSimulated: 'XPO TRx Volume'
+    },
+    basketWeightData: [
+      { date: '2025-09-16', competitor: 12, precursor: 2, target: 1 }
+    ],
+    metricWeightData: [
+      { date: '2025-09-16',
+        apidot_claims: 1.5,
+        nbrrxxpd_indication: 1.2,
+        trx_indication: 0.8,
+        apidot_diagnosis: 0.5,
+        apidot: 0.3,
+        unconditioned_asthma_patie: 0.2
+      }
+    ],
+    basketDiffTable: [
+      { date: '2025-09-16', basket: 'Competitive Potential', original: 2, simulated: 2, diff: -1 },
+      { date: '2025-09-16', basket: 'Patient Potential (precursor)', original: 1, simulated: 1, diff: 0 },
+      { date: '2025-09-16', basket: 'Current Value (target)', original: 7, simulated: 8, diff: -1 }
+    ],
+    metricDiffTable: [
+      { date: '2025-09-16 15:26:11', metric: 'Current Value (target)', type: 'XPO TRx Volume', origWeight: 0.8, simWeight: 0.9, diff: -0.1 },
+      { date: '2025-09-16 15:26:11', metric: 'Current Value (target)', type: 'OncoThera Copay Card PSP Claims', origWeight: 0.2, simWeight: 0.1, diff: 0 },
+      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand PixelTron - XPO TRx', origWeight: 0.9, simWeight: 0.2, diff: -3.1 },
+      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: '2L Therapy HER+ Overall Market - XPO TRx', origWeight: 0.8, simWeight: 0.4, diff: 0 },
+      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand Pix: Breast Market', origWeight: 0.2, simWeight: 0.4, diff: -1 },
+      { date: '2025-09-16 15:26:11', metric: 'Patient Potential (Precursor)', type: 'Payer mix, Medicaid, Medicare', origWeight: 09, simWeight: 08, diff: 09 }
+    ],
+    scoreDistribution: {
+      National: [
+        { score: '0', original: 10000, simulated: 10000 },
+        { score: '1', original: 4000, simulated: 4000 },
+        { score: '2', original: 2000, simulated: 2000 },
+        { score: '3', original: 1000, simulated: 1000 },
+        { score: '4', original: 500, simulated: 500 },
+        { score: '5', original: 300, simulated: 300 },
+        { score: '6', original: 200, simulated: 200 },
+        { score: '7', original: 100, simulated: 100 },
+        { score: '8', original: 50, simulated: 50 },
+        { score: '9', original: 20, simulated: 20 },
+        { score: '10', original: 10, simulated: 10 }
+      ],
+      Regional: [
+        { score: '0', original: 5000, simulated: 5200 },
+        { score: '1', original: 2000, simulated: 1900 },
+        { score: '2', original: 1000, simulated: 1100 },
+        { score: '3', original: 500, simulated: 480 },
+        { score: '4', original: 250, simulated: 270 },
+        { score: '5', original: 150, simulated: 150 },
+        { score: '6', original: 100, simulated: 95 },
+        { score: '7', original: 50, simulated: 55 },
+        { score: '8', original: 25, simulated: 25 },
+        { score: '9', original: 10, simulated: 12 },
+        { score: '10', original: 5, simulated: 5 }
+      ],
+      Territory: [
+        { score: '0', original: 2000, simulated: 2100 },
+        { score: '1', original: 800, simulated: 750 },
+        { score: '2', original: 400, simulated: 450 },
+        { score: '3', original: 200, simulated: 190 },
+        { score: '4', original: 100, simulated: 110 },
+        { score: '5', original: 60, simulated: 60 },
+        { score: '6', original: 40, simulated: 38 },
+        { score: '7', original: 20, simulated: 22 },
+        { score: '8', original: 10, simulated: 10 },
+        { score: '9', original: 4, simulated: 5 },
+        { score: '10', original: 2, simulated: 2 }
+      ]
+    },
+    scoreDiff: {
+      National: [
+        { score: '0', diff: 0 },
+        { score: '1', diff: 2 },
+        { score: '2', diff: -5 },
+        { score: '3', diff: 1 },
+        { score: '4', diff: 1 },
+        { score: '5', diff: 0 },
+        { score: '6', diff: -1 },
+        { score: '7', diff: 0 },
+        { score: '8', diff: 0 },
+        { score: '9', diff: 0 },
+        { score: '10', diff: 0 }
+      ],
+      Regional: [
+        { score: '0', diff: 200 },
+        { score: '1', diff: -100 },
+        { score: '2', diff: 100 },
+        { score: '3', diff: -20 },
+        { score: '4', diff: 20 },
+        { score: '5', diff: 0 },
+        { score: '6', diff: -5 },
+        { score: '7', diff: 5 },
+        { score: '8', diff: 0 },
+        { score: '9', diff: 2 },
+        { score: '10', diff: 0 }
+      ],
+      Territory: [
+        { score: '0', diff: 100 },
+        { score: '1', diff: -50 },
+        { score: '2', diff: 50 },
+        { score: '3', diff: -10 },
+        { score: '4', diff: 10 },
+        { score: '5', diff: 0 },
+        { score: '6', diff: -2 },
+        { score: '7', diff: 2 },
+        { score: '8', diff: 0 },
+        { score: '9', diff: 1 },
+        { score: '10', diff: 0 }
+      ]
+    },
+    inflowOutflow: [
+      { score: '1', inflow: 12, outflow: 15 },
+      { score: '2', inflow: 30, outflow: 33 },
+      { score: '3', inflow: 91, outflow: 90 },
+      { score: '4', inflow: 160, outflow: 159 },
+      { score: '5', inflow: 247, outflow: 248 },
+      { score: '6', inflow: 279, outflow: 279 },
+      { score: '7', inflow: 246, outflow: 246 },
+      { score: '8', inflow: 157, outflow: 157 },
+      { score: '9', inflow: 84, outflow: 84 },
+      { score: '10', inflow: 20, outflow: 20 }
+    ],
+    membershipChange: [
+      { entityId: '47198527', original: 6, simulated: 6, scoreDiff: -1 },
+      { entityId: '47198858', original: 2, simulated: 3, scoreDiff: -1 },
+      { entityId: '47198960', original: 6, simulated: 5, scoreDiff: 1 },
+      { entityId: '47199044', original: 6, simulated: 8, scoreDiff: -2 },
+      { entityId: '47199047', original: 7, simulated: 8, scoreDiff: -1 },
+      { entityId: '47199121', original: 6, simulated: 4, scoreDiff: 2 },
+      { entityId: '47199203', original: 10, simulated: 9, scoreDiff: 1 },
+      { entityId: '47199358', original: 9, simulated: 8, scoreDiff: 1 },
+      { entityId: '47199636', original: 7, simulated: 8, scoreDiff: -2 },
+      { entityId: '47199723', original: 8, simulated: 9, scoreDiff: -1 },
+      { entityId: '47199775', original: 7, simulated: 9, scoreDiff: -1 },
+      { entityId: '47200304', original: 6, simulated: 7, scoreDiff: -1 },
+      { entityId: '47200470', original: 4, simulated: 5, scoreDiff: -1 },
+      { entityId: '47200710', original: 5, simulated: 6, scoreDiff: -1 },
+      { entityId: '47201130', original: 5, simulated: 5, scoreDiff: 2 },
+      { entityId: '47201133', original: 4, simulated: 5, scoreDiff: -1 },
+      { entityId: '47201139', original: 8, simulated: 9, scoreDiff: -1 },
+      { entityId: '47201149', original: 4, simulated: 5, scoreDiff: -1 },
+      { entityId: '47201554', original: 5, simulated: 6, scoreDiff: 1 },
+      { entityId: '47201697', original: 7, simulated: 6, scoreDiff: 1 }
+    ]
   }
 };
 
@@ -326,15 +484,15 @@ export const ReportTab: React.FC = () => {
   const [selectedClientName, setSelectedClientName] = useState('p3kesimDd');
   const [selectedMarket, setSelectedMarket] = useState('P3: SPCA (NUCALA)');
   const [selectedDateRange, setSelectedDateRange] = useState('09/23/2025 - 09/23/2025');
-  const [selectedSimulation, setSelectedSimulation] = useState('Simulation (Simulation) SPCA NUCALA template - Sept 22 202...');
-  const [selectedProject, setSelectedProject] = useState('SPCA NUCALA (Sep 16, 2025)');
-  const [selectedObjective, setSelectedObjective] = useState('NUCALA SA vs COMPETITIVE SA - FASENRA');
+  const [selectedSimulation, setSelectedSimulation] = useState('Simulation (Odaiazol 70/30)');
+  const [selectedProject, setSelectedProject] = useState('Odaiazol (Sept 16, 2025)');
+  const [selectedObjective, setSelectedObjective] = useState('Odaiazol vs 2L Therapy HER+');
   const [selectedRegion, setSelectedRegion] = useState('National');
 
   // Compute current data based on filter selections
   const currentData = useMemo(() => {
     // Get data for selected simulation, or fallback to first available
-    const dataKey = selectedSimulation as keyof typeof mockDataRepository;
+    const dataKey = selectedSimulation as keyof typeof SIMULATION_DATA;
     console.log('Selected Client DB:', selectedClientDB);
     console.log('Selected Client Name:', selectedClientName);
     console.log('Selected Simulation:', selectedSimulation);
@@ -344,7 +502,7 @@ export const ReportTab: React.FC = () => {
     console.log('Selected Date Range:', selectedDateRange);
     console.log('Current Data Key:', dataKey);
 
-    const baseData = mockDataRepository[dataKey] || mockDataRepository['Simulation (Simulation) SPCA NUCALA template - Sept 22 202...'];
+    const baseData = SIMULATION_DATA[dataKey] || SIMULATION_DATA['Simulation (Odaiazol 70/30)'];
 
     // Apply filter-specific variations
     let data = JSON.parse(JSON.stringify(baseData)); // Deep clone
@@ -644,15 +802,16 @@ export const ReportTab: React.FC = () => {
                 width: '100%',
                 padding: '8px',
                 backgroundColor: 'var(--bg-card)',
-                color: 'var(--text-primary)',
+                color: SIMULATION_DATA[selectedSimulation as keyof typeof SIMULATION_DATA]?.nameColor || 'var(--text-primary)',
                 border: '1px solid var(--border-subtle)',
                 borderRadius: '4px',
                 fontSize: '12px',
                 cursor: 'pointer'
               }}
             >
-              <option value="Simulation (Simulation) SPCA NUCALA template - Sept 22 202...">Simulation (Simulation) SPCA NUCALA template - Sept 22 202...</option>
-              <option value="Value Engine: HCP Targeting v2.1">Value Engine: HCP Targeting v2.1</option>
+              <option value="Simulation (Odaiazol 70/30)" style={{ color: '#eab308' }}>Simulation (Odaiazol 70/30)</option>
+              <option value="Simulation (Odaiazol 60/40)" style={{ color: '#a855f7' }}>Simulation (Odaiazol 60/40)</option>
+              <option value="Simulation (Odaiazol 80/20)" style={{ color: '#a855f7' }}>Simulation (Odaiazol 80/20)</option>
             </select>
           </div>
 
@@ -664,7 +823,7 @@ export const ReportTab: React.FC = () => {
               color: 'var(--text-muted)',
               marginBottom: '4px'
             }}>
-              Project Name *
+              Product Name *
             </label>
             <select
               value={selectedProject}
@@ -673,15 +832,14 @@ export const ReportTab: React.FC = () => {
                 width: '100%',
                 padding: '8px',
                 backgroundColor: 'var(--bg-card)',
-                color: 'var(--text-primary)',
+                color: '#eab308', // Always yellow
                 border: '1px solid var(--border-subtle)',
                 borderRadius: '4px',
                 fontSize: '12px',
                 cursor: 'pointer'
               }}
             >
-              <option value="SPCA NUCALA (Sep 16, 2025)">SPCA NUCALA (Sep 16, 2025)</option>
-              <option value="Odaiazol Project">Odaiazol Project</option>
+              <option value="Odaiazol (Sept 16, 2025)" style={{ color: '#eab308' }}>Odaiazol (Sept 16, 2025)</option>
             </select>
           </div>
 
@@ -702,15 +860,14 @@ export const ReportTab: React.FC = () => {
                 width: '100%',
                 padding: '8px',
                 backgroundColor: 'var(--bg-card)',
-                color: 'var(--text-primary)',
+                color: '#eab308', // Always yellow
                 border: '1px solid var(--border-subtle)',
                 borderRadius: '4px',
                 fontSize: '12px',
                 cursor: 'pointer'
               }}
             >
-              <option value="NUCALA SA vs COMPETITIVE SA - FASENRA">NUCALA SA vs COMPETITIVE SA - FASENRA</option>
-              <option value="HCP Targeting Objective">HCP Targeting Objective</option>
+              <option value="Odaiazol vs 2L Therapy HER+" style={{ color: '#eab308' }}>Odaiazol vs 2L Therapy HER+</option>
             </select>
           </div>
         </div>
@@ -790,19 +947,19 @@ export const ReportTab: React.FC = () => {
           <Card>
             <CardContent className="p-4">
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Market Name</div>
-              <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>{infoCards.marketName}</div>
+              <div style={{ fontSize: '16px', fontWeight: '600', color: '#eab308' }}>{infoCards.marketName}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Top Scored Metric - Original</div>
-              <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>{infoCards.topMetricOriginal}</div>
+              <div style={{ fontSize: '16px', fontWeight: '600', color: '#eab308' }}>{infoCards.topMetricOriginal}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Top Scored Metric - Simulated</div>
-              <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>{infoCards.topMetricSimulated}</div>
+              <div style={{ fontSize: '16px', fontWeight: '600', color: '#eab308' }}>{infoCards.topMetricSimulated}</div>
             </CardContent>
           </Card>
         </div>
