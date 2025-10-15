@@ -16,9 +16,6 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
   const [setupComplete, setSetupComplete] = useState(false);
   const [highlightedSimId] = useState<string | null>(null);
   const [simulationCount, setSimulationCount] = useState(3);
-  const [isRunningSimulations, setIsRunningSimulations] = useState(false);
-  const [currentSimulation, setCurrentSimulation] = useState(0);
-  const [progress, setProgress] = useState(0);
 
   // Simulate loading when entering setup tab
   useEffect(() => {

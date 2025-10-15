@@ -11,7 +11,7 @@ export const ValueEngineEditDialog: React.FC = () => {
   const [basketName, setBasketName] = useState('Odaiazol');
   const [basketWeight, setBasketWeight] = useState('7');
   const [therapeuticArea, setTherapeuticArea] = useState('Oncology');
-  const [product, setProduct] = useState('Odaiazol');
+  const [product] = useState('Odaiazol');
   const [indication, setIndication] = useState('2L HER2+ Metastatic Breast Cancer');
   const [specialties, setSpecialties] = useState('Oncology');
   const [productDropdownOpen, setProductDropdownOpen] = useState(false);

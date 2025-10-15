@@ -119,7 +119,7 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
             // Start the first simulation
             return {
               ...sim,
-              status: 'running',
+              status: 'running' as const,
               progress: 0,
               startTime: startTime
             };
@@ -127,7 +127,7 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
             // Keep others as pending
             return {
               ...sim,
-              status: 'pending',
+              status: 'pending' as const,
               progress: 0,
               startTime: undefined
             };
@@ -169,7 +169,7 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
               return {
                 ...sim,
                 progress: 100,
-                status: 'completed',
+                status: 'completed' as const,
                 results: generateMockResults(sim.id)
               };
             }
@@ -186,7 +186,7 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
             console.log(`[SimulationRunner] Starting next simulation: ${updated[nextPendingIndex].name}`);
             updated[nextPendingIndex] = {
               ...updated[nextPendingIndex],
-              status: 'running',
+              status: 'running' as const,
               progress: 0,
               startTime: Date.now()
             };

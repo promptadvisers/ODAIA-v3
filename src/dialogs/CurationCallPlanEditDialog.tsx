@@ -229,7 +229,6 @@ export const CurationCallPlanEditDialog: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<ObjectiveTab>('objective1');
 
-  const [nearbyAnchor, setNearbyAnchor] = useState(true);
   const [nearbyAnchorLevel, setNearbyAnchorLevel] = useState<SignalLevel>('Medium');
   const [includeUpcomingAppointments, setIncludeUpcomingAppointments] = useState(false);
 
