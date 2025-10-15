@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, ChevronRight } from 'lucide-react';
 import { Button } from '../components/Button';
-import { useAppStore } from '../store/appStore';
+import { useAppStore, MOCK_PRODUCTS } from '../store/appStore';
 
 export const ValueEngineEditDialog: React.FC = () => {
   const { activeModal, setActiveModal } = useAppStore();
@@ -12,6 +12,9 @@ export const ValueEngineEditDialog: React.FC = () => {
   const [basketWeight, setBasketWeight] = useState('7');
   const [therapeuticArea, setTherapeuticArea] = useState('Oncology');
   const [product, setProduct] = useState('Odaiazol');
+  const [indication, setIndication] = useState('2L HER2+ Metastatic Breast Cancer');
+  const [specialties, setSpecialties] = useState('Oncology');
+  const [productDropdownOpen, setProductDropdownOpen] = useState(false);
   const [expandedNodes, setExpandedNodes] = useState<string[]>(['tumor-agnostic']);
   const [selectedIndications, setSelectedIndications] = useState<string[]>(['odaiazol']);
 
@@ -71,6 +74,15 @@ export const ValueEngineEditDialog: React.FC = () => {
     setMetrics(updated);
   };
 
+  // Sync Indication and Therapeutic Area when Product changes
+  useEffect(() => {
+    const selectedProductData = MOCK_PRODUCTS.find(p => p.name === product);
+    if (selectedProductData) {
+      setIndication(selectedProductData.indication);
+      setTherapeuticArea(selectedProductData.therapeuticArea);
+    }
+  }, [product]);
+
   const renderTreeNode = (node: any, level: number = 0) => {
     const isExpanded = expandedNodes.includes(node.id);
     const isSelected = selectedIndications.includes(node.id);
@@ -83,13 +95,21 @@ export const ValueEngineEditDialog: React.FC = () => {
           alignItems: 'center',
           gap: '8px',
           padding: '8px 12px',
-          backgroundColor: level === 0 ? 'var(--bg-card)' : 'transparent',
+          backgroundColor: level === 0 ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
           borderRadius: '6px',
-          marginBottom: '4px'
-        }}>
+          marginBottom: '4px',
+          cursor: 'pointer',
+          transition: 'background-color 200ms'
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)'}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = level === 0 ? 'rgba(255, 255, 255, 0.05)' : 'transparent'}
+        >
           {hasChildren && (
             <button
-              onClick={() => toggleNode(node.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleNode(node.id);
+              }}
               style={{
                 padding: '4px',
                 backgroundColor: 'transparent',
@@ -117,20 +137,37 @@ export const ValueEngineEditDialog: React.FC = () => {
           <input
             type="checkbox"
             checked={isSelected}
-            onChange={() => toggleSelection(node.id)}
-            style={{ cursor: 'pointer' }}
+            onChange={(e) => {
+              e.stopPropagation();
+              toggleSelection(node.id);
+            }}
+            style={{
+              cursor: 'pointer',
+              width: '16px',
+              height: '16px',
+              accentColor: '#3b82f6'
+            }}
           />
 
           <span style={{
-            fontSize: '12px',
+            fontSize: '13px',
             color: 'var(--text-primary)',
-            cursor: hasChildren ? 'pointer' : 'default',
+            flex: 1,
             fontWeight: level === 0 ? '500' : '400'
           }}
           onClick={() => hasChildren && toggleNode(node.id)}
           >
             {node.label}
           </span>
+
+          {/* Chevron on the right for all items */}
+          <ChevronRight
+            size={14}
+            style={{
+              color: 'var(--text-muted)',
+              marginLeft: 'auto'
+            }}
+          />
         </div>
 
         {hasChildren && isExpanded && (
@@ -158,9 +195,9 @@ export const ValueEngineEditDialog: React.FC = () => {
           transform: 'translate(-50%, -50%)',
           backgroundColor: 'var(--bg-modal)',
           borderRadius: '12px',
-          padding: '24px',
+          padding: '28px 32px',
           width: '90vw',
-          maxWidth: '700px',
+          maxWidth: '680px',
           maxHeight: '85vh',
           overflow: 'auto',
           zIndex: 1001,
@@ -171,10 +208,10 @@ export const ValueEngineEditDialog: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: '24px'
+            marginBottom: '28px'
           }}>
             <Dialog.Title style={{
-              fontSize: '18px',
+              fontSize: '17px',
               fontWeight: '600',
               color: 'var(--text-primary)',
               margin: 0
@@ -199,21 +236,21 @@ export const ValueEngineEditDialog: React.FC = () => {
           {/* Portfolio Products */}
           <div style={{ marginBottom: '24px' }}>
             <h3 style={{
-              fontSize: '16px',
+              fontSize: '15px',
               fontWeight: '600',
               color: 'var(--text-primary)',
-              marginBottom: '16px'
+              marginBottom: '14px'
             }}>
               Portfolio Products
             </h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
               <div>
                 <label style={{
                   display: 'block',
                   fontSize: '12px',
                   color: 'var(--text-secondary)',
-                  marginBottom: '6px'
+                  marginBottom: '8px'
                 }}>
                   Basket Name
                 </label>
@@ -223,14 +260,17 @@ export const ValueEngineEditDialog: React.FC = () => {
                   onChange={(e) => setBasketName(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '8px 12px',
+                    padding: '9px 14px',
                     backgroundColor: 'var(--bg-card)',
                     color: 'var(--text-primary)',
                     border: '1px solid var(--border-subtle)',
                     borderRadius: '6px',
                     fontSize: '13px',
-                    outline: 'none'
+                    outline: 'none',
+                    transition: 'border-color 200ms'
                   }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = 'var(--border-focus)'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-subtle)'}
                 />
               </div>
 
@@ -239,7 +279,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                   display: 'block',
                   fontSize: '12px',
                   color: 'var(--text-secondary)',
-                  marginBottom: '6px'
+                  marginBottom: '8px'
                 }}>
                   Basket Scoring Weight (0-10)
                 </label>
@@ -251,14 +291,17 @@ export const ValueEngineEditDialog: React.FC = () => {
                   max="10"
                   style={{
                     width: '100%',
-                    padding: '8px 12px',
+                    padding: '9px 14px',
                     backgroundColor: 'var(--bg-card)',
                     color: 'var(--text-primary)',
                     border: '1px solid var(--border-subtle)',
                     borderRadius: '6px',
                     fontSize: '13px',
-                    outline: 'none'
+                    outline: 'none',
+                    transition: 'border-color 200ms'
                   }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = 'var(--border-focus)'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-subtle)'}
                 />
               </div>
             </div>
@@ -267,18 +310,18 @@ export const ValueEngineEditDialog: React.FC = () => {
           {/* Basket Configurations */}
           <div style={{ marginBottom: '24px' }}>
             <h3 style={{
-              fontSize: '13px',
+              fontSize: '14px',
               fontWeight: '600',
               color: 'var(--text-primary)',
-              marginBottom: '8px',
+              marginBottom: '10px',
               letterSpacing: '-0.01em'
             }}>
               Basket Configurations
             </h3>
             <p style={{
-              fontSize: '11px',
-              color: 'var(--text-muted)',
-              marginBottom: '16px',
+              fontSize: '12px',
+              color: 'var(--text-secondary)',
+              marginBottom: '14px',
               lineHeight: '1.5'
             }}>
               Assign items to the configurations below to view available metrics
@@ -289,7 +332,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                 display: 'block',
                 fontSize: '12px',
                 color: 'var(--text-secondary)',
-                marginBottom: '6px'
+                marginBottom: '8px'
               }}>
                 Therapeutic Area
               </label>
@@ -298,17 +341,113 @@ export const ValueEngineEditDialog: React.FC = () => {
                 onChange={(e) => setTherapeuticArea(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '8px 12px',
-                  backgroundColor: 'var(--bg-card)',
+                  padding: '10px 14px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
                   color: 'var(--text-primary)',
-                  border: '1px solid var(--border-subtle)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
                   borderRadius: '6px',
                   fontSize: '13px',
                   cursor: 'pointer',
-                  outline: 'none'
+                  outline: 'none',
+                  transition: 'all 200ms'
                 }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)'}
               >
                 <option value="Oncology">Oncology</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '16px', position: 'relative' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+                marginBottom: '8px'
+              }}>
+                Product
+              </label>
+              <div
+                onClick={() => setProductDropdownOpen(!productDropdownOpen)}
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  transition: 'all 200ms',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)'}
+              >
+                <span>{product}</span>
+                <ChevronRight
+                  size={16}
+                  style={{
+                    transform: productDropdownOpen ? 'rotate(90deg)' : 'rotate(0deg)',
+                    transition: 'transform 200ms',
+                    color: 'var(--text-secondary)'
+                  }}
+                />
+              </div>
+
+              {/* Custom Popover with Tree */}
+              {productDropdownOpen && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '8px',
+                  backgroundColor: '#2a2a2a',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '6px',
+                  padding: '8px',
+                  zIndex: 1000,
+                  maxHeight: '300px',
+                  overflow: 'auto',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)'
+                }}>
+                  {renderTreeNode(productTree)}
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+                marginBottom: '8px'
+              }}>
+                Indication
+              </label>
+              <select
+                value={indication}
+                onChange={(e) => setIndication(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  transition: 'all 200ms'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)'}
+              >
+                <option value={indication}>{indication}</option>
               </select>
             </div>
 
@@ -317,49 +456,54 @@ export const ValueEngineEditDialog: React.FC = () => {
                 display: 'block',
                 fontSize: '12px',
                 color: 'var(--text-secondary)',
-                marginBottom: '6px'
+                marginBottom: '8px'
               }}>
-                Product
+                Specialties
               </label>
               <select
-                value={product}
-                onChange={(e) => setProduct(e.target.value)}
+                value={specialties}
+                onChange={(e) => setSpecialties(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '8px 12px',
-                  backgroundColor: 'var(--bg-card)',
+                  padding: '10px 14px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
                   color: 'var(--text-primary)',
-                  border: '1px solid var(--border-subtle)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
                   borderRadius: '6px',
                   fontSize: '13px',
                   cursor: 'pointer',
-                  outline: 'none'
+                  outline: 'none',
+                  transition: 'all 200ms'
                 }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)'}
               >
-                <option value="Odaiazol">Odaiazol</option>
+                <option value="Oncology">Oncology</option>
               </select>
             </div>
 
-            {/* Product Tree */}
+            {/* Product Tree - Hidden as it's now in the Product dropdown */}
+            {/*
             <div style={{
-              backgroundColor: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '8px',
-              padding: '12px',
+              backgroundColor: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              borderRadius: '6px',
+              padding: '14px 16px',
               marginBottom: '16px'
             }}>
               <div style={{
-                fontSize: '11px',
+                fontSize: '10px',
                 color: 'var(--text-muted)',
-                marginBottom: '12px',
+                marginBottom: '10px',
                 fontWeight: '500',
                 textTransform: 'uppercase',
-                letterSpacing: '0.05em'
+                letterSpacing: '0.08em'
               }}>
                 Indications
               </div>
               {renderTreeNode(productTree)}
             </div>
+            */}
           </div>
 
           {/* Metrics */}
@@ -368,14 +512,14 @@ export const ValueEngineEditDialog: React.FC = () => {
               fontSize: '14px',
               fontWeight: '600',
               color: 'var(--text-primary)',
-              marginBottom: '8px'
+              marginBottom: '12px'
             }}>
               Metrics
             </h3>
             <p style={{
               fontSize: '12px',
               color: 'var(--text-secondary)',
-              marginBottom: '16px'
+              marginBottom: '14px'
             }}>
               Assign scoring weight for each available metric
             </p>
@@ -388,31 +532,31 @@ export const ValueEngineEditDialog: React.FC = () => {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{
-                    backgroundColor: '#1a1a1a'
+                    backgroundColor: 'rgba(255, 255, 255, 0.03)'
                   }}>
                     <th style={{
-                      padding: '16px 20px',
+                      padding: '14px 18px',
                       textAlign: 'left',
-                      fontSize: '13px',
-                      fontWeight: '500',
+                      fontSize: '12px',
+                      fontWeight: '600',
                       color: 'var(--text-secondary)'
                     }}>
                       Metric name
                     </th>
                     <th style={{
-                      padding: '16px 20px',
+                      padding: '14px 18px',
                       textAlign: 'center',
-                      fontSize: '13px',
-                      fontWeight: '500',
+                      fontSize: '12px',
+                      fontWeight: '600',
                       color: 'var(--text-secondary)'
                     }}>
                       Scoring weight
                     </th>
                     <th style={{
-                      padding: '16px 20px',
+                      padding: '14px 18px',
                       textAlign: 'center',
-                      fontSize: '13px',
-                      fontWeight: '500',
+                      fontSize: '12px',
+                      fontWeight: '600',
                       color: 'var(--text-secondary)'
                     }}>
                       Visualize
@@ -423,15 +567,16 @@ export const ValueEngineEditDialog: React.FC = () => {
                   {metrics.map((metric, index) => (
                     <tr key={index}>
                       <td style={{
-                        padding: '16px 20px',
-                        fontSize: '15px',
+                        padding: '14px 18px',
+                        fontSize: '13px',
+                        fontWeight: '500',
                         color: 'var(--text-primary)',
                         backgroundColor: 'transparent'
                       }}>
                         {metric.name}
                       </td>
                       <td style={{
-                        padding: '16px 20px',
+                        padding: '14px 18px',
                         textAlign: 'right',
                         backgroundColor: 'transparent'
                       }}>
@@ -443,19 +588,19 @@ export const ValueEngineEditDialog: React.FC = () => {
                             min="0"
                             max="100"
                             style={{
-                              width: '100px',
-                              padding: '10px 16px',
-                              backgroundColor: '#1a1a1a',
+                              width: '90px',
+                              padding: '9px 14px',
+                              backgroundColor: 'rgba(255, 255, 255, 0.04)',
                               color: 'var(--text-primary)',
-                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              border: '1px solid rgba(255, 255, 255, 0.08)',
                               borderRadius: '6px',
-                              fontSize: '14px',
+                              fontSize: '13px',
                               textAlign: 'center',
                               outline: 'none'
                             }}
                           />
                           <span style={{
-                            fontSize: '14px',
+                            fontSize: '13px',
                             color: 'var(--text-secondary)',
                             minWidth: '20px'
                           }}>
@@ -464,7 +609,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                         </div>
                       </td>
                       <td style={{
-                        padding: '16px 20px',
+                        padding: '14px 18px',
                         textAlign: 'center',
                         backgroundColor: 'transparent'
                       }}>
@@ -493,9 +638,9 @@ export const ValueEngineEditDialog: React.FC = () => {
             onToggle={(e) => setOpenSections({...openSections, competitive: (e.target as HTMLDetailsElement).open})}
           >
             <summary style={{
-              padding: '14px 16px',
-              backgroundColor: '#1a1a1a',
-              border: 'none',
+              padding: '13px 16px',
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
               borderRadius: '8px',
               cursor: 'pointer',
               fontSize: '14px',
@@ -516,17 +661,17 @@ export const ValueEngineEditDialog: React.FC = () => {
               Competitive Potential
             </summary>
             <div style={{
-              backgroundColor: '#0d0d0d',
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
               borderRadius: '8px',
-              padding: '16px',
+              padding: '18px',
               marginTop: '8px'
             }}>
               <div style={{
                 fontSize: '13px',
                 color: 'var(--text-primary)',
                 marginBottom: '16px',
-                padding: '12px 16px',
-                backgroundColor: '#1a1a1a',
+                padding: '12px 18px',
+                backgroundColor: 'rgba(255, 255, 255, 0.04)',
                 borderRadius: '6px'
               }}>
                 Basket weight: 2
@@ -536,7 +681,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                 <thead>
                   <tr>
                     <th style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       textAlign: 'left',
                       fontSize: '12px',
                       fontWeight: '500',
@@ -545,7 +690,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                       Markets
                     </th>
                     <th style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       textAlign: 'center',
                       fontSize: '12px',
                       fontWeight: '500',
@@ -554,7 +699,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                       Scoring weight
                     </th>
                     <th style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       textAlign: 'center',
                       fontSize: '12px',
                       fontWeight: '500',
@@ -567,14 +712,14 @@ export const ValueEngineEditDialog: React.FC = () => {
                 <tbody>
                   <tr>
                     <td style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       fontSize: '14px',
                       color: 'var(--text-primary)'
                     }}>
                       2L Therapy HER+ Overall Market, XPO TRx
                     </td>
                     <td style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       textAlign: 'center'
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
@@ -583,11 +728,11 @@ export const ValueEngineEditDialog: React.FC = () => {
                           value="80"
                           readOnly
                           style={{
-                            width: '80px',
-                            padding: '8px 12px',
-                            backgroundColor: '#1a1a1a',
+                            width: '85px',
+                            padding: '9px 14px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.04)',
                             color: 'var(--text-primary)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
                             borderRadius: '6px',
                             fontSize: '14px',
                             textAlign: 'center',
@@ -603,7 +748,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                       </div>
                     </td>
                     <td style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       textAlign: 'center'
                     }}>
                       <input
@@ -621,14 +766,14 @@ export const ValueEngineEditDialog: React.FC = () => {
                   </tr>
                   <tr>
                     <td style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       fontSize: '14px',
                       color: 'var(--text-primary)'
                     }}>
                       Competitive brand PixelTron, XPO NBRx
                     </td>
                     <td style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       textAlign: 'center'
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
@@ -637,11 +782,11 @@ export const ValueEngineEditDialog: React.FC = () => {
                           value="20"
                           readOnly
                           style={{
-                            width: '80px',
-                            padding: '8px 12px',
-                            backgroundColor: '#1a1a1a',
+                            width: '85px',
+                            padding: '9px 14px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.04)',
                             color: 'var(--text-primary)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
                             borderRadius: '6px',
                             fontSize: '14px',
                             textAlign: 'center',
@@ -657,7 +802,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                       </div>
                     </td>
                     <td style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       textAlign: 'center'
                     }}>
                       <input
@@ -683,9 +828,9 @@ export const ValueEngineEditDialog: React.FC = () => {
             onToggle={(e) => setOpenSections({...openSections, patient: (e.target as HTMLDetailsElement).open})}
           >
             <summary style={{
-              padding: '14px 16px',
-              backgroundColor: '#1a1a1a',
-              border: 'none',
+              padding: '13px 16px',
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
               borderRadius: '8px',
               cursor: 'pointer',
               fontSize: '14px',
@@ -706,17 +851,17 @@ export const ValueEngineEditDialog: React.FC = () => {
               Patient Potential (precursor)
             </summary>
             <div style={{
-              backgroundColor: '#0d0d0d',
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
               borderRadius: '8px',
-              padding: '16px',
+              padding: '18px',
               marginTop: '8px'
             }}>
               <div style={{
                 fontSize: '13px',
                 color: 'var(--text-primary)',
                 marginBottom: '16px',
-                padding: '12px 16px',
-                backgroundColor: '#1a1a1a',
+                padding: '12px 18px',
+                backgroundColor: 'rgba(255, 255, 255, 0.04)',
                 borderRadius: '6px'
               }}>
                 Basket weight: 1
@@ -726,7 +871,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                 <thead>
                   <tr>
                     <th style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       textAlign: 'left',
                       fontSize: '12px',
                       fontWeight: '500',
@@ -734,7 +879,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                     }}>
                     </th>
                     <th style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       textAlign: 'center',
                       fontSize: '12px',
                       fontWeight: '500',
@@ -743,7 +888,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                       Scoring weight
                     </th>
                     <th style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       textAlign: 'center',
                       fontSize: '12px',
                       fontWeight: '500',
@@ -756,14 +901,14 @@ export const ValueEngineEditDialog: React.FC = () => {
                 <tbody>
                   <tr>
                     <td style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       fontSize: '14px',
                       color: 'var(--text-primary)'
                     }}>
                       PSP Claims
                     </td>
                     <td style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       textAlign: 'center'
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
@@ -772,11 +917,11 @@ export const ValueEngineEditDialog: React.FC = () => {
                           value="20"
                           readOnly
                           style={{
-                            width: '80px',
-                            padding: '8px 12px',
-                            backgroundColor: '#1a1a1a',
+                            width: '85px',
+                            padding: '9px 14px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.04)',
                             color: 'var(--text-primary)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
                             borderRadius: '6px',
                             fontSize: '14px',
                             textAlign: 'center',
@@ -792,7 +937,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                       </div>
                     </td>
                     <td style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       textAlign: 'center'
                     }}>
                       <input
@@ -810,14 +955,14 @@ export const ValueEngineEditDialog: React.FC = () => {
                   </tr>
                   <tr>
                     <td style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       fontSize: '14px',
                       color: 'var(--text-primary)'
                     }}>
                       Payer mix, Medicaid, Medicare
                     </td>
                     <td style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       textAlign: 'center'
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
@@ -826,11 +971,11 @@ export const ValueEngineEditDialog: React.FC = () => {
                           value="80"
                           readOnly
                           style={{
-                            width: '80px',
-                            padding: '8px 12px',
-                            backgroundColor: '#1a1a1a',
+                            width: '85px',
+                            padding: '9px 14px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.04)',
                             color: 'var(--text-primary)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
                             borderRadius: '6px',
                             fontSize: '14px',
                             textAlign: 'center',
@@ -846,7 +991,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                       </div>
                     </td>
                     <td style={{
-                      padding: '12px 16px',
+                      padding: '12px 18px',
                       textAlign: 'center'
                     }}>
                       <input
@@ -872,9 +1017,9 @@ export const ValueEngineEditDialog: React.FC = () => {
             onToggle={(e) => setOpenSections({...openSections, analog: (e.target as HTMLDetailsElement).open})}
           >
             <summary style={{
-              padding: '14px 16px',
-              backgroundColor: '#1a1a1a',
-              border: 'none',
+              padding: '13px 16px',
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
               borderRadius: '8px',
               cursor: 'pointer',
               fontSize: '14px',
@@ -895,7 +1040,7 @@ export const ValueEngineEditDialog: React.FC = () => {
               Analog
             </summary>
             <div style={{
-              backgroundColor: '#0d0d0d',
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
               borderRadius: '8px',
               padding: '20px',
               marginTop: '8px'
@@ -913,9 +1058,9 @@ export const ValueEngineEditDialog: React.FC = () => {
           {/* Action Buttons */}
           <div style={{
             display: 'flex',
-            gap: '12px',
+            gap: '10px',
             justifyContent: 'flex-end',
-            paddingTop: '20px',
+            paddingTop: '24px',
             borderTop: '1px solid var(--border-subtle)'
           }}>
             <Button variant="secondary" onClick={() => setActiveModal(null)}>

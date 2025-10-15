@@ -146,6 +146,10 @@ interface AppState {
   updateSimulation: (id: string, updates: Partial<SimulationScenario>) => void;
   removeSimulation: (id: string) => void;
   getSimulationById: (id: string) => SimulationScenario | undefined;
+
+  // PSP Metric Demo
+  pspMetricAdded: boolean;
+  setPspMetricAdded: (added: boolean) => void;
 }
 
 export const useAppStore = create<AppState>((set): AppState => ({
@@ -323,7 +327,11 @@ export const useAppStore = create<AppState>((set): AppState => ({
   getSimulationById: (id): SimulationScenario | undefined => {
     const state: AppState = useAppStore.getState();
     return state.simulations.find((sim: SimulationScenario) => sim.id === id);
-  }
+  },
+
+  // PSP Metric Demo
+  pspMetricAdded: false,
+  setPspMetricAdded: (added) => set({ pspMetricAdded: added })
 }));
 
 // Mock products data

@@ -11,8 +11,10 @@ export interface Simulation {
   name: string;
   status: 'pending' | 'running' | 'completed';
   progress: number;
+  startTime?: number;
   config: {
     establishedProduct: string;
+    labels?: string[];
     parameters: string[];
   };
   results?: {
@@ -58,22 +60,31 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
     // Always include the 2 original cards
     const originalSimulations: Simulation[] = [
       {
-        id: 'original-value-engine',
-        name: 'Value Engine: HCP Targeting',
+        id: 'value-engine-option-1',
+        name: 'Value Engine: HCP Targeting Option 1',
         status: 'pending',
         progress: 0,
         config: {
           establishedProduct: productConfig.product || 'Odaiazol',
+          labels: [
+            'Established Product',
+            '70/30 Value Weighting'
+          ],
           parameters: []
         }
       },
       {
-        id: 'original-curation-engine',
-        name: 'Curation Engine: Call Plan',
+        id: 'value-engine-option-2',
+        name: 'Value Engine: HCP Targeting Option 2',
         status: 'pending',
         progress: 0,
         config: {
           establishedProduct: productConfig.product || 'Odaiazol',
+          labels: [
+            'Established Product',
+            '70/30 Value Weighting',
+            'XPO TRx Weight to 0.2'
+          ],
           parameters: []
         }
       }
@@ -99,42 +110,97 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
   // Check if simulation was triggered from chat
   useEffect(() => {
     if (simulationTriggered) {
-      // Start simulations automatically
-      setSimulations(prev => prev.map(sim => ({
-        ...sim,
-        status: 'running',
-        progress: 0
-      })));
-      
-      // Reset the trigger
-      setSimulationTriggered(false);
+      // Start ONLY the first simulation, leave others as pending
+      const startTime = Date.now();
+      console.log('[SimulationRunner] Simulation triggered! Starting first simulation at:', startTime);
+      setSimulations(prev => {
+        const updated = prev.map((sim, index) => {
+          if (index === 0) {
+            // Start the first simulation
+            return {
+              ...sim,
+              status: 'running',
+              progress: 0,
+              startTime: startTime
+            };
+          } else {
+            // Keep others as pending
+            return {
+              ...sim,
+              status: 'pending',
+              progress: 0,
+              startTime: undefined
+            };
+          }
+        });
+        console.log('[SimulationRunner] Updated simulations:', updated);
+        return updated;
+      });
+
+      // DON'T reset the trigger here - let it stay true while simulations run
+      // It will be reset when all simulations complete (see effect below)
     }
   }, [simulationTriggered, setSimulationTriggered]);
 
-  // Simulate progress for running simulations
+  // Simulate progress for running simulations - runs for exactly 12 seconds
   useEffect(() => {
+    const duration = 12000; // 12 seconds total
+    const intervalTime = 100; // Update every 100ms for smooth animation
+
+    console.log('[SimulationRunner] Setting up progress interval');
+
     const interval = setInterval(() => {
-      setSimulations(prev => prev.map(sim => {
-        if (sim.status === 'running' && sim.progress < 100) {
-          const newProgress = Math.min(sim.progress + Math.random() * 15, 100);
-          
-          // Complete simulation when progress reaches 100
-          if (newProgress >= 100) {
-            return {
-              ...sim,
-              progress: 100,
-              status: 'completed',
-              results: generateMockResults(sim.id)
+      setSimulations(prev => {
+        let hasJustCompleted = false;
+
+        // First pass: update progress for running simulations
+        const updated = prev.map(sim => {
+          if (sim.status === 'running' && sim.startTime) {
+            // Calculate progress based on elapsed time since start
+            const elapsed = Date.now() - sim.startTime;
+            const newProgress = Math.min((elapsed / duration) * 100, 100);
+
+            console.log(`[SimulationRunner] ${sim.name}: elapsed=${elapsed}ms, progress=${newProgress.toFixed(2)}%`);
+
+            // Complete simulation when progress reaches 100
+            if (newProgress >= 100) {
+              console.log(`[SimulationRunner] ${sim.name}: COMPLETED`);
+              hasJustCompleted = true;
+              return {
+                ...sim,
+                progress: 100,
+                status: 'completed',
+                results: generateMockResults(sim.id)
+              };
+            }
+
+            return { ...sim, progress: newProgress };
+          }
+          return sim;
+        });
+
+        // Second pass: if a simulation just completed, start the next pending one
+        if (hasJustCompleted) {
+          const nextPendingIndex = updated.findIndex(s => s.status === 'pending');
+          if (nextPendingIndex !== -1) {
+            console.log(`[SimulationRunner] Starting next simulation: ${updated[nextPendingIndex].name}`);
+            updated[nextPendingIndex] = {
+              ...updated[nextPendingIndex],
+              status: 'running',
+              progress: 0,
+              startTime: Date.now()
             };
           }
-          
-          return { ...sim, progress: newProgress };
         }
-        return sim;
-      }));
-    }, 500);
 
-    return () => clearInterval(interval);
+        return updated;
+      });
+    }, intervalTime);
+
+    return () => {
+      console.log('[SimulationRunner] Cleaning up progress interval');
+      clearInterval(interval);
+    };
   }, []);
 
   const generateMockResults = (simId: string): Simulation['results'] => {
@@ -173,10 +239,23 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
   // Check if any simulations are still running or pending
   const anyRunning = simulations.some(s => s.status === 'running' || s.status === 'pending');
 
+  // When all simulations complete, show them for 2 seconds, then reset to show correct report
+  useEffect(() => {
+    if (!anyRunning && simulations.every(s => s.status === 'completed')) {
+      console.log('[SimulationRunner] All simulations completed, will reset in 2 seconds');
+      // Give user 2 seconds to see the completed state, then switch to the correct report view
+      setTimeout(() => {
+        console.log('[SimulationRunner] Resetting simulationTriggered to show correct report');
+        setSimulationTriggered(false);
+      }, 2000); // 2 second delay to see completion
+    }
+  }, [anyRunning, simulations, setSimulationTriggered]);
+
   return (
     <>
-      {anyRunning ? (
-        /* Parallel Progress Bars View */
+      {/* Always show progress bars view while simulations are active (running, pending, or recently completed) */}
+      {(anyRunning || simulations.some(s => s.status === 'completed')) ? (
+        /* Progress Bars View - show during and after completion */
         <div style={{
           padding: '32px',
           backgroundColor: 'var(--bg-main)'
@@ -187,7 +266,7 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
             color: 'var(--text-primary)',
             marginBottom: '24px'
           }}>
-            Running Simulations
+            {anyRunning ? 'Running Simulations' : 'Simulations Complete'}
           </h2>
 
           <div style={{
@@ -199,14 +278,15 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
               <div key={sim.id} style={{
                 backgroundColor: 'var(--bg-card)',
                 borderRadius: '12px',
-                padding: '24px',
-                border: '1px solid var(--border-subtle)'
+                padding: '20px 24px',
+                border: '1px solid var(--border-subtle)',
+                position: 'relative'
               }}>
-                {/* Simulation Name and Status */}
+                {/* Header: Title + Status Badge */}
                 <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center',
+                  alignItems: 'flex-start',
                   marginBottom: '16px'
                 }}>
                   <h3 style={{
@@ -217,59 +297,102 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
                   }}>
                     {sim.name}
                   </h3>
+
+                  {/* Status badge - green when completed, orange when in progress */}
                   <span style={{
-                    fontSize: '13px',
+                    padding: '4px 10px',
+                    backgroundColor: sim.status === 'completed'
+                      ? 'rgba(16, 185, 129, 0.15)'
+                      : 'rgba(245, 158, 11, 0.15)',
+                    color: sim.status === 'completed' ? '#10b981' : '#f59e0b',
+                    fontSize: '11px',
                     fontWeight: '500',
-                    color: sim.status === 'completed' ? '#10b981' : 'var(--accent-blue)'
+                    borderRadius: '6px',
+                    textTransform: 'lowercase'
                   }}>
-                    {sim.status === 'completed' ? 'Completed' : `${Math.round(sim.progress)}%`}
+                    {sim.status === 'completed' ? 'completed' : 'in progress'}
                   </span>
                 </div>
 
-                {/* Progress Bar */}
-                <div style={{
-                  width: '100%',
-                  height: '8px',
-                  backgroundColor: 'var(--bg-secondary)',
-                  borderRadius: '4px',
-                  overflow: 'hidden',
-                  position: 'relative'
-                }}>
+                {/* Labels Row */}
+                {sim.config.labels && sim.config.labels.length > 0 && (
                   <div style={{
-                    width: `${sim.progress}%`,
-                    height: '100%',
-                    backgroundColor: sim.status === 'completed' ? '#10b981' : 'var(--accent-blue)',
-                    borderRadius: '4px',
-                    transition: 'width 0.3s ease',
-                    position: 'relative',
-                    overflow: 'hidden'
+                    display: 'flex',
+                    gap: '8px',
+                    marginBottom: '16px',
+                    flexWrap: 'wrap'
                   }}>
-                    {sim.status === 'running' && (
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
-                        animation: 'shimmer 2s infinite'
-                      }} />
-                    )}
+                    {sim.config.labels.map((label, idx) => (
+                      <span key={idx} style={{
+                        padding: '4px 10px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        color: 'var(--text-secondary)',
+                        fontSize: '12px',
+                        fontWeight: '400',
+                        borderRadius: '4px',
+                        border: '1px solid rgba(255, 255, 255, 0.08)'
+                      }}>
+                        {label}
+                      </span>
+                    ))}
                   </div>
-                </div>
+                )}
 
-                {/* Product Details */}
-                <div style={{
-                  marginTop: '12px',
-                  fontSize: '12px',
-                  color: 'var(--text-secondary)'
-                }}>
-                  Product: {sim.config.establishedProduct}
-                  {sim.config.parameters.length > 0 && (
-                    <span style={{ marginLeft: '12px', color: 'var(--text-muted)' }}>
-                      • {sim.config.parameters.join(', ')}
+                {/* Progress Bar Section */}
+                <div style={{ marginBottom: '8px' }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '8px'
+                  }}>
+                    <span style={{
+                      fontSize: '12px',
+                      color: 'var(--text-secondary)',
+                      fontWeight: '500'
+                    }}>
+                      Running simulation
                     </span>
-                  )}
+                    <span style={{
+                      fontSize: '12px',
+                      color: 'var(--text-secondary)',
+                      fontWeight: '500'
+                    }}>
+                      {Math.round(sim.progress)}%
+                    </span>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div style={{
+                    width: '100%',
+                    height: '6px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '3px',
+                    overflow: 'hidden',
+                    position: 'relative'
+                  }}>
+                    <div style={{
+                      width: `${sim.progress}%`,
+                      height: '100%',
+                      backgroundColor: sim.status === 'completed' ? '#10b981' : '#3b82f6',
+                      borderRadius: '3px',
+                      transition: 'width 0.3s ease',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}>
+                      {sim.status === 'running' && (
+                        <div style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                          animation: 'shimmer 2s infinite'
+                        }} />
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

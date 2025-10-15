@@ -1,6 +1,6 @@
 import React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { Button } from '../components/Button';
 import { useAppStore } from '../store/appStore';
 
@@ -66,15 +66,15 @@ export const CurationReviewDialog: React.FC = () => {
                 color: 'var(--text-primary)',
                 margin: 0
               }}>
-                Curation: Call Plan
+                Orchestration Engine
               </Dialog.Title>
               <span style={{
                 padding: '4px 12px',
-                backgroundColor: 'rgba(245, 158, 11, 0.2)',
-                color: '#f59e0b',
-                fontSize: '12px',
-                fontWeight: '500',
-                borderRadius: '4px'
+                backgroundColor: '#f59e0b',
+                color: '#000000',
+                fontSize: '11px',
+                fontWeight: '600',
+                borderRadius: '6px'
               }}>
                 Review
               </span>
@@ -109,286 +109,358 @@ export const CurationReviewDialog: React.FC = () => {
             </div>
           </div>
 
-          {/* Single Column Layout - Suggestions */}
+          {/* Single Column Layout - Main Content */}
           <div style={{ marginBottom: '24px' }}>
-            <h3 style={{
-              fontSize: '18px',
-              fontWeight: '600',
-              color: 'var(--text-primary)',
-              marginBottom: '8px'
-            }}>
-              Suggestions
-            </h3>
-            <p style={{
-              fontSize: '14px',
-              color: 'var(--text-secondary)',
-              marginBottom: '20px',
-              lineHeight: '1.5'
-            }}>
-              Specifies how much a suggestion influences the curated list
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {/* Suggestion 1 */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '12px',
-                backgroundColor: 'transparent',
-                borderRadius: '6px'
-              }}>
-                <input
-                  type="checkbox"
-                  checked
-                  readOnly
-                  style={{
-                    width: '18px',
-                    height: '18px',
-                    accentColor: '#3b82f6',
-                    cursor: 'pointer',
-                    flexShrink: 0
-                  }}
-                />
-                <span style={{
-                  flex: 1,
+              {/* Section 1: General Setup */}
+              <div style={{ marginBottom: '32px' }}>
+                <h3 style={{
                   fontSize: '15px',
-                  color: 'var(--text-primary)'
+                  fontWeight: '600',
+                  color: 'var(--text-primary)',
+                  marginBottom: '16px'
                 }}>
-                  New writer identified for Odaiazol
-                </span>
-                <select
-                  defaultValue="Medium"
-                  style={{
-                    padding: '6px 32px 6px 12px',
-                    backgroundColor: 'transparent',
-                    color: 'var(--text-secondary)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    appearance: 'none',
-                    backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23666\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 8px center',
-                    minWidth: '120px'
-                  }}
-                >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                </select>
+                  General Setup
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {/* Associate HCP Targeting dropdown */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '8px',
+                    backgroundColor: 'transparent'
+                  }}>
+                    <div style={{
+                      width: '18px',
+                      height: '18px',
+                      backgroundColor: '#3b82f6',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Check size={13} color="#ffffff" strokeWidth={2} />
+                    </div>
+                    <span style={{
+                      fontSize: '14px',
+                      color: 'var(--text-primary)'
+                    }}>
+                      Associate HCP Targeting
+                    </span>
+                  </div>
+
+                  {/* Odaiazol dropdown */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '8px 8px 8px 42px',
+                    backgroundColor: 'transparent'
+                  }}>
+                    <select
+                      defaultValue="odaiazol"
+                      style={{
+                        padding: '6px 32px 6px 12px',
+                        backgroundColor: 'var(--bg-secondary)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-subtle)',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        outline: 'none',
+                        minWidth: '200px'
+                      }}
+                    >
+                      <option value="odaiazol">Odaiazol</option>
+                      <option value="pixeltron">Pixeltron</option>
+                    </select>
+                  </div>
+
+                  {/* Leverage Strategy checkbox */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '12px',
+                    padding: '8px',
+                    backgroundColor: 'transparent'
+                  }}>
+                    <div style={{
+                      width: '18px',
+                      height: '18px',
+                      backgroundColor: '#3b82f6',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      marginTop: '2px'
+                    }}>
+                      <Check size={13} color="#ffffff" strokeWidth={2} />
+                    </div>
+                    <span style={{
+                      fontSize: '14px',
+                      color: 'var(--text-primary)',
+                      lineHeight: '1.5'
+                    }}>
+                      Leverage Strategy, Signals and, High quality, Positive PBM impact
+                    </span>
+                  </div>
+
+                  {/* Proactive Engg delivery checkbox */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '12px',
+                    padding: '8px',
+                    backgroundColor: 'transparent'
+                  }}>
+                    <div style={{
+                      width: '18px',
+                      height: '18px',
+                      backgroundColor: '#3b82f6',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      marginTop: '2px'
+                    }}>
+                      <Check size={13} color="#ffffff" strokeWidth={2} />
+                    </div>
+                    <span style={{
+                      fontSize: '14px',
+                      color: 'var(--text-primary)',
+                      lineHeight: '1.5'
+                    }}>
+                      Proactive Engg. delivery and, High Quality, Category & Brand Health
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              {/* Suggestion 2 */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '12px',
-                backgroundColor: 'transparent',
-                borderRadius: '6px'
-              }}>
-                <input
-                  type="checkbox"
-                  checked
-                  readOnly
-                  style={{
-                    width: '18px',
-                    height: '18px',
-                    accentColor: '#3b82f6',
-                    cursor: 'pointer',
-                    flexShrink: 0
-                  }}
-                />
-                <span style={{
-                  flex: 1,
+              {/* Section 2: Associated Odaiazol Selling Teams */}
+              <div style={{ marginBottom: '32px' }}>
+                <h3 style={{
                   fontSize: '15px',
-                  color: 'var(--text-primary)'
+                  fontWeight: '600',
+                  color: 'var(--text-primary)',
+                  marginBottom: '16px'
                 }}>
-                  Significant increase in Odaiazol writing
-                </span>
-                <select
-                  defaultValue="Medium"
-                  style={{
-                    padding: '6px 32px 6px 12px',
-                    backgroundColor: 'transparent',
-                    color: 'var(--text-secondary)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    appearance: 'none',
-                    backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23666\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 8px center',
-                    minWidth: '120px'
-                  }}
-                >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                </select>
+                  Associated Odaiazol Selling Teams
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '8px',
+                    backgroundColor: 'transparent'
+                  }}>
+                    <div style={{
+                      width: '18px',
+                      height: '18px',
+                      backgroundColor: '#3b82f6',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Check size={13} color="#ffffff" strokeWidth={2} />
+                    </div>
+                    <span style={{
+                      fontSize: '14px',
+                      color: 'var(--text-primary)'
+                    }}>
+                      P1: US_SI (Odaiazol)
+                    </span>
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '8px',
+                    backgroundColor: 'transparent'
+                  }}>
+                    <div style={{
+                      width: '18px',
+                      height: '18px',
+                      backgroundColor: '#3b82f6',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Check size={13} color="#ffffff" strokeWidth={2} />
+                    </div>
+                    <span style={{
+                      fontSize: '14px',
+                      color: 'var(--text-primary)'
+                    }}>
+                      P2: US_SE (Odaiazol)
+                    </span>
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '8px',
+                    backgroundColor: 'transparent'
+                  }}>
+                    <div style={{
+                      width: '18px',
+                      height: '18px',
+                      backgroundColor: '#3b82f6',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Check size={13} color="#ffffff" strokeWidth={2} />
+                    </div>
+                    <span style={{
+                      fontSize: '14px',
+                      color: 'var(--text-primary)'
+                    }}>
+                      P3: US_XL (Odaiazol)
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              {/* Suggestion 3 */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '12px',
-                backgroundColor: 'transparent',
-                borderRadius: '6px'
-              }}>
-                <input
-                  type="checkbox"
-                  checked
-                  readOnly
-                  style={{
-                    width: '18px',
-                    height: '18px',
-                    accentColor: '#3b82f6',
-                    cursor: 'pointer',
-                    flexShrink: 0
-                  }}
-                />
-                <span style={{
-                  flex: 1,
+              {/* Section 3: Campaign Settings */}
+              <div style={{ marginBottom: '32px' }}>
+                <h3 style={{
                   fontSize: '15px',
-                  color: 'var(--text-primary)'
+                  fontWeight: '600',
+                  color: 'var(--text-primary)',
+                  marginBottom: '12px'
                 }}>
-                  Significant decrease in Odaiazol writing
-                </span>
-                <select
-                  defaultValue="Medium"
-                  style={{
-                    padding: '6px 32px 6px 12px',
-                    backgroundColor: 'transparent',
-                    color: 'var(--text-secondary)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    appearance: 'none',
-                    backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23666\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 8px center',
-                    minWidth: '120px'
-                  }}
-                >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                </select>
-              </div>
+                  Campaign Settings
+                </h3>
+                <p style={{
+                  fontSize: '13px',
+                  color: 'var(--text-secondary)',
+                  marginBottom: '16px',
+                  lineHeight: '1.6'
+                }}>
+                  Reach and frequency rules, and other engagement criteria
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '8px',
+                    backgroundColor: 'transparent'
+                  }}>
+                    <div style={{
+                      width: '18px',
+                      height: '18px',
+                      backgroundColor: '#3b82f6',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Check size={13} color="#ffffff" strokeWidth={2} />
+                    </div>
+                    <span style={{
+                      fontSize: '14px',
+                      color: 'var(--text-primary)'
+                    }}>
+                      Campaign 1
+                    </span>
+                  </div>
 
-              {/* Suggestion 4 */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '12px',
-                backgroundColor: 'transparent',
-                borderRadius: '6px'
-              }}>
-                <input
-                  type="checkbox"
-                  checked
-                  readOnly
-                  style={{
-                    width: '18px',
-                    height: '18px',
-                    accentColor: '#3b82f6',
-                    cursor: 'pointer',
-                    flexShrink: 0
-                  }}
-                />
-                <span style={{
-                  flex: 1,
-                  fontSize: '15px',
-                  color: 'var(--text-primary)'
-                }}>
-                  New writer identified for Pixeltron
-                </span>
-                <select
-                  defaultValue="Medium"
-                  style={{
-                    padding: '6px 32px 6px 12px',
-                    backgroundColor: 'transparent',
-                    color: 'var(--text-secondary)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    appearance: 'none',
-                    backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23666\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 8px center',
-                    minWidth: '120px'
-                  }}
-                >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                </select>
-              </div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '8px',
+                    backgroundColor: 'transparent'
+                  }}>
+                    <div style={{
+                      width: '18px',
+                      height: '18px',
+                      backgroundColor: '#3b82f6',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Check size={13} color="#ffffff" strokeWidth={2} />
+                    </div>
+                    <span style={{
+                      fontSize: '14px',
+                      color: 'var(--text-primary)'
+                    }}>
+                      Tactic Count 3
+                    </span>
+                  </div>
 
-              {/* Suggestion 5 */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '12px',
-                backgroundColor: 'transparent',
-                borderRadius: '6px'
-              }}>
-                <input
-                  type="checkbox"
-                  checked
-                  readOnly
-                  style={{
-                    width: '18px',
-                    height: '18px',
-                    accentColor: '#3b82f6',
-                    cursor: 'pointer',
-                    flexShrink: 0
-                  }}
-                />
-                <span style={{
-                  flex: 1,
-                  fontSize: '15px',
-                  color: 'var(--text-primary)'
-                }}>
-                  Significant increase in Pixeltron writing
-                </span>
-                <select
-                  defaultValue="Medium"
-                  style={{
-                    padding: '6px 32px 6px 12px',
-                    backgroundColor: 'transparent',
-                    color: 'var(--text-secondary)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    appearance: 'none',
-                    backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23666\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 8px center',
-                    minWidth: '120px'
-                  }}
-                >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                </select>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '8px',
+                    backgroundColor: 'transparent'
+                  }}>
+                    <div style={{
+                      width: '18px',
+                      height: '18px',
+                      backgroundColor: '#3b82f6',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Check size={13} color="#ffffff" strokeWidth={2} />
+                    </div>
+                    <span style={{
+                      fontSize: '14px',
+                      color: 'var(--text-primary)'
+                    }}>
+                      Campaign Length: 1 Month
+                    </span>
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '8px',
+                    backgroundColor: 'transparent'
+                  }}>
+                    <div style={{
+                      width: '18px',
+                      height: '18px',
+                      backgroundColor: '#3b82f6',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Check size={13} color="#ffffff" strokeWidth={2} />
+                    </div>
+                    <span style={{
+                      fontSize: '14px',
+                      color: 'var(--text-primary)'
+                    }}>
+                      Adjust to changing marketing conditions
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
           </div>
 
           {/* Action Buttons */}

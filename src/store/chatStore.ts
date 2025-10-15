@@ -15,9 +15,18 @@ export interface PrePrompt {
   visible: boolean;
 }
 
+export interface SuggestionCard {
+  id: string;
+  title: string;
+  description?: string;
+  action: () => void;
+  visible: boolean;
+}
+
 interface ChatState {
   messages: ChatMessage[];
   prePrompts: PrePrompt[];
+  suggestionCards: SuggestionCard[];
   currentStep: number;
   isTyping: boolean;
   isThinking: boolean;
@@ -29,6 +38,7 @@ interface ChatState {
   // Actions
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
   setPrePrompts: (prompts: PrePrompt[]) => void;
+  setSuggestionCards: (cards: SuggestionCard[]) => void;
   setCurrentStep: (step: number) => void;
   setIsTyping: (typing: boolean) => void;
   setIsThinking: (thinking: boolean) => void;
@@ -47,6 +57,7 @@ interface ChatState {
 export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
   prePrompts: [],
+  suggestionCards: [],
   currentStep: 0,
   isTyping: false,
   isThinking: false,
@@ -62,8 +73,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
       timestamp: new Date()
     }]
   })),
-  
+
   setPrePrompts: (prompts) => set({ prePrompts: prompts }),
+
+  setSuggestionCards: (cards) => set({ suggestionCards: cards }),
   
   setCurrentStep: (step) => set({ currentStep: step }),
   
@@ -80,7 +93,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   setCurrentActiveTab: (tab) => set({ currentActiveTab: tab }),
 
-  clearChat: () => set({ messages: [], prePrompts: [], currentStep: 0 }),
+  clearChat: () => set({ messages: [], prePrompts: [], suggestionCards: [], currentStep: 0 }),
   
   sendUserMessage: (content: string) => {
     const { addMessage, setIsThinking, setIsTyping } = get();
@@ -143,7 +156,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
   
   executeDemoStep: (step, userMessage) => {
-    const { addMessage, setPrePrompts, setIsTyping, setIsThinking, setCurrentStep, setIsExecutingTask, setSimulationTriggered } = get();
+    const { addMessage, setPrePrompts, setSuggestionCards, setIsTyping, setIsThinking, setCurrentStep, setIsExecutingTask, setSimulationTriggered } = get();
     const appStore = useAppStore.getState();
     
     // Funny loading messages for different actions
@@ -175,27 +188,46 @@ export const useChatStore = create<ChatState>((set, get) => ({
       
         switch(step) {
           case 0:
-            // Initial state - show multiple prompt options
-            setPrePrompts([
+            // Initial state - show suggestion cards after document upload
+            setSuggestionCards([
               {
-                id: '1',
-                text: 'List missing or disapproved configurations',
-                action: () => get().executeDemoStep(1, 'List missing or disapproved configurations'),
+                id: 'suggest-1',
+                title: 'Add Copay Card PSP',
+                description: 'Configure patient support program access',
+                action: () => {
+                  // Add PSP metric to the configuration
+                  const appStore = useAppStore.getState();
+                  appStore.setPspMetricAdded(true);
+
+                  // Hide this suggestion card after click
+                  const currentCards = get().suggestionCards;
+                  set({
+                    suggestionCards: currentCards.filter(c => c.id !== 'suggest-1')
+                  });
+
+                  // Add confirmation message
+                  addMessage({
+                    type: 'agent',
+                    content: 'PSP metric added to Current Value configuration. The change is now visible in the Value Engine review.'
+                  });
+                },
                 visible: true
               },
               {
-                id: '1b',
-                text: 'Show complete brand settings',
-                action: () => get().executeDemoStep(1, 'Show complete brand settings'),
-                visible: true
-              },
-              {
-                id: '1c',
-                text: 'Review configuration status',
-                action: () => get().executeDemoStep(1, 'Review configuration status'),
+                id: 'suggest-2',
+                title: 'Change Sales goals to NBRx increase by 10%',
+                description: 'Adjust target metrics for new business growth',
+                action: () => {
+                  // Handle card click
+                  console.log('Change Sales goals clicked');
+                  // Could update the sales goals configuration
+                },
                 visible: true
               }
             ]);
+
+            // Clear pre-prompted buttons - only show suggestion cards
+            setPrePrompts([]);
             break;
           
           case 1:
@@ -546,19 +578,6 @@ Would you like me to help configure any of these items?`;
   generateSetupPrePrompts: () => {
     const appStore = useAppStore.getState();
     const simulations = appStore.simulations;
-
-    if (simulations.length === 0) {
-      // No simulations yet, suggest adding one
-      set({
-        prePrompts: [{
-          id: 'setup-1',
-          text: 'Add a new simulation scenario',
-          action: () => {},
-          visible: true
-        }]
-      });
-      return;
-    }
 
     // Generate context-aware prompts for existing simulations
     const prompts: PrePrompt[] = [];

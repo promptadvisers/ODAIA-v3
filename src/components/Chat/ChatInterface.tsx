@@ -2,12 +2,14 @@ import React, { useEffect, useRef } from 'react';
 import { useChatStore } from '../../store/chatStore';
 import { ChatMessage } from './ChatMessage';
 import { PrePromptedButton } from './PrePromptedButton';
+import { SuggestionCard } from '../SuggestionCard';
 import { Send } from 'lucide-react';
 
 export const ChatInterface: React.FC<{ activeTab?: string }> = ({ activeTab = 'brand' }) => {
   const {
     messages,
     prePrompts,
+    suggestionCards,
     isTyping,
     isThinking,
     isExecutingTask,
@@ -27,7 +29,7 @@ export const ChatInterface: React.FC<{ activeTab?: string }> = ({ activeTab = 'b
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, prePrompts]);
+  }, [messages, prePrompts, suggestionCards]);
 
   // Update current active tab and generate appropriate prompts
   useEffect(() => {
@@ -281,9 +283,23 @@ export const ChatInterface: React.FC<{ activeTab?: string }> = ({ activeTab = 'b
           </div>
         )}
         
+        {/* Suggestion Cards */}
+        {suggestionCards.length > 0 && !isTyping && !isThinking && (
+          <div style={{
+            marginTop: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px'
+          }}>
+            {suggestionCards.map((card) => (
+              <SuggestionCard key={card.id} card={card} />
+            ))}
+          </div>
+        )}
+
         {/* Pre-prompted buttons */}
         {prePrompts.length > 0 && !isTyping && !isThinking && (
-          <div style={{ 
+          <div style={{
             marginTop: '16px',
             display: 'flex',
             flexWrap: 'wrap',
@@ -296,7 +312,7 @@ export const ChatInterface: React.FC<{ activeTab?: string }> = ({ activeTab = 'b
             ))}
           </div>
         )}
-        
+
         <div ref={messagesEndRef} />
       </div>
       

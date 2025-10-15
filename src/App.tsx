@@ -25,6 +25,8 @@ import { ValueEngineEditDialog } from './dialogs/ValueEngineEditDialog';
 import { CurationReviewDialog } from './dialogs/CurationReviewDialog';
 import { SimulationReportDialog } from './dialogs/SimulationReportDialog';
 import { CurationAdvancedConfigDialog } from './dialogs/CurationAdvancedConfigDialog';
+import { CurationCallPlanReviewDialog } from './dialogs/CurationCallPlanReviewDialog';
+import { CurationCallPlanEditDialog } from './dialogs/CurationCallPlanEditDialog';
 
 function App() {
   const [activeTab, setActiveTab] = useState('brand');
@@ -155,6 +157,8 @@ function App() {
         <CurationReviewDialog />
         <SimulationReportDialog />
         <CurationAdvancedConfigDialog />
+        <CurationCallPlanReviewDialog />
+        <CurationCallPlanEditDialog />
       </div>
     </Router>
   );

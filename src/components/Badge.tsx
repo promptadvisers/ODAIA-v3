@@ -25,12 +25,12 @@ export const Badge: React.FC<BadgeProps> = ({
         };
       case 'warning':
         return {
-          backgroundColor: 'var(--badge-warning-bg)',
-          color: 'var(--badge-warning-text)',
+          backgroundColor: '#f59e0b',
+          color: '#000000',
           padding: '4px 10px',
           fontSize: '11px',
           fontWeight: '600',
-          border: '1px solid rgba(245, 158, 11, 0.2)'
+          border: 'none'
         };
       case 'info':
         return {

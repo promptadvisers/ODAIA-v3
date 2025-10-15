@@ -17,6 +17,8 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
   });
   const [editingWebPortal, setEditingWebPortal] = useState(false);
   const [editingMarketAccess, setEditingMarketAccess] = useState(false);
+  const [webPortalConfirmed, setWebPortalConfirmed] = useState(false);
+  const [marketAccessConfirmed, setMarketAccessConfirmed] = useState(false);
 
   const handleSubmit = () => {
     updateBrandAccess({
@@ -77,13 +79,13 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
             </h2>
             <span style={{
               padding: '4px 12px',
-              backgroundColor: 'var(--accent-yellow)',
+              backgroundColor: webPortalConfirmed && marketAccessConfirmed ? '#10b981' : 'var(--accent-yellow)',
               color: 'white',
               fontSize: '11px',
               fontWeight: '600',
               borderRadius: '6px'
             }}>
-              Missing info
+              {webPortalConfirmed && marketAccessConfirmed ? 'Ready' : 'Missing info'}
             </span>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -171,7 +173,7 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
           <div style={{ marginBottom: '8px' }}>
             <label style={{
               fontSize: '12px',
-              color: '#ef4444',
+              color: webPortalConfirmed ? 'var(--text-secondary)' : '#ef4444',
               display: 'block',
               marginBottom: '8px',
               fontWeight: '500'
@@ -189,7 +191,7 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
                   width: '100%',
                   padding: '10px 12px',
                   backgroundColor: 'var(--bg-input)',
-                  border: '1px solid #ef4444',
+                  border: `1px solid ${webPortalConfirmed ? 'var(--border-subtle)' : '#ef4444'}`,
                   borderRadius: '6px',
                   color: 'var(--text-primary)',
                   fontSize: '13px',
@@ -198,35 +200,40 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
               />
             ) : (
               <div
-                onClick={() => setEditingWebPortal(true)}
+                onClick={() => {
+                  setWebPortalConfirmed(true);
+                  setEditingWebPortal(true);
+                }}
                 style={{
                   position: 'relative',
                   display: 'flex',
                   alignItems: 'center',
                   padding: '10px 12px',
                   backgroundColor: 'var(--bg-input)',
-                  border: '1px solid #ef4444',
+                  border: `1px solid ${webPortalConfirmed ? 'var(--border-subtle)' : '#ef4444'}`,
                   borderRadius: '6px',
                   cursor: 'pointer'
                 }}
               >
-                <span style={{
-                  width: '16px',
-                  height: '16px',
-                  borderRadius: '50%',
-                  border: '2px solid #ef4444',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '10px',
-                  color: '#ef4444',
-                  fontWeight: 'bold',
-                  backgroundColor: 'transparent',
-                  marginRight: '8px',
-                  flexShrink: 0
-                }}>
-                  !
-                </span>
+                {!webPortalConfirmed && (
+                  <span style={{
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '50%',
+                    border: '2px solid #ef4444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '10px',
+                    color: '#ef4444',
+                    fontWeight: 'bold',
+                    backgroundColor: 'transparent',
+                    marginRight: '8px',
+                    flexShrink: 0
+                  }}>
+                    !
+                  </span>
+                )}
                 <span style={{
                   flex: 1,
                   color: 'var(--text-primary)',
@@ -234,31 +241,32 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
                 }}>
                   {formData.webPortal}
                 </span>
-                <Check
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    color: 'var(--text-primary)',
-                    flexShrink: 0
-                  }}
-                />
+                {webPortalConfirmed && (
+                  <Check
+                    size={18}
+                    color="var(--text-muted)"
+                    style={{ flexShrink: 0 }}
+                  />
+                )}
               </div>
             )}
-            <div style={{
-              fontSize: '11px',
-              color: '#ef4444',
-              marginTop: '4px',
-              paddingLeft: '2px'
-            }}>
-              Confirm selection
-            </div>
+            {!webPortalConfirmed && (
+              <div style={{
+                fontSize: '11px',
+                color: '#ef4444',
+                marginTop: '4px',
+                paddingLeft: '2px'
+              }}>
+                Confirm selection
+              </div>
+            )}
           </div>
 
           {/* Market Access */}
           <div style={{ marginBottom: '32px' }}>
             <label style={{
               fontSize: '12px',
-              color: '#ef4444',
+              color: marketAccessConfirmed ? 'var(--text-secondary)' : '#ef4444',
               display: 'block',
               marginBottom: '8px',
               fontWeight: '500'
@@ -276,7 +284,7 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
                   width: '100%',
                   padding: '10px 12px',
                   backgroundColor: 'var(--bg-input)',
-                  border: '1px solid #ef4444',
+                  border: `1px solid ${marketAccessConfirmed ? 'var(--border-subtle)' : '#ef4444'}`,
                   borderRadius: '6px',
                   color: 'var(--text-primary)',
                   fontSize: '13px',
@@ -285,35 +293,40 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
               />
             ) : (
               <div
-                onClick={() => setEditingMarketAccess(true)}
+                onClick={() => {
+                  setMarketAccessConfirmed(true);
+                  setEditingMarketAccess(true);
+                }}
                 style={{
                   position: 'relative',
                   display: 'flex',
                   alignItems: 'center',
                   padding: '10px 12px',
                   backgroundColor: 'var(--bg-input)',
-                  border: '1px solid #ef4444',
+                  border: `1px solid ${marketAccessConfirmed ? 'var(--border-subtle)' : '#ef4444'}`,
                   borderRadius: '6px',
                   cursor: 'pointer'
                 }}
               >
-                <span style={{
-                  width: '16px',
-                  height: '16px',
-                  borderRadius: '50%',
-                  border: '2px solid #ef4444',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '10px',
-                  color: '#ef4444',
-                  fontWeight: 'bold',
-                  backgroundColor: 'transparent',
-                  marginRight: '8px',
-                  flexShrink: 0
-                }}>
-                  !
-                </span>
+                {!marketAccessConfirmed && (
+                  <span style={{
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '50%',
+                    border: '2px solid #ef4444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '10px',
+                    color: '#ef4444',
+                    fontWeight: 'bold',
+                    backgroundColor: 'transparent',
+                    marginRight: '8px',
+                    flexShrink: 0
+                  }}>
+                    !
+                  </span>
+                )}
                 <span style={{
                   flex: 1,
                   color: 'var(--text-primary)',
@@ -321,24 +334,25 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
                 }}>
                   {formData.marketAccess}
                 </span>
-                <Check
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    color: 'var(--text-primary)',
-                    flexShrink: 0
-                  }}
-                />
+                {marketAccessConfirmed && (
+                  <Check
+                    size={18}
+                    color="var(--text-muted)"
+                    style={{ flexShrink: 0 }}
+                  />
+                )}
               </div>
             )}
-            <div style={{
-              fontSize: '11px',
-              color: '#ef4444',
-              marginTop: '4px',
-              paddingLeft: '2px'
-            }}>
-              Confirm selection
-            </div>
+            {!marketAccessConfirmed && (
+              <div style={{
+                fontSize: '11px',
+                color: '#ef4444',
+                marginTop: '4px',
+                paddingLeft: '2px'
+              }}>
+                Confirm selection
+              </div>
+            )}
           </div>
 
           {/* Buttons */}

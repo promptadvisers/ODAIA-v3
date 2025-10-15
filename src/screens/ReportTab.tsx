@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
-import { Settings } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { Settings, ChevronLeft, ChevronRight, ChevronDown, X } from 'lucide-react';
 import { SimulationRunner } from '../components/Report/SimulationRunner';
 import { useChatStore } from '../store/chatStore';
+import { CurationSimulationOutput } from '../components/Report/CurationSimulationOutput';
+import { PowerScoreSimulationView } from '../components/Report/PowerScoreSimulationView';
 
 // Simulation data repository - 3 product-based simulations
 const SIMULATION_DATA = {
@@ -488,6 +488,51 @@ export const ReportTab: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState('Odaiazol (Sept 16, 2025)');
   const [selectedObjective, setSelectedObjective] = useState('Odaiazol vs 2L Therapy HER+');
   const [selectedRegion, setSelectedRegion] = useState('National');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [activeReport, setActiveReport] = useState<'powerscore' | 'curation'>('powerscore');
+  const [isReportMenuOpen, setIsReportMenuOpen] = useState(false);
+  const reportMenuRef = useRef<HTMLDivElement | null>(null);
+  const [showCurationToast, setShowCurationToast] = useState(false);
+  const toastTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (reportMenuRef.current && !reportMenuRef.current.contains(event.target as Node)) {
+        setIsReportMenuOpen(false);
+      }
+    }
+
+    if (isReportMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isReportMenuOpen]);
+
+  useEffect(() => {
+    if (activeReport === 'curation') {
+      setShowCurationToast(false);
+      if (toastTimerRef.current) {
+        window.clearTimeout(toastTimerRef.current);
+      }
+      toastTimerRef.current = window.setTimeout(() => {
+        setShowCurationToast(true);
+      }, 5000);
+    } else {
+      if (toastTimerRef.current) {
+        window.clearTimeout(toastTimerRef.current);
+      }
+      setShowCurationToast(false);
+    }
+
+    return () => {
+      if (toastTimerRef.current) {
+        window.clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, [activeReport]);
 
   // Compute current data based on filter selections
   const currentData = useMemo(() => {
@@ -631,16 +676,50 @@ export const ReportTab: React.FC = () => {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100%', backgroundColor: 'var(--bg-main)' }}>
+    <div style={{ display: 'flex', height: '100%', backgroundColor: 'var(--bg-main)', position: 'relative' }}>
       {/* Control Panel Sidebar */}
-      <div style={{
-        width: '260px',
-        backgroundColor: 'var(--bg-secondary)',
-        borderRight: '1px solid var(--border-subtle)',
-        padding: '20px 16px',
-        overflowY: 'auto'
-      }}>
-        <h2 style={{
+      <div
+        style={{
+          width: isSidebarCollapsed ? '0px' : '260px',
+          transition: 'width 0.3s ease',
+          backgroundColor: 'var(--bg-secondary)',
+          borderRight: isSidebarCollapsed ? 'none' : '1px solid var(--border-subtle)',
+          overflow: 'hidden',
+          position: 'relative'
+        }}
+      >
+        <div
+          style={{
+            width: '260px',
+            padding: '20px 16px',
+            overflowY: 'auto',
+            height: '100%',
+            boxSizing: 'border-box',
+            position: 'relative'
+          }}
+        >
+          <button
+            onClick={() => setIsSidebarCollapsed(true)}
+            style={{
+              position: 'absolute',
+              top: '16px',
+              right: '-16px',
+              width: '32px',
+              height: '32px',
+              borderRadius: '16px',
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid var(--border-subtle)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+            }}
+            aria-label="Collapse control panel"
+          >
+            <ChevronLeft size={14} color="var(--text-secondary)" />
+          </button>
+          <h2 style={{
           fontSize: '14px',
           fontWeight: '600',
           color: 'var(--text-primary)',
@@ -658,7 +737,7 @@ export const ReportTab: React.FC = () => {
             gap: '8px',
             marginBottom: '12px'
           }}>
-            <Settings size={14} color="var(--accent-yellow)" />
+            <Settings size={14} color="var(--text-secondary)" />
             <h3 style={{
               fontSize: '12px',
               fontWeight: '600',
@@ -810,8 +889,8 @@ export const ReportTab: React.FC = () => {
               }}
             >
               <option value="Simulation (Odaiazol 70/30)">Simulation (Odaiazol 70/30)</option>
-              <option value="Simulation (Odaiazol 60/40)">Simulation (Odaiazol 60/40)</option>
-              <option value="Simulation (Odaiazol 80/20)">Simulation (Odaiazol 80/20)</option>
+              <option value="Simulation (Odaiazol 60/40)" style={{ color: '#a855f7' }}>Simulation (Odaiazol 60/40)</option>
+              <option value="Simulation (Odaiazol 80/20)" style={{ color: '#a855f7' }}>Simulation (Odaiazol 80/20)</option>
             </select>
           </div>
 
@@ -916,294 +995,215 @@ export const ReportTab: React.FC = () => {
           </div>
         </div>
       </div>
+    </div>
+
+      {isSidebarCollapsed && (
+        <button
+          onClick={() => setIsSidebarCollapsed(false)}
+          style={{
+            position: 'absolute',
+            top: '20px',
+            left: '12px',
+            zIndex: 2,
+            width: '32px',
+            height: '32px',
+            borderRadius: '16px',
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-subtle)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.25)'
+          }}
+          aria-label="Expand control panel"
+        >
+          <ChevronRight size={14} color="var(--text-secondary)" />
+        </button>
+      )}
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, padding: '20px', overflowY: 'auto', backgroundColor: 'var(--bg-main)' }}>
-        {/* Page Title */}
-        <h1 style={{
-          fontSize: '18px',
-          fontWeight: '600',
-          color: 'var(--text-primary)',
-          marginBottom: '20px',
-          letterSpacing: '-0.01em'
-        }}>
-          PowerScore Simulation Comparison
-        </h1>
+      <div style={{ flex: 1, padding: '20px', overflowY: 'auto', backgroundColor: 'var(--bg-main)', position: 'relative' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '20px'
+          }}
+        >
+          <div style={{ position: 'relative', display: 'inline-block' }} ref={reportMenuRef}>
+            <button
+              onClick={() => setIsReportMenuOpen((prev) => !prev)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                backgroundColor: 'transparent',
+                border: 'none',
+                color: 'var(--text-primary)',
+                fontSize: '18px',
+                fontWeight: 600,
+                letterSpacing: '-0.01em',
+                cursor: 'pointer'
+              }}
+            >
+              {activeReport === 'powerscore' ? 'PowerScore Simulation Comparison' : 'Curation Simulation Output'}
+              <ChevronDown size={16} color="var(--text-secondary)" />
+            </button>
 
-        {/* Info Cards Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '20px' }}>
-          <Card>
-            <CardContent className="p-4">
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Start Date</div>
-              <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>{infoCards.startDate}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>End Date</div>
-              <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>{infoCards.endDate}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Market Name</div>
-              <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>{infoCards.marketName}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Top Scored Metric - Original</div>
-              <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>{infoCards.topMetricOriginal}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Top Scored Metric - Simulated</div>
-              <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)' }}>{infoCards.topMetricSimulated}</div>
-            </CardContent>
-          </Card>
+            {isReportMenuOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  left: 0,
+                  minWidth: '260px',
+                  backgroundColor: 'var(--bg-card)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: '8px',
+                  boxShadow: '0px 10px 30px rgba(0, 0, 0, 0.35)',
+                  zIndex: 5,
+                  overflow: 'hidden'
+                }}
+              >
+                <button
+                  onClick={() => {
+                    setActiveReport('powerscore');
+                    setIsReportMenuOpen(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '12px 16px',
+                    backgroundColor: activeReport === 'powerscore' ? 'rgba(99,102,241,0.15)' : 'transparent',
+                    border: 'none',
+                    color: 'var(--text-primary)',
+                    fontSize: '14px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  PowerScore Simulation Comparison
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveReport('curation');
+                    setIsReportMenuOpen(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '12px 16px',
+                    backgroundColor: activeReport === 'curation' ? 'rgba(168,85,247,0.2)' : 'transparent',
+                    border: 'none',
+                    color: 'var(--text-primary)',
+                    fontSize: '14px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Curation Simulation Output
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Section Title */}
-        <h2 style={{
-          fontSize: '14px',
-          fontWeight: '600',
-          color: 'var(--text-primary)',
-          marginBottom: '16px',
-          marginTop: '24px',
-          letterSpacing: '-0.01em'
-        }}>
-          Original vs Simulation
-        </h2>
+        {activeReport === 'powerscore' ? (
+          <PowerScoreSimulationView
+            infoCards={infoCards}
+            basketWeightData={basketWeightData}
+            metricWeightData={metricWeightData}
+            basketDiffTableData={basketDiffTableData}
+            metricDiffTableData={metricDiffTableData}
+            inflowOutflowData={inflowOutflowData}
+            membershipChangeData={membershipChangeData}
+          />
+        ) : (
+          <CurationSimulationOutput
+            onSimulationChange={(id) => {
+              console.log('Selected curation simulation', id);
+            }}
+          />
+        )}
 
-        {/* Chart Grid - Row 1 */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-          {/* Basket Weight Stacked Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xs">Original Basket Weight vs Simulated Basket Weight</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={basketWeightData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
-                  <XAxis dataKey="date" tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} />
-                  <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'var(--bg-modal)',
-                      border: '1px solid var(--border-primary)',
-                      borderRadius: '6px',
-                      fontSize: '11px'
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '11px' }} />
-                  <Bar dataKey="competitor" stackId="a" fill="#60a5fa" name="competitor" />
-                  <Bar dataKey="precursor" stackId="a" fill="#93c5fd" name="precursor" />
-                  <Bar dataKey="target" stackId="a" fill="#bfdbfe" name="target" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Basket Weight Diff Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xs">Basket Weight Diff: Original vs Simulated</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ backgroundColor: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-subtle)' }}>
-                      <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Day of Created At</th>
-                      <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Basket</th>
-                      <th style={{ padding: '8px', textAlign: 'right', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Original Basket Weight</th>
-                      <th style={{ padding: '8px', textAlign: 'right', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Simulated Basket Weight</th>
-                      <th style={{ padding: '8px', textAlign: 'right', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Weight Difference</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {basketDiffTableData.map((row: any, idx: number) => (
-                      <tr key={idx} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                        <td style={{ padding: '8px', color: 'var(--text-secondary)' }}>{row.date}</td>
-                        <td style={{ padding: '8px', color: 'var(--text-primary)' }}>{row.basket}</td>
-                        <td style={{ padding: '8px', textAlign: 'right', color: 'var(--text-secondary)' }}>{row.original}</td>
-                        <td style={{ padding: '8px', textAlign: 'right', color: 'var(--text-primary)' }}>{row.simulated}</td>
-                        <td style={{
-                          padding: '8px',
-                          textAlign: 'right',
-                          color: row.diff === 0 ? 'var(--text-secondary)' : row.diff > 0 ? '#fff' : '#fff',
-                          backgroundColor: row.diff === 0 ? 'transparent' : row.diff > 0 ? '#10b981' : '#ef4444',
-                          fontWeight: '500'
-                        }}>
-                          {row.diff}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+        {showCurationToast && activeReport === 'curation' && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'rgba(15, 23, 42, 0.55)',
+              zIndex: 20,
+              animation: 'fadeIn 0.3s ease'
+            }}
+          >
+            <div
+              style={{
+                width: 'min(520px, 90%)',
+                background: 'linear-gradient(145deg, rgba(30,41,59,0.95), rgba(15,23,42,0.95))',
+                border: '1px solid rgba(148,163,184,0.35)',
+                borderRadius: '18px',
+                padding: '28px',
+                boxShadow: '0 30px 80px rgba(15, 23, 42, 0.65)',
+                color: 'var(--text-primary)',
+                position: 'relative',
+                backdropFilter: 'blur(16px)',
+                animation: 'scaleIn 0.3s ease'
+              }}
+            >
+              <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.24em', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                AI Recommendation
               </div>
-              <div style={{ marginTop: '8px', fontSize: '10px', color: 'var(--text-muted)' }}>3 rows × 5 columns</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Chart Grid - Row 2 */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-          {/* Metric Weight Stacked Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xs">Original Metric Weight vs Simulated Metric Weight</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={metricWeightData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
-                  <XAxis dataKey="date" tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} />
-                  <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'var(--bg-modal)',
-                      border: '1px solid var(--border-primary)',
-                      borderRadius: '6px',
-                      fontSize: '11px'
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '10px' }} />
-                  <Bar dataKey="apidot_claims" stackId="a" fill="#60a5fa" name="apidot_claims" />
-                  <Bar dataKey="nbrrxxpd_indication" stackId="a" fill="#3b82f6" name="nbrrxxpd_indication" />
-                  <Bar dataKey="trx_indication" stackId="a" fill="#2563eb" name="trx_indication" />
-                  <Bar dataKey="apidot_diagnosis" stackId="a" fill="#ef4444" name="apidot_diagnosis" />
-                  <Bar dataKey="apidot" stackId="a" fill="#f59e0b" name="apidot" />
-                  <Bar dataKey="unconditioned_asthma_patie" stackId="a" fill="#f97316" name="unconditioned_asthma_patie..." />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Metric Weight Diff Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xs">Scoring Metric Weight Diff: Original vs Simulated</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div style={{ overflowX: 'auto', maxHeight: '280px' }}>
-                <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse' }}>
-                  <thead style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-card)' }}>
-                    <tr style={{ backgroundColor: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-subtle)' }}>
-                      <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Created At</th>
-                      <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Basket</th>
-                      <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Metric Type</th>
-                      <th style={{ padding: '8px', textAlign: 'right', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Original Metric Weight</th>
-                      <th style={{ padding: '8px', textAlign: 'right', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Simulated Metric Weight</th>
-                      <th style={{ padding: '8px', textAlign: 'right', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Weight Diff</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {metricDiffTableData.map((row: any, idx: number) => (
-                      <tr key={idx} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                        <td style={{ padding: '8px', color: 'var(--text-secondary)', fontSize: '10px' }}>{row.date}</td>
-                        <td style={{ padding: '8px', color: 'var(--text-primary)' }}>{row.metric}</td>
-                        <td style={{ padding: '8px', color: 'var(--text-primary)' }}>{row.type}</td>
-                        <td style={{ padding: '8px', textAlign: 'right', color: 'var(--text-secondary)' }}>{row.origWeight}</td>
-                        <td style={{ padding: '8px', textAlign: 'right', color: 'var(--text-primary)' }}>{row.simWeight}</td>
-                        <td style={{
-                          padding: '8px',
-                          textAlign: 'right',
-                          color: row.diff === 0 ? 'var(--text-secondary)' : '#fff',
-                          backgroundColor: row.diff === 0 ? 'transparent' : row.diff > 0 ? '#10b981' : row.diff < -0.2 ? '#ef4444' : '#f59e0b',
-                          fontWeight: '500'
-                        }}>
-                          {row.diff}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '14px', letterSpacing: '-0.01em' }}>Simulation 1 is the strongest configuration</h3>
+              <p style={{ fontSize: '14px', lineHeight: 1.7, color: 'var(--text-secondary)', marginBottom: '24px' }}>
+                The Simulation 1 run shows strong, clean separation: curated groups (CA, CNA) far exceed non-curated (NCA, NCNA), and “Eventually Engaged” consistently outperforms “Never Engaged”—a healthy engagement gradient and clear waste reduction. Simulation 2 keeps the right ordering but with tighter gaps (e.g., CA 1,860 vs NCA 1,240), implying moderate targeting value. Simulation 3 is misaligned: CA (720) trails NCA (940) and curated gains are weak, indicating poor list quality. My suggestion: choose the Simulation 1 set—it best represents effective curation with high lift and sensible engagement stratification.
+              </p>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <button
+                  onClick={() => setShowCurationToast(false)}
+                  style={{
+                    padding: '10px 18px',
+                    borderRadius: '999px',
+                    border: '1px solid rgba(148,163,184,0.35)',
+                    backgroundColor: 'transparent',
+                    color: 'var(--text-primary)',
+                    fontSize: '13px',
+                    letterSpacing: '0.02em',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Dismiss
+                </button>
               </div>
-              <div style={{ marginTop: '8px', fontSize: '10px', color: 'var(--text-muted)' }}>9 rows × 6 columns</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Chart Grid - Row 3 (Inflow & Outflow and Membership Change) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-          {/* Inflow & Outflow Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xs">Inflow & Outflow</CardTitle>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Simulation = Original + Inflow - Outflow
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={inflowOutflowData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
-                  <XAxis dataKey="score" tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} />
-                  <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'var(--bg-modal)',
-                      border: '1px solid var(--border-primary)',
-                      borderRadius: '6px',
-                      fontSize: '11px'
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '11px' }} />
-                  <Bar dataKey="inflow" fill="#60a5fa" name="Inflow" label={{ position: 'inside', fill: '#000', fontSize: 11 }} />
-                  <Bar dataKey="outflow" fill="#f87171" name="Outflow" label={{ position: 'inside', fill: '#000', fontSize: 11 }} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Change In Membership Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xs">Change In Membership</CardTitle>
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Entities with +/- Score Difference
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '280px' }}>
-                <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse' }}>
-                  <thead style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-card)' }}>
-                    <tr style={{ backgroundColor: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-subtle)' }}>
-                      <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Day of Created At</th>
-                      <th style={{ padding: '8px', textAlign: 'left', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Entity ID</th>
-                      <th style={{ padding: '8px', textAlign: 'right', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>ORIGINAL_VALUE</th>
-                      <th style={{ padding: '8px', textAlign: 'right', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>SIMULATED_VALUE</th>
-                      <th style={{ padding: '8px', textAlign: 'right', fontWeight: '600', color: 'var(--text-muted)', fontSize: '10px' }}>Score Diff</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {membershipChangeData.map((row: any, idx: number) => (
-                      <tr key={idx} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                        <td style={{ padding: '8px', color: 'var(--text-secondary)', fontSize: '10px' }}>2025-09-16</td>
-                        <td style={{ padding: '8px', color: 'var(--text-primary)' }}>{row.entityId}</td>
-                        <td style={{ padding: '8px', textAlign: 'right', color: 'var(--text-secondary)' }}>{row.original}</td>
-                        <td style={{ padding: '8px', textAlign: 'right', color: 'var(--text-primary)' }}>{row.simulated}</td>
-                        <td style={{
-                          padding: '8px',
-                          textAlign: 'right',
-                          color: '#fff',
-                          backgroundColor: row.scoreDiff > 0 ? '#10b981' : '#ef4444',
-                          fontWeight: '500'
-                        }}>
-                          {row.scoreDiff}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div style={{ marginTop: '8px', fontSize: '10px', color: 'var(--text-muted)' }}>{membershipChangeData.length} rows × 5 columns</div>
-            </CardContent>
-          </Card>
-        </div>
+              <button
+                onClick={() => setShowCurationToast(false)}
+                aria-label="Dismiss recommendation"
+                style={{
+                  position: 'absolute',
+                  top: '16px',
+                  right: '16px',
+                  background: 'rgba(148,163,184,0.15)',
+                  border: '1px solid rgba(148,163,184,0.2)',
+                  borderRadius: '999px',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer'
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

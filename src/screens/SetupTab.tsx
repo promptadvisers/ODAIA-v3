@@ -4,8 +4,6 @@ import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { useAppStore } from '../store/appStore';
 import { useChatStore } from '../store/chatStore';
-import { AddSimulationModal } from '../dialogs/AddSimulationModal';
-import { Plus } from 'lucide-react';
 
 interface SetupTabProps {
   onNavigateToReport?: () => void;
@@ -16,7 +14,6 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
   const { setSimulationTriggered } = useChatStore();
   const [isLoading, setIsLoading] = useState(true);
   const [setupComplete, setSetupComplete] = useState(false);
-  const [showAddSimulationModal, setShowAddSimulationModal] = useState(false);
   const [highlightedSimId] = useState<string | null>(null);
   const [simulationCount, setSimulationCount] = useState(3);
   const [isRunningSimulations, setIsRunningSimulations] = useState(false);
@@ -37,32 +34,13 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
 
   // Handle running simulations
   const handleRunSimulations = () => {
-    setIsRunningSimulations(true);
-    setCurrentSimulation(1);
-    setProgress(0);
+    // Trigger simulations to start running
     setSimulationTriggered(true);
 
-    const totalDuration = 30000; // 30 seconds total
-    const durationPerSimulation = totalDuration / simulationCount;
-    const progressInterval = 100; // Update every 100ms
-
-    let elapsed = 0;
-    const interval = setInterval(() => {
-      elapsed += progressInterval;
-      const newProgress = Math.min((elapsed / totalDuration) * 100, 100);
-      const newCurrentSim = Math.min(Math.floor((elapsed / durationPerSimulation)) + 1, simulationCount);
-
-      setProgress(newProgress);
-      setCurrentSimulation(newCurrentSim);
-
-      if (elapsed >= totalDuration) {
-        clearInterval(interval);
-        setTimeout(() => {
-          setIsRunningSimulations(false);
-          onNavigateToReport?.();
-        }, 500);
-      }
-    }, progressInterval);
+    // Delay navigation slightly to ensure state update propagates first
+    setTimeout(() => {
+      onNavigateToReport?.();
+    }, 0);
   };
 
   if (!hasUploadedFiles) {
@@ -107,7 +85,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
           }} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {[1, 2].map((i) => (
             <div key={i} style={{
               backgroundColor: 'var(--bg-card)',
@@ -225,7 +203,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
       </div>
 
       {/* All Configuration Cards - Original + Dynamic Simulations in ONE grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '20px' }}>
         {/* Value Engine Card */}
         <Card>
           <CardHeader>
@@ -289,13 +267,13 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
           </CardContent>
         </Card>
 
-        {/* Curation Engine Card (Only for Sales workflow) */}
-        {selectedWorkflow === 'sales' && (
+        {/* Orchestration Engine Card (Only for Marketing workflow) */}
+        {selectedWorkflow === 'marketing' && (
           <Card>
             <CardHeader>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div>
-                  <CardTitle>Curation Engine: Call Plan</CardTitle>
+                  <CardTitle>Orchestration Engine</CardTitle>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
                     <span style={{
                       padding: '4px 8px',
@@ -346,6 +324,71 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                 <Button
                   variant="secondary"
                   onClick={() => setActiveModal('curation-edit')}
+                >
+                  Edit
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Curation Engine: Call Plan Card (Only for Sales workflow) */}
+        {selectedWorkflow === 'sales' && (
+          <Card>
+            <CardHeader>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <div>
+                  <CardTitle>Curation Engine: Call Plan</CardTitle>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+                    <span style={{
+                      padding: '4px 8px',
+                      backgroundColor: 'var(--border-primary)',
+                      color: 'var(--text-secondary)',
+                      fontSize: '11px',
+                      fontWeight: '500',
+                      borderRadius: '4px'
+                    }}>
+                      5-10 Suggestions per week
+                    </span>
+                    <span style={{
+                      padding: '4px 8px',
+                      backgroundColor: 'var(--border-primary)',
+                      color: 'var(--text-secondary)',
+                      fontSize: '11px',
+                      fontWeight: '500',
+                      borderRadius: '4px'
+                    }}>
+                      12 Signals
+                    </span>
+                    <span style={{
+                      padding: '4px 8px',
+                      backgroundColor: 'var(--border-primary)',
+                      color: 'var(--text-secondary)',
+                      fontSize: '11px',
+                      fontWeight: '500',
+                      borderRadius: '4px'
+                    }}>
+                      Reach & Frequency
+                    </span>
+                  </div>
+                </div>
+                <Badge variant="warning">Review</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.5' }}>
+                Define what, how and how often you would like our suggestions delivered to your sales reps.
+              </p>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <Button
+                  variant="primary"
+                  onClick={() => setActiveModal('curation-call-plan-review')}
+                >
+                  Review
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setActiveModal('curation-call-plan-edit')}
                 >
                   Edit
                 </Button>
@@ -529,107 +572,6 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
         ))}
       </div>
 
-      {/* Add Simulation Bar */}
-      <div
-        onClick={() => setShowAddSimulationModal(true)}
-        style={{
-          padding: '20px',
-          border: '2px dashed var(--border-subtle)',
-          borderRadius: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '12px',
-          cursor: 'pointer',
-          backgroundColor: 'transparent',
-          transition: 'all 200ms',
-          marginTop: '20px'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = 'var(--accent-blue)';
-          e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = 'var(--border-subtle)';
-          e.currentTarget.style.backgroundColor = 'transparent';
-        }}
-      >
-        <Plus size={20} color="var(--accent-blue)" />
-        <span style={{
-          fontSize: '14px',
-          fontWeight: '500',
-          color: 'var(--accent-blue)'
-        }}>
-          Add Simulation
-        </span>
-      </div>
-
-      {/* Add Simulation Modal */}
-      <AddSimulationModal
-        isOpen={showAddSimulationModal}
-        onClose={() => setShowAddSimulationModal(false)}
-      />
-
-      {/* Running Simulations Modal */}
-      {isRunningSimulations && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999
-        }}>
-          <div style={{
-            backgroundColor: 'var(--bg-modal)',
-            borderRadius: '12px',
-            padding: '48px 64px',
-            maxWidth: '600px',
-            width: '90%',
-            textAlign: 'center'
-          }}>
-            <h2 style={{
-              fontSize: '28px',
-              fontWeight: '600',
-              color: 'var(--text-primary)',
-              marginBottom: '32px'
-            }}>
-              Running Simulations
-            </h2>
-
-            {/* Progress Bar */}
-            <div style={{
-              width: '100%',
-              height: '12px',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '6px',
-              overflow: 'hidden',
-              marginBottom: '20px'
-            }}>
-              <div style={{
-                width: `${progress}%`,
-                height: '100%',
-                backgroundColor: '#3b82f6',
-                borderRadius: '6px',
-                transition: 'width 0.1s linear'
-              }} />
-            </div>
-
-            {/* Progress Text */}
-            <p style={{
-              fontSize: '16px',
-              color: 'var(--text-secondary)',
-              margin: 0
-            }}>
-              Running Simulation {currentSimulation} of {simulationCount}
-            </p>
-          </div>
-        </div>
-      )}
 
       <style>{`
         @keyframes highlightPulse {
