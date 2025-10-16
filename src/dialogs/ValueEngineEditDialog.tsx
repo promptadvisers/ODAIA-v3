@@ -1,8 +1,194 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X, ChevronRight } from 'lucide-react';
+import { X, ChevronRight, ChevronDown } from 'lucide-react';
 import { Button } from '../components/Button';
-import { useAppStore, MOCK_PRODUCTS } from '../store/appStore';
+import { useAppStore } from '../store/appStore';
+import {
+  type AudienceLevel,
+  type ProductNode,
+  type MetricDefinition,
+  type BasketSectionDefinition,
+  VALUE_ENGINE_CONFIG,
+  DEFAULT_AUDIENCE_TABS,
+  getMetricsForNode,
+  getDefaultMetricsByLevel,
+  audienceLabelMap
+} from '../data/valueEngineConfig';
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+const collectLeafIds = (node: ProductNode): string[] => {
+  if (!node.children || node.children.length === 0) {
+    return [node.id];
+  }
+  return node.children.flatMap((child) => collectLeafIds(child));
+};
+
+const buildProductMaps = (nodes: ProductNode[]) => {
+  const nodeMap: Record<string, ProductNode> = {};
+  const parentMap: Record<string, string | null> = {};
+
+  const traverse = (list: ProductNode[], parent: string | null) => {
+    list.forEach((node) => {
+      nodeMap[node.id] = node;
+      parentMap[node.id] = parent;
+      if (node.children && node.children.length) {
+        traverse(node.children, node.id);
+      }
+    });
+  };
+
+  traverse(nodes, null);
+  return { nodeMap, parentMap };
+};
+
+const collectAncestors = (nodeId: string, parentMap: Record<string, string | null>): string[] => {
+  const ancestors: string[] = [];
+  let current = parentMap[nodeId];
+  while (current) {
+    ancestors.push(current);
+    current = parentMap[current];
+  }
+  return ancestors;
+};
+
+const getPathLabels = (
+  nodeId: string,
+  nodeMap: Record<string, ProductNode>,
+  parentMap: Record<string, string | null>
+): string[] => {
+  const labels: string[] = [];
+  let current: string | null = nodeId;
+  while (current) {
+    const node = nodeMap[current];
+    if (node) {
+      labels.unshift(node.label);
+    }
+    current = parentMap[current] ?? null;
+  }
+  return labels;
+};
+
+interface MetricState extends MetricDefinition {
+  weight: number;
+}
+
+type MetricStateByLevel = Record<AudienceLevel, Record<string, MetricState>>;
+
+const buildMetricState = (
+  selectedLeafIds: string[],
+  nodeMap: Record<string, ProductNode>,
+  parentMap: Record<string, string | null>,
+  previous?: MetricStateByLevel
+): MetricStateByLevel => {
+  const levels = DEFAULT_AUDIENCE_TABS;
+  const next: MetricStateByLevel = levels.reduce((acc, level) => {
+    const defaults = getDefaultMetricsByLevel([level])[level] ?? [];
+    const metricMap: Record<string, MetricState> = {};
+
+    defaults.forEach((metric) => {
+      metricMap[metric.id] = { ...metric, weight: metric.defaultWeight };
+    });
+
+    const relevantNodeIds = new Set<string>();
+    selectedLeafIds.forEach((leafId) => {
+      relevantNodeIds.add(leafId);
+      collectAncestors(leafId, parentMap).forEach((ancestor) => relevantNodeIds.add(ancestor));
+    });
+
+    relevantNodeIds.forEach((nodeId) => {
+      const node = nodeMap[nodeId];
+      if (!node) return;
+      const metrics = getMetricsForNode(node, level);
+      metrics.forEach((metric) => {
+        if (!metricMap[metric.id]) {
+          metricMap[metric.id] = { ...metric, weight: metric.defaultWeight };
+        }
+      });
+    });
+
+    const previousLevelState = previous?.[level];
+    if (previousLevelState) {
+      Object.keys(metricMap).forEach((metricId) => {
+        const previousMetric = previousLevelState[metricId];
+        if (previousMetric) {
+          metricMap[metricId] = {
+            ...metricMap[metricId],
+            weight: previousMetric.weight,
+            visualize: previousMetric.visualize
+          };
+        }
+      });
+    }
+
+    acc[level] = metricMap;
+    return acc;
+  }, {} as MetricStateByLevel);
+
+  return next;
+};
+
+interface SectionMetricState {
+  id: string;
+  label: string;
+  weight: number;
+  visualize: boolean;
+  defaultWeight: number;
+}
+
+type SectionStateByLevel = Partial<Record<AudienceLevel, Record<string, SectionMetricState>>>;
+
+const buildSectionState = (section: BasketSectionDefinition): SectionStateByLevel => {
+  const state: SectionStateByLevel = {};
+  DEFAULT_AUDIENCE_TABS.forEach((level) => {
+    const metrics = section.metricsByLevel[level];
+    if (!metrics) return;
+    state[level] = metrics.reduce<Record<string, SectionMetricState>>((acc, metric) => {
+      acc[metric.id] = {
+        id: metric.id,
+        label: metric.label,
+        weight: metric.defaultWeight,
+        visualize: metric.visualize,
+        defaultWeight: metric.defaultWeight
+      };
+      return acc;
+    }, {});
+  });
+  return state;
+};
+
+const renderTabs = (
+  availableLevels: AudienceLevel[],
+  activeLevel: AudienceLevel,
+  onChange: (level: AudienceLevel) => void,
+  levelHasMetrics: (level: AudienceLevel) => boolean
+) => (
+  <div style={{ display: 'inline-flex', backgroundColor: 'rgba(148, 163, 184, 0.1)', borderRadius: '9999px', padding: '4px' }}>
+    {availableLevels.map((level) => {
+      const hasMetrics = levelHasMetrics(level);
+      return (
+        <button
+          key={level}
+          onClick={() => hasMetrics && onChange(level)}
+          style={{
+            minWidth: '72px',
+            padding: '6px 12px',
+            borderRadius: '9999px',
+            border: 'none',
+            cursor: hasMetrics ? 'pointer' : 'not-allowed',
+            fontSize: '12px',
+            fontWeight: 500,
+            color: activeLevel === level ? '#0f172a' : hasMetrics ? '#e2e8f0' : '#64748b',
+            backgroundColor: activeLevel === level ? '#38bdf8' : 'transparent',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          {audienceLabelMap[level]}
+        </button>
+      );
+    })}
+  </div>
+);
 
 export const ValueEngineEditDialog: React.FC = () => {
   const { activeModal, setActiveModal } = useAppStore();
@@ -10,171 +196,349 @@ export const ValueEngineEditDialog: React.FC = () => {
 
   const [basketName, setBasketName] = useState('Odaiazol');
   const [basketWeight, setBasketWeight] = useState('7');
-  const [therapeuticArea, setTherapeuticArea] = useState('Oncology');
-  const [product] = useState('Odaiazol');
-  const [indication, setIndication] = useState('2L HER2+ Metastatic Breast Cancer');
+  const [therapeuticArea] = useState(VALUE_ENGINE_CONFIG.therapeuticArea);
   const [specialties, setSpecialties] = useState('Oncology');
-  const [productDropdownOpen, setProductDropdownOpen] = useState(false);
-  const [expandedNodes, setExpandedNodes] = useState<string[]>(['tumor-agnostic']);
-  const [selectedIndications, setSelectedIndications] = useState<string[]>(['odaiazol']);
+  const [indication, setIndication] = useState('');
+  const [indicationManuallyEdited, setIndicationManuallyEdited] = useState(false);
 
-  const [metrics, setMetrics] = useState([
-    { name: 'XPO TRx Volume', weight: 90, visualize: true },
-    { name: 'XPO NRx Volume', weight: 0, visualize: false },
-    { name: 'XPO NBRx Volume', weight: 0, visualize: false },
-    { name: 'OncoThera Copay Card PSP Claims', weight: 10, visualize: true }
-  ]);
+  const [expandedNodeIds, setExpandedNodeIds] = useState<string[]>(['tot-oncology', 'breast-mkt', 'her2-therapies']);
+  const [selectedLeafIds, setSelectedLeafIds] = useState<string[]>(['odaiazol']);
 
-  const [openSections, setOpenSections] = useState({
-    competitive: false,
-    patient: false,
-    analog: false
-  });
+  const [activeMetricLevel, setActiveMetricLevel] = useState<AudienceLevel>('hcp');
+  const [competitiveLevel, setCompetitiveLevel] = useState<AudienceLevel>('hcp');
+  const [patientLevel, setPatientLevel] = useState<AudienceLevel>('hcp');
 
-  const productTree = {
-    id: 'tumor-agnostic',
-    label: 'Tumor-Agnostic Indications',
-    children: [
-      {
-        id: 'odaiazol',
-        label: 'Odaiazol',
-        children: [
-          { id: 'ntrk', label: 'NTRK fusion' },
-          { id: 'braf', label: 'BRAF V600E–mutant tumors' }
-        ]
-      }
-    ]
-  };
+  const productTree = VALUE_ENGINE_CONFIG.productTree;
+  const { nodeMap, parentMap } = useMemo(() => buildProductMaps(productTree), [productTree]);
 
-  const toggleNode = (nodeId: string) => {
-    setExpandedNodes(prev =>
-      prev.includes(nodeId)
-        ? prev.filter(id => id !== nodeId)
-        : [...prev, nodeId]
-    );
-  };
+  const [metricState, setMetricState] = useState<MetricStateByLevel>(() =>
+    buildMetricState(selectedLeafIds, nodeMap, parentMap)
+  );
 
-  const toggleSelection = (nodeId: string) => {
-    setSelectedIndications(prev =>
-      prev.includes(nodeId)
-        ? prev.filter(id => id !== nodeId)
-        : [...prev, nodeId]
-    );
-  };
+  const primaryCompetitiveSection = VALUE_ENGINE_CONFIG.competitiveSections[0];
+  const primaryPatientSection = VALUE_ENGINE_CONFIG.patientSections[0];
 
-  const updateMetricWeight = (index: number, weight: number) => {
-    const updated = [...metrics];
-    updated[index].weight = weight;
-    setMetrics(updated);
-  };
+  const [competitiveState, setCompetitiveState] = useState<SectionStateByLevel>(() =>
+    primaryCompetitiveSection ? buildSectionState(primaryCompetitiveSection) : {}
+  );
+  const [patientState, setPatientState] = useState<SectionStateByLevel>(() =>
+    primaryPatientSection ? buildSectionState(primaryPatientSection) : {}
+  );
 
-  const toggleMetricVisualize = (index: number) => {
-    const updated = [...metrics];
-    updated[index].visualize = !updated[index].visualize;
-    setMetrics(updated);
-  };
-
-  // Sync Indication and Therapeutic Area when Product changes
   useEffect(() => {
-    const selectedProductData = MOCK_PRODUCTS.find(p => p.name === product);
-    if (selectedProductData) {
-      setIndication(selectedProductData.indication);
-      setTherapeuticArea(selectedProductData.therapeuticArea);
-    }
-  }, [product]);
+    setMetricState((prev) => buildMetricState(selectedLeafIds, nodeMap, parentMap, prev));
+    setIndicationManuallyEdited(false);
+  }, [selectedLeafIds.join('|'), nodeMap, parentMap]);
 
-  const renderTreeNode = (node: any, level: number = 0) => {
-    const isExpanded = expandedNodes.includes(node.id);
-    const isSelected = selectedIndications.includes(node.id);
-    const hasChildren = node.children && node.children.length > 0;
+  useEffect(() => {
+    if (indicationManuallyEdited) return;
+    const primaryLeaf = selectedLeafIds[0];
+    if (!primaryLeaf) return;
+    const path = getPathLabels(primaryLeaf, nodeMap, parentMap);
+    setIndication(path.slice(1).join(' › ') || path.join(' › '));
+  }, [selectedLeafIds.join('|'), indicationManuallyEdited, nodeMap, parentMap]);
+
+  const handleToggleExpand = (nodeId: string) => {
+    setExpandedNodeIds((prev) =>
+      prev.includes(nodeId) ? prev.filter((id) => id !== nodeId) : [...prev, nodeId]
+    );
+  };
+
+  const handleToggleSelection = (node: ProductNode, shouldDeselect: boolean) => {
+    const leafIds = collectLeafIds(node);
+    setSelectedLeafIds((prev) => {
+      const next = new Set(prev);
+      if (shouldDeselect) {
+        leafIds.forEach((leaf) => next.delete(leaf));
+        if (next.size === 0) {
+          return prev;
+        }
+      } else {
+        leafIds.forEach((leaf) => next.add(leaf));
+      }
+      return Array.from(next);
+    });
+  };
+
+  const handleRemoveProduct = (productId: string) => {
+    setSelectedLeafIds((prev) => {
+      if (prev.length <= 1) {
+        return prev;
+      }
+      const filtered = prev.filter((id) => id !== productId);
+      return filtered.length > 0 ? filtered : prev;
+    });
+  };
+
+  const currentMetrics = useMemo(() => {
+    const metrics = metricState[activeMetricLevel] || {};
+    return Object.values(metrics).sort((a, b) => a.name.localeCompare(b.name));
+  }, [metricState, activeMetricLevel]);
+
+  const updateMetricWeight = (level: AudienceLevel, metricId: string, weight: number) => {
+    setMetricState((prev) => ({
+      ...prev,
+      [level]: {
+        ...prev[level],
+        [metricId]: {
+          ...prev[level][metricId],
+          weight
+        }
+      }
+    }));
+  };
+
+  const toggleMetricVisualize = (level: AudienceLevel, metricId: string) => {
+    setMetricState((prev) => ({
+      ...prev,
+      [level]: {
+        ...prev[level],
+        [metricId]: {
+          ...prev[level][metricId],
+          visualize: !prev[level][metricId].visualize
+        }
+      }
+    }));
+  };
+
+  const updateSectionMetric = (
+    setter: React.Dispatch<React.SetStateAction<SectionStateByLevel>>,
+    level: AudienceLevel,
+    metricId: string,
+    update: Partial<SectionMetricState>
+  ) => {
+    setter((prev) => {
+      const levelMetrics = prev[level];
+      if (!levelMetrics) return prev;
+      return {
+        ...prev,
+        [level]: {
+          ...levelMetrics,
+          [metricId]: {
+            ...levelMetrics[metricId],
+            ...update
+          }
+        }
+      };
+    });
+  };
+
+  const renderProductNode = (node: ProductNode, level = 0) => {
+    const hasChildren = !!node.children && node.children.length > 0;
+    const isExpanded = expandedNodeIds.includes(node.id);
+    const leafIds = collectLeafIds(node);
+    const selectedCount = leafIds.filter((leafId) => selectedLeafIds.includes(leafId)).length;
+    const isChecked = selectedCount === leafIds.length;
+    const isIndeterminate = selectedCount > 0 && selectedCount < leafIds.length;
 
     return (
-      <div key={node.id} style={{ marginLeft: level * 20 }}>
-        <div style={{
+      <div key={node.id}>
+        <div
+          style={{
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
           padding: '8px 12px',
-          backgroundColor: level === 0 ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
-          borderRadius: '6px',
-          marginBottom: '4px',
+            paddingLeft: `${level * 20 + 8}px`,
           cursor: 'pointer',
-          transition: 'background-color 200ms'
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)'}
-        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = level === 0 ? 'rgba(255, 255, 255, 0.05)' : 'transparent'}
+            borderRadius: '6px',
+            transition: 'background-color 0.15s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(148, 163, 184, 0.08)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
         >
-          {hasChildren && (
+          {hasChildren ? (
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                toggleNode(node.id);
+                handleToggleExpand(node.id);
               }}
               style={{
-                padding: '4px',
-                backgroundColor: 'transparent',
+                background: 'none',
                 border: 'none',
-                cursor: 'pointer',
-                color: 'var(--text-muted)',
+                color: '#94a3b8',
                 display: 'flex',
                 alignItems: 'center',
-                transition: 'color 200ms'
+                justifyContent: 'center'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
             >
-              <ChevronRight
-                size={14}
-                style={{
-                  transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                  transition: 'transform 200ms ease-in-out'
-                }}
-              />
+              {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
+          ) : (
+            <span style={{ width: '14px' }} />
           )}
-          {!hasChildren && <div style={{ width: '20px' }} />}
 
           <input
             type="checkbox"
-            checked={isSelected}
+            checked={isChecked}
+            ref={(el) => {
+              if (el) {
+                el.indeterminate = isIndeterminate;
+              }
+            }}
             onChange={(e) => {
               e.stopPropagation();
-              toggleSelection(node.id);
+              handleToggleSelection(node, isChecked);
             }}
             style={{
-              cursor: 'pointer',
               width: '16px',
               height: '16px',
-              accentColor: '#3b82f6'
+              cursor: 'pointer',
+              accentColor: '#38bdf8'
             }}
           />
 
-          <span style={{
+          <span
+            style={{
             fontSize: '13px',
-            color: 'var(--text-primary)',
-            flex: 1,
-            fontWeight: level === 0 ? '500' : '400'
-          }}
-          onClick={() => hasChildren && toggleNode(node.id)}
+              color: '#e2e8f0',
+              fontWeight: level === 0 ? 600 : 400,
+              flex: 1
+            }}
+            onClick={() => {
+              if (hasChildren) {
+                handleToggleExpand(node.id);
+              } else {
+                handleToggleSelection(node, isChecked);
+              }
+            }}
           >
             {node.label}
           </span>
-
-          {/* Chevron on the right for all items */}
-          <ChevronRight
-            size={14}
-            style={{
-              color: 'var(--text-muted)',
-              marginLeft: 'auto'
-            }}
-          />
         </div>
-
         {hasChildren && isExpanded && (
           <div>
-            {node.children.map((child: any) => renderTreeNode(child, level + 1))}
+            {node.children!.map((child) => renderProductNode(child, level + 1))}
           </div>
         )}
+      </div>
+    );
+  };
+
+  const renderSection = (
+    section: BasketSectionDefinition | undefined,
+    sectionState: SectionStateByLevel,
+    activeLevel: AudienceLevel,
+    onLevelChange: (level: AudienceLevel) => void,
+    onUpdate: (
+      level: AudienceLevel,
+      metricId: string,
+      update: Partial<SectionMetricState>
+    ) => void
+  ) => {
+    if (!section) return null;
+    const availableLevels = section.tabs ?? DEFAULT_AUDIENCE_TABS;
+    const metricsForLevel = sectionState[activeLevel];
+    const metricsList = metricsForLevel
+      ? Object.values(metricsForLevel).sort((a, b) => a.label.localeCompare(b.label))
+      : [];
+
+    return (
+      <div style={{ marginBottom: '18px' }}>
+        <div
+            style={{
+            padding: '12px 16px',
+            backgroundColor: 'rgba(15, 23, 42, 0.85)',
+            borderRadius: '10px',
+            border: '1px solid rgba(148, 163, 184, 0.2)',
+            marginBottom: '12px'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <div>
+              <div style={{ fontSize: '15px', fontWeight: 600, color: '#f8fafc', marginBottom: '4px' }}>
+                {section.label}
+              </div>
+              <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+                Basket weight: {section.basketWeight}
+                {section.products && section.products.length > 0 && (
+                  <span style={{ marginLeft: '12px' }}>
+                    Products: {section.products.join(', ')}
+                  </span>
+                )}
+              </div>
+            </div>
+            {renderTabs(availableLevels, activeLevel, onLevelChange, (level) => !!sectionState[level])}
+        </div>
+
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ backgroundColor: 'rgba(148, 163, 184, 0.08)' }}>
+                  <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '12px', color: '#94a3b8' }}>
+                    Markets
+                  </th>
+                  <th style={{ padding: '10px 14px', textAlign: 'center', fontSize: '12px', color: '#94a3b8' }}>
+                    Scoring weight
+                  </th>
+                  <th style={{ padding: '10px 14px', textAlign: 'center', fontSize: '12px', color: '#94a3b8' }}>
+                    Visualize
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {metricsList.map((metric) => (
+                  <tr key={`${activeLevel}-${metric.id}`}>
+                    <td style={{ padding: '12px 14px', fontSize: '13px', color: '#e2e8f0' }}>
+                      {metric.label}
+                    </td>
+                    <td style={{ padding: '12px 14px', textAlign: 'center' }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={metric.weight}
+                          onChange={(e) =>
+                            onUpdate(activeLevel, metric.id, {
+                              weight: clamp(parseInt(e.target.value, 10) || 0, 0, 100)
+                            })
+                          }
+                          style={{
+                            width: '80px',
+                            padding: '8px 0',
+                            backgroundColor: '#0f172a',
+                            border: '1px solid rgba(148, 163, 184, 0.3)',
+                            borderRadius: '6px',
+                            color: '#f1f5f9',
+                            textAlign: 'center'
+                          }}
+                        />
+                        <span style={{ fontSize: '12px', color: '#94a3b8' }}>%</span>
+          </div>
+                    </td>
+                    <td style={{ padding: '12px 14px', textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        checked={metric.visualize}
+                        onChange={() =>
+                          onUpdate(activeLevel, metric.id, { visualize: !metric.visualize })
+                        }
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          cursor: 'pointer',
+                          accentColor: '#38bdf8'
+                        }}
+                      />
+                    </td>
+                  </tr>
+                ))}
+                {metricsList.length === 0 && (
+                  <tr>
+                    <td colSpan={3} style={{ padding: '14px', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
+                      No metrics configured for this level.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     );
   };
@@ -182,892 +546,355 @@ export const ValueEngineEditDialog: React.FC = () => {
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && setActiveModal(null)}>
       <Dialog.Portal>
-        <Dialog.Overlay style={{
+        <Dialog.Overlay
+          style={{
           position: 'fixed',
           inset: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
           zIndex: 1000
-        }} />
-        <Dialog.Content style={{
+          }}
+        />
+        <Dialog.Content
+          style={{
           position: 'fixed',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          backgroundColor: 'var(--bg-modal)',
-          borderRadius: '12px',
-          padding: '28px 32px',
-          width: '90vw',
-          maxWidth: '680px',
-          maxHeight: '85vh',
+            width: '95vw',
+            maxWidth: '980px',
+            maxHeight: '90vh',
           overflow: 'auto',
-          zIndex: 1001,
-          border: '1px solid var(--border-subtle)'
-        }}>
-          {/* Header */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '28px'
-          }}>
-            <Dialog.Title style={{
-              fontSize: '17px',
-              fontWeight: '600',
-              color: 'var(--text-primary)',
-              margin: 0
-            }}>
-              New Project: Odaiazol - Establish Product
+            backgroundColor: '#0f172a',
+            borderRadius: '16px',
+            border: '1px solid rgba(148, 163, 184, 0.25)',
+            padding: '28px 32px',
+            boxShadow: '0 24px 60px rgba(15, 23, 42, 0.6)',
+            zIndex: 1001
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+            <div>
+              <Dialog.Title style={{ fontSize: '18px', fontWeight: 600, color: '#f8fafc', marginBottom: '4px' }}>
+                New Project: Odaiazol – Establish Product
             </Dialog.Title>
+              <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>
+                Configure product selections and adjust metric weighting across HCP, FSA, and Regional views.
+              </p>
+            </div>
             <button
               onClick={() => setActiveModal(null)}
               style={{
-                padding: '8px',
-                backgroundColor: 'transparent',
-                border: 'none',
-                color: 'var(--text-secondary)',
-                cursor: 'pointer',
-                borderRadius: '4px'
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                border: '1px solid rgba(148, 163, 184, 0.25)',
+                background: 'transparent',
+                color: '#94a3b8',
+                cursor: 'pointer'
               }}
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
 
-          {/* Portfolio Products */}
-          <div style={{ marginBottom: '24px' }}>
-            <h3 style={{
-              fontSize: '15px',
-              fontWeight: '600',
-              color: 'var(--text-primary)',
-              marginBottom: '14px'
-            }}>
-              Portfolio Products
-            </h3>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', gap: '32px' }}>
+            <div style={{ flex: 0.42, display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <section>
+                <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#f8fafc', marginBottom: '12px' }}>Portfolio Products</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px', gap: '12px' }}>
               <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '12px',
-                  color: 'var(--text-secondary)',
-                  marginBottom: '8px'
-                }}>
-                  Basket Name
-                </label>
+                    <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px' }}>Basket Name</label>
                 <input
-                  type="text"
                   value={basketName}
                   onChange={(e) => setBasketName(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '9px 14px',
-                    backgroundColor: 'var(--bg-card)',
-                    color: 'var(--text-primary)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: '6px',
-                    fontSize: '13px',
-                    outline: 'none',
-                    transition: 'border-color 200ms'
-                  }}
-                  onFocus={(e) => e.currentTarget.style.borderColor = 'var(--border-focus)'}
-                  onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-subtle)'}
+                        padding: '10px 14px',
+                        borderRadius: '10px',
+                        border: '1px solid rgba(148, 163, 184, 0.25)',
+                        backgroundColor: '#0b1220',
+                        color: '#f8fafc',
+                        fontSize: '13px'
+                      }}
                 />
               </div>
-
               <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '12px',
-                  color: 'var(--text-secondary)',
-                  marginBottom: '8px'
-                }}>
-                  Basket Scoring Weight (0-10)
-                </label>
+                    <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px' }}>Basket Weight (0-10)</label>
                 <input
                   type="number"
+                      min={0}
+                      max={10}
                   value={basketWeight}
                   onChange={(e) => setBasketWeight(e.target.value)}
-                  min="0"
-                  max="10"
                   style={{
                     width: '100%',
-                    padding: '9px 14px',
-                    backgroundColor: 'var(--bg-card)',
-                    color: 'var(--text-primary)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: '6px',
-                    fontSize: '13px',
-                    outline: 'none',
-                    transition: 'border-color 200ms'
-                  }}
-                  onFocus={(e) => e.currentTarget.style.borderColor = 'var(--border-focus)'}
-                  onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-subtle)'}
+                        padding: '10px 12px',
+                        borderRadius: '10px',
+                        border: '1px solid rgba(148, 163, 184, 0.25)',
+                        backgroundColor: '#0b1220',
+                        color: '#f8fafc',
+                        fontSize: '13px'
+                      }}
                 />
               </div>
             </div>
-          </div>
+              </section>
 
-          {/* Basket Configurations */}
-          <div style={{ marginBottom: '24px' }}>
-            <h3 style={{
-              fontSize: '14px',
-              fontWeight: '600',
-              color: 'var(--text-primary)',
-              marginBottom: '10px',
-              letterSpacing: '-0.01em'
-            }}>
-              Basket Configurations
-            </h3>
-            <p style={{
-              fontSize: '12px',
-              color: 'var(--text-secondary)',
-              marginBottom: '14px',
-              lineHeight: '1.5'
-            }}>
-              Assign items to the configurations below to view available metrics
-            </p>
+              <section>
+                <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#f8fafc', marginBottom: '6px' }}>Basket Configurations</h3>
+                <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '14px' }}>
+                  Assign products to reveal the metrics that power scoring across each audience view.
+                </p>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '12px',
-                color: 'var(--text-secondary)',
-                marginBottom: '8px'
-              }}>
-                Therapeutic Area
-              </label>
-              <select
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px' }}>Therapeutic Area</label>
+                  <input
                 value={therapeuticArea}
-                onChange={(e) => setTherapeuticArea(e.target.value)}
+                    readOnly
                 style={{
                   width: '100%',
                   padding: '10px 14px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  transition: 'all 200ms'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)'}
-              >
-                <option value="Oncology">Oncology</option>
-              </select>
+                      borderRadius: '10px',
+                      border: '1px solid rgba(148, 163, 184, 0.15)',
+                      backgroundColor: '#0b1220',
+                      color: '#f8fafc',
+                      fontSize: '13px'
+                    }}
+                  />
             </div>
 
-            <div style={{ marginBottom: '16px', position: 'relative' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '12px',
-                color: 'var(--text-secondary)',
-                marginBottom: '8px'
-              }}>
-                Product
-              </label>
-              <div
-                onClick={() => setProductDropdownOpen(!productDropdownOpen)}
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px' }}>Selected Products</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {selectedLeafIds.map((id) => {
+                      const node = nodeMap[id];
+                      return (
+                        <span
+                          key={id}
                 style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  transition: 'all 200ms',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)'}
-              >
-                <span>{product}</span>
-                <ChevronRight
-                  size={16}
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '6px 10px',
+                            backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                            color: '#38bdf8',
+                            borderRadius: '9999px',
+                            fontSize: '12px'
+                          }}
+                        >
+                          {node?.label ?? id}
+                          <button
+                            onClick={() => handleRemoveProduct(id)}
                   style={{
-                    transform: productDropdownOpen ? 'rotate(90deg)' : 'rotate(0deg)',
-                    transition: 'transform 200ms',
-                    color: 'var(--text-secondary)'
-                  }}
-                />
+                              background: 'none',
+                              border: 'none',
+                              color: '#38bdf8',
+                              cursor: selectedLeafIds.length > 1 ? 'pointer' : 'not-allowed'
+                            }}
+                            disabled={selectedLeafIds.length <= 1}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
               </div>
 
-              {/* Custom Popover with Tree */}
-              {productDropdownOpen && (
-                <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  marginTop: '8px',
-                  backgroundColor: '#2a2a2a',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  borderRadius: '6px',
-                  padding: '8px',
-                  zIndex: 1000,
+                <div
+                  style={{
+                    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(148, 163, 184, 0.25)',
                   maxHeight: '300px',
-                  overflow: 'auto',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)'
-                }}>
-                  {renderTreeNode(productTree)}
+                    overflow: 'auto'
+                  }}
+                >
+                  {productTree.map((node) => renderProductNode(node))}
                 </div>
-              )}
-            </div>
+              </section>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '12px',
-                color: 'var(--text-secondary)',
-                marginBottom: '8px'
-              }}>
-                Indication
-              </label>
-              <select
+              <section>
+                <div style={{ display: 'grid', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px' }}>Indication Path</label>
+                    <input
                 value={indication}
-                onChange={(e) => setIndication(e.target.value)}
+                      onChange={(e) => {
+                        setIndication(e.target.value);
+                        setIndicationManuallyEdited(true);
+                      }}
                 style={{
                   width: '100%',
                   padding: '10px 14px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  transition: 'all 200ms'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)'}
-              >
-                <option value={indication}>{indication}</option>
-              </select>
+                        borderRadius: '10px',
+                        border: '1px solid rgba(148, 163, 184, 0.25)',
+                        backgroundColor: '#0b1220',
+                        color: '#f8fafc',
+                        fontSize: '13px'
+                      }}
+                    />
             </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '12px',
-                color: 'var(--text-secondary)',
-                marginBottom: '8px'
-              }}>
-                Specialties
-              </label>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px' }}>Specialty</label>
               <select
                 value={specialties}
                 onChange={(e) => setSpecialties(e.target.value)}
                 style={{
                   width: '100%',
                   padding: '10px 14px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                  color: 'var(--text-primary)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  transition: 'all 200ms'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)'}
+                        borderRadius: '10px',
+                        border: '1px solid rgba(148, 163, 184, 0.25)',
+                        backgroundColor: '#0b1220',
+                        color: '#f8fafc',
+                        fontSize: '13px'
+                      }}
               >
                 <option value="Oncology">Oncology</option>
+                      <option value="Hematology">Hematology</option>
+                      <option value="Radiation Oncology">Radiation Oncology</option>
               </select>
+                  </div>
+                </div>
+              </section>
             </div>
 
-            {/* Product Tree - Hidden as it's now in the Product dropdown */}
-            {/*
-            <div style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              borderRadius: '6px',
-              padding: '14px 16px',
+            <div style={{ flex: 0.58, display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <section>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
               marginBottom: '16px'
-            }}>
-              <div style={{
-                fontSize: '10px',
-                color: 'var(--text-muted)',
-                marginBottom: '10px',
-                fontWeight: '500',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em'
-              }}>
-                Indications
+                  }}
+                >
+                  <div>
+                    <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#f8fafc', marginBottom: '6px' }}>Metrics</h3>
+                    <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>
+                      Adjust weights and visibility for the metrics surfaced by the selected products.
+                    </p>
               </div>
-              {renderTreeNode(productTree)}
-            </div>
-            */}
+                  {renderTabs(DEFAULT_AUDIENCE_TABS, activeMetricLevel, setActiveMetricLevel, (level) => !!metricState[level])}
           </div>
 
-          {/* Metrics */}
-          <div style={{ marginBottom: '24px' }}>
-            <h3 style={{
-              fontSize: '14px',
-              fontWeight: '600',
-              color: 'var(--text-primary)',
-              marginBottom: '12px'
-            }}>
-              Metrics
-            </h3>
-            <p style={{
-              fontSize: '12px',
-              color: 'var(--text-secondary)',
-              marginBottom: '14px'
-            }}>
-              Assign scoring weight for each available metric
-            </p>
-
-            <div style={{
-              backgroundColor: 'transparent',
-              borderRadius: '8px',
-              overflow: 'hidden'
-            }}>
+                <div
+                  style={{
+                    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(148, 163, 184, 0.25)'
+                  }}
+                >
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.03)'
-                  }}>
-                    <th style={{
-                      padding: '14px 18px',
-                      textAlign: 'left',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      color: 'var(--text-secondary)'
-                    }}>
-                      Metric name
+                      <tr style={{ backgroundColor: 'rgba(148, 163, 184, 0.08)' }}>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', color: '#94a3b8' }}>
+                          Metric Name
                     </th>
-                    <th style={{
-                      padding: '14px 18px',
-                      textAlign: 'center',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      color: 'var(--text-secondary)'
-                    }}>
-                      Scoring weight
+                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', color: '#94a3b8' }}>
+                          Scoring Weight
                     </th>
-                    <th style={{
-                      padding: '14px 18px',
-                      textAlign: 'center',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      color: 'var(--text-secondary)'
-                    }}>
+                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', color: '#94a3b8' }}>
                       Visualize
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {metrics.map((metric, index) => (
-                    <tr key={index}>
-                      <td style={{
-                        padding: '14px 18px',
-                        fontSize: '13px',
-                        fontWeight: '500',
-                        color: 'var(--text-primary)',
-                        backgroundColor: 'transparent'
-                      }}>
+                      {currentMetrics.map((metric) => (
+                        <tr key={`${activeMetricLevel}-${metric.id}`}>
+                          <td style={{ padding: '14px 16px', fontSize: '13px', color: '#f1f5f9', fontWeight: 500 }}>
                         {metric.name}
                       </td>
-                      <td style={{
-                        padding: '14px 18px',
-                        textAlign: 'right',
-                        backgroundColor: 'transparent'
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                          <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                           <input
                             type="number"
+                                min={0}
+                                max={100}
                             value={metric.weight}
-                            onChange={(e) => updateMetricWeight(index, parseInt(e.target.value) || 0)}
-                            min="0"
-                            max="100"
+                                onChange={(e) =>
+                                  updateMetricWeight(
+                                    activeMetricLevel,
+                                    metric.id,
+                                    clamp(parseInt(e.target.value, 10) || 0, 0, 100)
+                                  )
+                                }
                             style={{
                               width: '90px',
-                              padding: '9px 14px',
-                              backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                              color: 'var(--text-primary)',
-                              border: '1px solid rgba(255, 255, 255, 0.08)',
-                              borderRadius: '6px',
-                              fontSize: '13px',
+                                  padding: '8px 0',
+                                  backgroundColor: '#0b1220',
+                                  border: '1px solid rgba(148, 163, 184, 0.3)',
+                                  borderRadius: '8px',
+                                  color: '#f8fafc',
                               textAlign: 'center',
-                              outline: 'none'
-                            }}
-                          />
-                          <span style={{
-                            fontSize: '13px',
-                            color: 'var(--text-secondary)',
-                            minWidth: '20px'
-                          }}>
-                            %
-                          </span>
+                                  fontSize: '13px'
+                                }}
+                              />
+                              <span style={{ fontSize: '12px', color: '#94a3b8' }}>%</span>
                         </div>
                       </td>
-                      <td style={{
-                        padding: '14px 18px',
-                        textAlign: 'center',
-                        backgroundColor: 'transparent'
-                      }}>
+                          <td style={{ padding: '14px 16px', textAlign: 'center' }}>
                         <input
                           type="checkbox"
                           checked={metric.visualize}
-                          onChange={() => toggleMetricVisualize(index)}
+                              onChange={() => toggleMetricVisualize(activeMetricLevel, metric.id)}
                           style={{
-                            cursor: 'pointer',
                             width: '18px',
                             height: '18px',
-                            accentColor: '#3b82f6'
+                                cursor: 'pointer',
+                                accentColor: '#38bdf8'
                           }}
                         />
                       </td>
                     </tr>
                   ))}
+                      {currentMetrics.length === 0 && (
+                        <tr>
+                          <td colSpan={3} style={{ padding: '16px', textAlign: 'center', fontSize: '12px', color: '#94a3b8' }}>
+                            Select products in the tree to reveal available metrics.
+                    </td>
+                  </tr>
+                      )}
                 </tbody>
               </table>
             </div>
-          </div>
+              </section>
 
-          {/* Collapsible Sections */}
-          <details
-            style={{ marginBottom: '16px' }}
-            onToggle={(e) => setOpenSections({...openSections, competitive: (e.target as HTMLDetailsElement).open})}
-          >
-            <summary style={{
-              padding: '13px 16px',
-              backgroundColor: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              color: 'var(--text-primary)',
-              listStyle: 'none',
-              display: 'flex',
-              alignItems: 'center'
-            }}>
-              <span style={{
-                marginRight: '8px',
-                display: 'inline-block',
-                transform: openSections.competitive ? 'rotate(90deg)' : 'rotate(0deg)',
-                transition: 'transform 200ms ease'
-              }}>
-                ▶
-              </span>
-              Competitive Potential
-            </summary>
-            <div style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.3)',
-              borderRadius: '8px',
-              padding: '18px',
-              marginTop: '8px'
-            }}>
-              <div style={{
-                fontSize: '13px',
-                color: 'var(--text-primary)',
-                marginBottom: '16px',
-                padding: '12px 18px',
-                backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                borderRadius: '6px'
-              }}>
-                Basket weight: 2
-              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                {renderSection(
+                  primaryCompetitiveSection,
+                  competitiveState,
+                  competitiveLevel,
+                  setCompetitiveLevel,
+                  (level, id, update) => updateSectionMetric(setCompetitiveState, level, id, update)
+                )}
 
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    <th style={{
-                      padding: '12px 18px',
-                      textAlign: 'left',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      color: 'var(--text-secondary)'
-                    }}>
-                      Markets
-                    </th>
-                    <th style={{
-                      padding: '12px 18px',
-                      textAlign: 'center',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      color: 'var(--text-secondary)'
-                    }}>
-                      Scoring weight
-                    </th>
-                    <th style={{
-                      padding: '12px 18px',
-                      textAlign: 'center',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      color: 'var(--text-secondary)'
-                    }}>
-                      Visualize
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style={{
-                      padding: '12px 18px',
-                      fontSize: '14px',
-                      color: 'var(--text-primary)'
-                    }}>
-                      2L Therapy HER+ Overall Market, XPO TRx
-                    </td>
-                    <td style={{
-                      padding: '12px 18px',
-                      textAlign: 'center'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        <input
-                          type="number"
-                          value="80"
-                          readOnly
-                          style={{
-                            width: '85px',
-                            padding: '9px 14px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                            color: 'var(--text-primary)',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                            borderRadius: '6px',
-                            fontSize: '14px',
-                            textAlign: 'center',
-                            outline: 'none'
-                          }}
-                        />
-                        <span style={{
-                          fontSize: '14px',
-                          color: 'var(--text-secondary)'
-                        }}>
-                          %
-                        </span>
+                {renderSection(
+                  primaryPatientSection,
+                  patientState,
+                  patientLevel,
+                  setPatientLevel,
+                  (level, id, update) => updateSectionMetric(setPatientState, level, id, update)
+                )}
                       </div>
-                    </td>
-                    <td style={{
-                      padding: '12px 18px',
-                      textAlign: 'center'
-                    }}>
-                      <input
-                        type="checkbox"
-                        checked
-                        readOnly
-                        style={{
-                          cursor: 'pointer',
-                          width: '18px',
-                          height: '18px',
-                          accentColor: '#3b82f6'
-                        }}
-                      />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{
-                      padding: '12px 18px',
-                      fontSize: '14px',
-                      color: 'var(--text-primary)'
-                    }}>
-                      Competitive brand PixelTron, XPO NBRx
-                    </td>
-                    <td style={{
-                      padding: '12px 18px',
-                      textAlign: 'center'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        <input
-                          type="number"
-                          value="20"
-                          readOnly
-                          style={{
-                            width: '85px',
-                            padding: '9px 14px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                            color: 'var(--text-primary)',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                            borderRadius: '6px',
-                            fontSize: '14px',
-                            textAlign: 'center',
-                            outline: 'none'
-                          }}
-                        />
-                        <span style={{
-                          fontSize: '14px',
-                          color: 'var(--text-secondary)'
-                        }}>
-                          %
-                        </span>
                       </div>
-                    </td>
-                    <td style={{
-                      padding: '12px 18px',
-                      textAlign: 'center'
-                    }}>
-                      <input
-                        type="checkbox"
-                        checked
-                        readOnly
-                        style={{
-                          cursor: 'pointer',
-                          width: '18px',
-                          height: '18px',
-                          accentColor: '#3b82f6'
-                        }}
-                      />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
             </div>
-          </details>
 
-          <details
-            style={{ marginBottom: '16px' }}
-            onToggle={(e) => setOpenSections({...openSections, patient: (e.target as HTMLDetailsElement).open})}
-          >
-            <summary style={{
-              padding: '13px 16px',
-              backgroundColor: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              color: 'var(--text-primary)',
-              listStyle: 'none',
+          <div
+            style={{
               display: 'flex',
-              alignItems: 'center'
-            }}>
-              <span style={{
-                marginRight: '8px',
-                display: 'inline-block',
-                transform: openSections.patient ? 'rotate(90deg)' : 'rotate(0deg)',
-                transition: 'transform 200ms ease'
-              }}>
-                ▶
-              </span>
-              Patient Potential (precursor)
-            </summary>
-            <div style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.3)',
-              borderRadius: '8px',
-              padding: '18px',
-              marginTop: '8px'
-            }}>
-              <div style={{
-                fontSize: '13px',
-                color: 'var(--text-primary)',
-                marginBottom: '16px',
-                padding: '12px 18px',
-                backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                borderRadius: '6px'
-              }}>
-                Basket weight: 1
-              </div>
-
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    <th style={{
-                      padding: '12px 18px',
-                      textAlign: 'left',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      color: 'var(--text-secondary)'
-                    }}>
-                    </th>
-                    <th style={{
-                      padding: '12px 18px',
-                      textAlign: 'center',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      color: 'var(--text-secondary)'
-                    }}>
-                      Scoring weight
-                    </th>
-                    <th style={{
-                      padding: '12px 18px',
-                      textAlign: 'center',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      color: 'var(--text-secondary)'
-                    }}>
-                      Visualize
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style={{
-                      padding: '12px 18px',
-                      fontSize: '14px',
-                      color: 'var(--text-primary)'
-                    }}>
-                      PSP Claims
-                    </td>
-                    <td style={{
-                      padding: '12px 18px',
-                      textAlign: 'center'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        <input
-                          type="number"
-                          value="20"
-                          readOnly
-                          style={{
-                            width: '85px',
-                            padding: '9px 14px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                            color: 'var(--text-primary)',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                            borderRadius: '6px',
-                            fontSize: '14px',
-                            textAlign: 'center',
-                            outline: 'none'
-                          }}
-                        />
-                        <span style={{
-                          fontSize: '14px',
-                          color: 'var(--text-secondary)'
-                        }}>
-                          %
-                        </span>
-                      </div>
-                    </td>
-                    <td style={{
-                      padding: '12px 18px',
-                      textAlign: 'center'
-                    }}>
-                      <input
-                        type="checkbox"
-                        checked
-                        readOnly
-                        style={{
-                          cursor: 'pointer',
-                          width: '18px',
-                          height: '18px',
-                          accentColor: '#3b82f6'
-                        }}
-                      />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{
-                      padding: '12px 18px',
-                      fontSize: '14px',
-                      color: 'var(--text-primary)'
-                    }}>
-                      Payer mix, Medicaid, Medicare
-                    </td>
-                    <td style={{
-                      padding: '12px 18px',
-                      textAlign: 'center'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        <input
-                          type="number"
-                          value="80"
-                          readOnly
-                          style={{
-                            width: '85px',
-                            padding: '9px 14px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                            color: 'var(--text-primary)',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                            borderRadius: '6px',
-                            fontSize: '14px',
-                            textAlign: 'center',
-                            outline: 'none'
-                          }}
-                        />
-                        <span style={{
-                          fontSize: '14px',
-                          color: 'var(--text-secondary)'
-                        }}>
-                          %
-                        </span>
-                      </div>
-                    </td>
-                    <td style={{
-                      padding: '12px 18px',
-                      textAlign: 'center'
-                    }}>
-                      <input
-                        type="checkbox"
-                        checked
-                        readOnly
-                        style={{
-                          cursor: 'pointer',
-                          width: '18px',
-                          height: '18px',
-                          accentColor: '#3b82f6'
-                        }}
-                      />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </details>
-
-          <details
-            style={{ marginBottom: '24px' }}
-            onToggle={(e) => setOpenSections({...openSections, analog: (e.target as HTMLDetailsElement).open})}
-          >
-            <summary style={{
-              padding: '13px 16px',
-              backgroundColor: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              color: 'var(--text-primary)',
-              listStyle: 'none',
-              display: 'flex',
-              alignItems: 'center'
-            }}>
-              <span style={{
-                marginRight: '8px',
-                display: 'inline-block',
-                transform: openSections.analog ? 'rotate(90deg)' : 'rotate(0deg)',
-                transition: 'transform 200ms ease'
-              }}>
-                ▶
-              </span>
-              Analog
-            </summary>
-            <div style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.3)',
-              borderRadius: '8px',
-              padding: '20px',
-              marginTop: '8px'
-            }}>
-              <p style={{
-                fontSize: '14px',
-                color: 'var(--text-muted)',
-                margin: 0
-              }}>
-                Not required
-              </p>
-            </div>
-          </details>
-
-          {/* Action Buttons */}
-          <div style={{
-            display: 'flex',
-            gap: '10px',
             justifyContent: 'flex-end',
-            paddingTop: '24px',
-            borderTop: '1px solid var(--border-subtle)'
-          }}>
+              gap: '12px',
+              marginTop: '28px',
+              borderTop: '1px solid rgba(148, 163, 184, 0.15)',
+              paddingTop: '20px'
+            }}
+          >
             <Button variant="secondary" onClick={() => setActiveModal(null)}>
               Cancel
             </Button>
             <Button variant="primary" onClick={() => setActiveModal(null)}>
-              Save objective
+              Save Configuration
             </Button>
           </div>
         </Dialog.Content>

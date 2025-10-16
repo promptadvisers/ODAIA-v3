@@ -601,22 +601,6 @@ Would you like me to help configure any of these items?`;
       });
     }
 
-    if (simulations.length >= 1) {
-      prompts.push({
-        id: 'setup-4',
-        text: `Add XPO dollars metric to ${simulations[0].name} with weight 0.3`,
-        action: () => get().executeSetupStep(3, `Add XPO dollars metric to ${simulations[0].name} with weight 0.3`, simulations[0].id),
-        visible: true
-      });
-    }
-
-    prompts.push({
-      id: 'setup-5',
-      text: 'Update basket weights in all simulations',
-      action: () => get().executeSetupStep(4, 'Update basket weights in all simulations'),
-      visible: true
-    });
-
     set({ prePrompts: prompts });
   },
 
