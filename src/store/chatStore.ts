@@ -23,37 +23,6 @@ export interface SuggestionCard {
   visible: boolean;
 }
 
-interface ChatState {
-  messages: ChatMessage[];
-  prePrompts: PrePrompt[];
-  suggestionCards: SuggestionCard[];
-  currentStep: number;
-  isTyping: boolean;
-  isThinking: boolean;
-  isExecutingTask: boolean;
-  executingMessage: string;
-  simulationTriggered: boolean;
-  currentActiveTab: string;
-
-  // Actions
-  addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
-  setPrePrompts: (prompts: PrePrompt[]) => void;
-  setSuggestionCards: (cards: SuggestionCard[]) => void;
-  setCurrentStep: (step: number) => void;
-  setIsTyping: (typing: boolean) => void;
-  setIsThinking: (thinking: boolean) => void;
-  setIsExecutingTask: (executing: boolean, message?: string) => void;
-  setSimulationTriggered: (triggered: boolean) => void;
-  setCurrentActiveTab: (tab: string) => void;
-  clearChat: () => void;
-  sendUserMessage: (content: string) => void;
-
-  // Demo flow actions
-  executeDemoStep: (step: number, userMessage?: string) => void;
-  executeSetupStep: (step: number, userMessage?: string, targetSimId?: string) => void;
-  generateSetupPrePrompts: () => void;
-}
-
 const buildLegacySuggestionCards = (get: () => ChatState, set: (partial: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>)) => void): SuggestionCard[] => [
   {
     id: 'suggest-1',
@@ -63,8 +32,8 @@ const buildLegacySuggestionCards = (get: () => ChatState, set: (partial: Partial
       const appStore = useAppStore.getState();
       appStore.setPspMetricAdded(true);
 
-      set((state: ChatState) => ({
-        suggestionCards: state.suggestionCards.filter((c: SuggestionCard) => c.id !== 'suggest-1')
+      set((state) => ({
+        suggestionCards: state.suggestionCards.filter((c) => c.id !== 'suggest-1')
       }));
 
       get().addMessage({
@@ -104,8 +73,8 @@ const buildBrandAssistantCards = (get: () => ChatState, set: (partial: Partial<C
       });
       appStore.approveBrandItem('brandAccess');
 
-      set((state: ChatState) => ({
-        suggestionCards: state.suggestionCards.filter((c: SuggestionCard) => c.id !== 'brand-assign-missing-data')
+      set((state) => ({
+        suggestionCards: state.suggestionCards.filter((c) => c.id !== 'brand-assign-missing-data')
       }));
 
       get().addMessage({
@@ -131,8 +100,8 @@ const buildBrandAssistantCards = (get: () => ChatState, set: (partial: Partial<C
         window.dispatchEvent(new CustomEvent('assistant-approve-all'));
       }
 
-      set((state: ChatState) => ({
-        suggestionCards: state.suggestionCards.filter((c: SuggestionCard) => c.id !== 'brand-approve-all-configurations')
+      set((state) => ({
+        suggestionCards: state.suggestionCards.filter((c) => c.id !== 'brand-approve-all-configurations')
       }));
 
       get().addMessage({
@@ -143,6 +112,37 @@ const buildBrandAssistantCards = (get: () => ChatState, set: (partial: Partial<C
     visible: true
   }
 ];
+
+interface ChatState {
+  messages: ChatMessage[];
+  prePrompts: PrePrompt[];
+  suggestionCards: SuggestionCard[];
+  currentStep: number;
+  isTyping: boolean;
+  isThinking: boolean;
+  isExecutingTask: boolean;
+  executingMessage: string;
+  simulationTriggered: boolean;
+  currentActiveTab: string;
+
+  // Actions
+  addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
+  setPrePrompts: (prompts: PrePrompt[]) => void;
+  setSuggestionCards: (cards: SuggestionCard[]) => void;
+  setCurrentStep: (step: number) => void;
+  setIsTyping: (typing: boolean) => void;
+  setIsThinking: (thinking: boolean) => void;
+  setIsExecutingTask: (executing: boolean, message?: string) => void;
+  setSimulationTriggered: (triggered: boolean) => void;
+  setCurrentActiveTab: (tab: string) => void;
+  clearChat: () => void;
+  sendUserMessage: (content: string) => void;
+
+  // Demo flow actions
+  executeDemoStep: (step: number, userMessage?: string) => void;
+  executeSetupStep: (step: number, userMessage?: string, targetSimId?: string) => void;
+  generateSetupPrePrompts: () => void;
+}
 
 export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
@@ -181,7 +181,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
   
   setSimulationTriggered: (triggered) => set({ simulationTriggered: triggered }),
 
-  setCurrentActiveTab: (tab) => set({ currentActiveTab: tab }),
+  setCurrentActiveTab: (tab) => {
+    const cards = tab === 'brand'
+      ? buildBrandAssistantCards(get, set)
+      : buildLegacySuggestionCards(get, set);
+
+    set({
+      currentActiveTab: tab,
+      suggestionCards: cards
+    });
+  },
 
   clearChat: () => set({ messages: [], prePrompts: [], suggestionCards: [], currentStep: 0 }),
   
