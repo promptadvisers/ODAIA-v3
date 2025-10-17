@@ -184,7 +184,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setCurrentActiveTab: (tab) => {
     const cards = tab === 'brand'
       ? buildBrandAssistantCards(get, set)
-      : buildLegacySuggestionCards(get, set);
+      : [];
 
     set({
       currentActiveTab: tab,
