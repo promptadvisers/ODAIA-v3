@@ -54,6 +54,96 @@ interface ChatState {
   generateSetupPrePrompts: () => void;
 }
 
+const buildLegacySuggestionCards = (get: () => ChatState, set: StoreApi<ChatState>['setState']): SuggestionCard[] => [
+  {
+    id: 'suggest-1',
+    title: 'Add Copay Card PSP',
+    description: 'Configure patient support program access',
+    action: () => {
+      const appStore = useAppStore.getState();
+      appStore.setPspMetricAdded(true);
+
+      set((state) => ({
+        suggestionCards: state.suggestionCards.filter((c) => c.id !== 'suggest-1')
+      }));
+
+      get().addMessage({
+        type: 'agent',
+        content: 'PSP metric added to Current Value configuration. The change is now visible in the Value Engine review.'
+      });
+    },
+    visible: true
+  },
+  {
+    id: 'suggest-2',
+    title: 'Change Sales goals to NBRx increase by 10%',
+    description: 'Adjust target metrics for new business growth',
+    action: () => {
+      console.log('Change Sales goals clicked');
+    },
+    visible: true
+  }
+];
+
+const buildBrandAssistantCards = (get: () => ChatState, set: StoreApi<ChatState>['setState']): SuggestionCard[] => [
+  {
+    id: 'brand-assign-missing-data',
+    title: 'Assign Missing Data',
+    description: 'Fill required Brand Access details and approve.',
+    action: () => {
+      if (get().currentActiveTab !== 'brand') {
+        return;
+      }
+
+      const appStore = useAppStore.getState();
+      appStore.updateBrandAccess({
+        pspProgram: 'OncoConnect PSP',
+        finicalSupport: 'OncoThera Copay Card',
+        webPortal: 'AIM XR',
+        marketAccess: 'MITT Quarterly'
+      });
+      appStore.approveBrandItem('brandAccess');
+
+      set((state) => ({
+        suggestionCards: state.suggestionCards.filter((c) => c.id !== 'brand-assign-missing-data')
+      }));
+
+      get().addMessage({
+        type: 'agent',
+        content: 'Brand Access Strategy has been updated with the missing data and marked as ready.'
+      });
+    },
+    visible: true
+  },
+  {
+    id: 'brand-approve-all-configurations',
+    title: 'Approve All Configurations',
+    description: 'Approve the remaining setup items for the selected workflow.',
+    action: () => {
+      if (get().currentActiveTab !== 'brand') {
+        return;
+      }
+
+      const appStore = useAppStore.getState();
+      appStore.approveAllSetup(appStore.selectedWorkflow);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('assistant-approve-all'));
+      }
+
+      set((state) => ({
+        suggestionCards: state.suggestionCards.filter((c) => c.id !== 'brand-approve-all-configurations')
+      }));
+
+      get().addMessage({
+        type: 'agent',
+        content: `All configurations for the ${appStore.selectedWorkflow} workflow are now approved.`
+      });
+    },
+    visible: true
+  }
+];
+
 export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
   prePrompts: [],
@@ -189,42 +279,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
         switch(step) {
           case 0:
             // Initial state - show suggestion cards after document upload
-            setSuggestionCards([
-              {
-                id: 'suggest-1',
-                title: 'Add Copay Card PSP',
-                description: 'Configure patient support program access',
-                action: () => {
-                  // Add PSP metric to the configuration
-                  const appStore = useAppStore.getState();
-                  appStore.setPspMetricAdded(true);
+            const cards = get().currentActiveTab === 'brand'
+              ? buildBrandAssistantCards(get, set)
+              : buildLegacySuggestionCards(get, set);
 
-                  // Hide this suggestion card after click
-                  const currentCards = get().suggestionCards;
-                  set({
-                    suggestionCards: currentCards.filter(c => c.id !== 'suggest-1')
-                  });
-
-                  // Add confirmation message
-                  addMessage({
-                    type: 'agent',
-                    content: 'PSP metric added to Current Value configuration. The change is now visible in the Value Engine review.'
-                  });
-                },
-                visible: true
-              },
-              {
-                id: 'suggest-2',
-                title: 'Change Sales goals to NBRx increase by 10%',
-                description: 'Adjust target metrics for new business growth',
-                action: () => {
-                  // Handle card click
-                  console.log('Change Sales goals clicked');
-                  // Could update the sales goals configuration
-                },
-                visible: true
-              }
-            ]);
+            setSuggestionCards(cards);
 
             // Clear pre-prompted buttons - only show suggestion cards
             setPrePrompts([]);

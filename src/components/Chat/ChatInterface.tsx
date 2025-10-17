@@ -33,20 +33,22 @@ export const ChatInterface: React.FC<{ activeTab?: string }> = ({ activeTab = 'b
 
   // Update current active tab and generate appropriate prompts
   useEffect(() => {
-    if (activeTab !== currentActiveTab) {
-      setCurrentActiveTab(activeTab);
-
-      if (activeTab === 'setup') {
-        // Generate setup-specific pre-prompts
-        generateSetupPrePrompts();
-      } else if (activeTab === 'brand' && currentStep === 0 && messages.length === 0) {
-        // Start the brand demo flow
-        setTimeout(() => {
-          executeDemoStep(0);
-        }, 1000);
-      }
+    if (activeTab === currentActiveTab) {
+      return;
     }
-  }, [activeTab, currentActiveTab]);
+
+    setCurrentActiveTab(activeTab);
+
+    if (activeTab === 'setup') {
+      generateSetupPrePrompts();
+    }
+
+    if (activeTab === 'brand' && currentStep === 0 && messages.length === 0) {
+      setTimeout(() => {
+        executeDemoStep(0);
+      }, 1000);
+    }
+  }, [activeTab, currentActiveTab, currentStep, executeDemoStep, generateSetupPrePrompts, messages.length, setCurrentActiveTab]);
 
   // Start the demo on first load (Brand tab)
   useEffect(() => {

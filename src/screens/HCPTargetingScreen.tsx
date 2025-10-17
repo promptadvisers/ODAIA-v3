@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAppStore } from '../store/appStore';
 import { Sidebar } from '../components/Sidebar';
 import { Header } from '../components/Header';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
@@ -13,6 +14,12 @@ interface HCPTargetingScreenProps {
 export const HCPTargetingScreen: React.FC<HCPTargetingScreenProps> = ({ onNavigate }) => {
   const [activeTab, setActiveTab] = useState('setup');
   const [activeSection, setActiveSection] = useState('documents');
+  const {
+    updateBrandAccess,
+    approveBrandItem,
+    approveAllSetup,
+    selectedWorkflow
+  } = useAppStore();
 
   const tabs = [
     { id: 'brand', label: 'Brand' },
@@ -51,10 +58,41 @@ export const HCPTargetingScreen: React.FC<HCPTargetingScreenProps> = ({ onNaviga
     }
   ];
 
-  const suggestions = [
-    'Add Copay Card PSP',
-    'Change Sales goals to NBRx increase by 10%'
-  ];
+  const handleAssignMissingData = () => {
+    updateBrandAccess({
+      pspProgram: 'OncoConnect PSP',
+      finicalSupport: 'OncoThera Copay Card',
+      webPortal: 'AIM XR',
+      marketAccess: 'MITT Quarterly'
+    });
+    approveBrandItem('brandAccess');
+  };
+
+  const handleApproveAll = () => {
+    approveAllSetup(selectedWorkflow);
+  };
+
+  const suggestions = activeTab === 'setup'
+    ? [
+        {
+          label: 'Assign Missing Data',
+          onClick: handleAssignMissingData
+        },
+        {
+          label: 'Approve All Configurations',
+          onClick: handleApproveAll
+        }
+      ]
+    : [
+        {
+          label: 'Add Copay Card PSP',
+          onClick: handleAssignMissingData
+        },
+        {
+          label: 'Change Sales goals to NBRx increase by 10%',
+          onClick: handleApproveAll
+        }
+      ];
 
   return (
     <div className="flex h-screen bg-dark">
@@ -101,9 +139,11 @@ export const HCPTargetingScreen: React.FC<HCPTargetingScreenProps> = ({ onNaviga
               {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
-                  className="w-full text-left p-3 bg-card rounded-lg border border-border-secondary hover:bg-hover transition-colors text-sm text-text-primary"
+                  className="w-full text-left p-3 bg-card rounded-lg border border-border-secondary hover:bg-hover transition-colors text-sm text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={suggestion.onClick}
+                  disabled={!suggestion.onClick}
                 >
-                  {suggestion}
+                  {suggestion.label}
                 </button>
               ))}
             </div>

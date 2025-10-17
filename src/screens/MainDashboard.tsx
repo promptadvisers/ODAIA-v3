@@ -85,6 +85,18 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
     setApprovedCards(new Set(allTitles));
   };
 
+  React.useEffect(() => {
+    const listener = () => {
+      handleApproveAll();
+    };
+
+    window.addEventListener('assistant-approve-all', listener);
+
+    return () => {
+      window.removeEventListener('assistant-approve-all', listener);
+    };
+  }, [brandItems]);
+
   // Filter out approved cards
   const visibleBrandItems = brandItems.filter(item => !approvedCards.has(item.title));
 
