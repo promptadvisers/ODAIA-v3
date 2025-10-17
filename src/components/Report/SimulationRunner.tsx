@@ -42,6 +42,20 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedSimulation, setSelectedSimulation] = useState<Simulation | null>(null);
 
+  const getBaselineDuration = (index: number) => {
+    if (index === 0) return 6200;
+    if (index === 1) return 7200;
+    if (index === 2) return 8300;
+    return 8300 + (index - 2) * 600;
+  };
+
+  const getHeadStartOffset = (index: number) => {
+    if (index === 0) return -900;
+    if (index === 1) return 0;
+    if (index === 2) return 350;
+    return 350 + (index - 2) * 220;
+  };
+
   // Convert configured scenarios from SetupTab into simulations
   const scenariosToSimulations = (scenarios: any[]): Simulation[] => {
     return scenarios.map((scenario, index) => ({
@@ -117,12 +131,18 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
       console.log('[SimulationRunner] Simulation triggered! Starting all simulations at:', startTime);
       setSimulations(prev => {
         const updated = prev.map((sim, index) => {
-          const randomizedDuration = Math.floor(Math.random() * 4000) + 6000; // 6-10 seconds
+          const baseDuration = getBaselineDuration(index);
+          const randomizedDuration = baseDuration + Math.floor(Math.random() * 700) - 200;
+          const headStart = getHeadStartOffset(index);
+          const staggerBase = startTime + index * 140;
+          const appliedStart = headStart < 0 ? staggerBase + headStart : staggerBase + headStart;
+          const initialElapsed = headStart < 0 ? Math.abs(headStart) : 0;
+          const initialProgress = headStart < 0 ? Math.min((initialElapsed / randomizedDuration) * 100, 18) : 0;
           return {
             ...sim,
             status: 'running' as const,
-            progress: 0,
-            startTime: startTime + index * 25, // slight stagger for visual variation
+            progress: initialProgress,
+            startTime: appliedStart,
             duration: randomizedDuration,
             results: undefined
           };
