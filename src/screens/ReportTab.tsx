@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Settings, ChevronLeft, ChevronRight, ChevronDown, Triangle } from 'lucide-react';
+import { Settings, ChevronDown, Triangle } from 'lucide-react';
 import { SimulationRunner } from '../components/Report/SimulationRunner';
 import { useChatStore } from '../store/chatStore';
 import { CurationSimulationOutput } from '../components/Report/CurationSimulationOutput';
@@ -511,7 +511,7 @@ export const ReportTab: React.FC = () => {
 
 const NAV_WIDTH = 72;
   const PANEL_WIDTH = 260;
-  const TOGGLE_SIZE = 26;
+  // const TOGGLE_SIZE = 26;
   // const expandedToggleLeft = NAV_WIDTH + PANEL_WIDTH - TOGGLE_SIZE / 2;
 
   // Compute current data based on filter selections

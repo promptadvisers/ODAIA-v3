@@ -148,7 +148,7 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
             sim = { ...sim, duration: effectiveDuration };
           }
             // Calculate progress based on elapsed time since start
-            const elapsed = Date.now() - sim.startTime;
+            const elapsed = Date.now() - (sim.startTime || Date.now());
           const newProgress = Math.min((elapsed / effectiveDuration) * 100, 100);
 
             console.log(`[SimulationRunner] ${sim.name}: elapsed=${elapsed}ms, progress=${newProgress.toFixed(2)}%`);
