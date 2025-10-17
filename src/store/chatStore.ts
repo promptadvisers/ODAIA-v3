@@ -54,7 +54,7 @@ interface ChatState {
   generateSetupPrePrompts: () => void;
 }
 
-const buildLegacySuggestionCards = (get: () => ChatState, set: StoreApi<ChatState>['setState']): SuggestionCard[] => [
+const buildLegacySuggestionCards = (get: () => ChatState, set: (partial: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>)) => void): SuggestionCard[] => [
   {
     id: 'suggest-1',
     title: 'Add Copay Card PSP',
@@ -63,8 +63,8 @@ const buildLegacySuggestionCards = (get: () => ChatState, set: StoreApi<ChatStat
       const appStore = useAppStore.getState();
       appStore.setPspMetricAdded(true);
 
-      set((state) => ({
-        suggestionCards: state.suggestionCards.filter((c) => c.id !== 'suggest-1')
+      set((state: ChatState) => ({
+        suggestionCards: state.suggestionCards.filter((c: SuggestionCard) => c.id !== 'suggest-1')
       }));
 
       get().addMessage({
@@ -85,7 +85,7 @@ const buildLegacySuggestionCards = (get: () => ChatState, set: StoreApi<ChatStat
   }
 ];
 
-const buildBrandAssistantCards = (get: () => ChatState, set: StoreApi<ChatState>['setState']): SuggestionCard[] => [
+const buildBrandAssistantCards = (get: () => ChatState, set: (partial: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>)) => void): SuggestionCard[] => [
   {
     id: 'brand-assign-missing-data',
     title: 'Assign Missing Data',
@@ -104,8 +104,8 @@ const buildBrandAssistantCards = (get: () => ChatState, set: StoreApi<ChatState>
       });
       appStore.approveBrandItem('brandAccess');
 
-      set((state) => ({
-        suggestionCards: state.suggestionCards.filter((c) => c.id !== 'brand-assign-missing-data')
+      set((state: ChatState) => ({
+        suggestionCards: state.suggestionCards.filter((c: SuggestionCard) => c.id !== 'brand-assign-missing-data')
       }));
 
       get().addMessage({
@@ -131,8 +131,8 @@ const buildBrandAssistantCards = (get: () => ChatState, set: StoreApi<ChatState>
         window.dispatchEvent(new CustomEvent('assistant-approve-all'));
       }
 
-      set((state) => ({
-        suggestionCards: state.suggestionCards.filter((c) => c.id !== 'brand-approve-all-configurations')
+      set((state: ChatState) => ({
+        suggestionCards: state.suggestionCards.filter((c: SuggestionCard) => c.id !== 'brand-approve-all-configurations')
       }));
 
       get().addMessage({
