@@ -206,6 +206,8 @@ export const MOCK_PRODUCTS: Product[] = [
 ];
 
 const SIMULATIONS_STORAGE_KEY = 'setupSimulations';
+const STORAGE_VERSION_KEY = 'appStorageVersion';
+const CURRENT_STORAGE_VERSION = '2'; // Increment this to clear all localStorage
 
 const DEFAULT_SIMULATIONS: SimulationScenario[] = [
   {
@@ -262,15 +264,25 @@ const DEFAULT_SIMULATIONS: SimulationScenario[] = [
 
 const loadStoredSimulations = (): SimulationScenario[] => {
   try {
+    // Check storage version and clear if outdated
+    const storedVersion = localStorage.getItem(STORAGE_VERSION_KEY);
+    if (storedVersion !== CURRENT_STORAGE_VERSION) {
+      console.log('Storage version mismatch - clearing localStorage');
+      localStorage.clear();
+      localStorage.setItem(STORAGE_VERSION_KEY, CURRENT_STORAGE_VERSION);
+      localStorage.setItem(SIMULATIONS_STORAGE_KEY, JSON.stringify([]));
+      return [];
+    }
+
     const stored = localStorage.getItem(SIMULATIONS_STORAGE_KEY);
     if (!stored) {
-      localStorage.setItem(SIMULATIONS_STORAGE_KEY, JSON.stringify(DEFAULT_SIMULATIONS));
-      return DEFAULT_SIMULATIONS;
+      localStorage.setItem(SIMULATIONS_STORAGE_KEY, JSON.stringify([]));
+      return [];
     }
 
     const parsed = JSON.parse(stored);
     if (!Array.isArray(parsed)) {
-      return DEFAULT_SIMULATIONS;
+      return [];
     }
 
     return parsed.map((simulation: SimulationScenario & { createdAt?: string | number }) => ({
@@ -279,7 +291,7 @@ const loadStoredSimulations = (): SimulationScenario[] => {
     }));
   } catch (error) {
     console.error('Failed to load simulations from storage:', error);
-    return DEFAULT_SIMULATIONS;
+    return [];
   }
 };
 
