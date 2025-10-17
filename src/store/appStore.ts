@@ -209,59 +209,6 @@ const SIMULATIONS_STORAGE_KEY = 'setupSimulations';
 const STORAGE_VERSION_KEY = 'appStorageVersion';
 const CURRENT_STORAGE_VERSION = '2'; // Increment this to clear all localStorage
 
-const DEFAULT_SIMULATIONS: SimulationScenario[] = [
-  {
-    id: 'sim-1',
-    name: 'Simulation 1',
-    product: MOCK_PRODUCTS[0],
-    valueEngine: {
-      product: 'Odaiazol',
-      therapeuticArea: 'Oncology',
-      indication: '2L HER2+ Metastatic Breast Cancer',
-      metrics: [
-        { name: 'XPO TRx Volume', weight: 70, visualize: true },
-        { name: '2L HER2+ Overall Market Share', weight: 20, visualize: true },
-        { name: 'PSP Enrollment Growth', weight: 10, visualize: false }
-      ],
-      basketWeight: '7'
-    },
-    curationEngine: {
-      suggestionsPerWeek: '5-10',
-      signals: 12,
-      strategy: 'Reach & Frequency',
-      reachFrequency: '4-6 calls/month'
-    },
-    status: 'configured',
-    createdAt: new Date(),
-    approved: false
-  },
-  {
-    id: 'sim-2',
-    name: 'Simulation 2',
-    product: MOCK_PRODUCTS[0],
-    valueEngine: {
-      product: 'Odaiazol',
-      therapeuticArea: 'Oncology',
-      indication: '2L HER2+ Metastatic Breast Cancer',
-      metrics: [
-        { name: 'XPO TRx Volume', weight: 60, visualize: true },
-        { name: 'NBRx Opportunity', weight: 25, visualize: true },
-        { name: 'Targeted Biomarker Share', weight: 15, visualize: false }
-      ],
-      basketWeight: '6'
-    },
-    curationEngine: {
-      suggestionsPerWeek: '4-6',
-      signals: 10,
-      strategy: 'Switch & Persist',
-      reachFrequency: '3 calls/month'
-    },
-    status: 'configured',
-    createdAt: new Date(),
-    approved: false
-  }
-];
-
 const loadStoredSimulations = (): SimulationScenario[] => {
   try {
     // Check storage version and clear if outdated
