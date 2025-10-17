@@ -5,11 +5,32 @@ import { Button } from '../components/Button';
 import { useAppStore } from '../store/appStore';
 
 export const ValueEngineReviewDialog: React.FC = () => {
-  const { activeModal, setActiveModal, pspMetricAdded } = useAppStore();
+  const {
+    activeModal,
+    setActiveModal,
+    pspMetricAdded,
+    setSetupApproval,
+    setSetupReady,
+    setupApprovals,
+    simulations
+  } = useAppStore();
   const isOpen = activeModal === 'value-engine-review';
 
   const handleApprove = () => {
-    // Handle approval logic
+    setSetupApproval('valueEngine', true);
+
+    const pendingSimulation = simulations.some((simulation) => !simulation.approved);
+    const pendingSections = Object.entries(setupApprovals).some(([key, approved]) => {
+      if (key === 'valueEngine') {
+        return false;
+      }
+      return !approved;
+    });
+
+    if (!pendingSimulation && !pendingSections) {
+      setSetupReady(true);
+    }
+
     setActiveModal(null);
   };
 

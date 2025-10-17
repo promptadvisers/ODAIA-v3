@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../Card';
 import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 
@@ -37,8 +37,23 @@ interface SimulationConfig {
   kpiHistory: HistoryRow[];
   summaryBullets: string[];
 }
+interface SimulationContent extends SimulationConfig {
+  recommendation: {
+    title: string;
+    excerpt: string;
+    details: string;
+  };
+  narrative: string;
+}
 
-const SIMULATION_CONTENT: Record<SimulationId, SimulationConfig> = {
+const SHARED_RECOMMENDATION_COPY = {
+  title: 'Simulation 1 is the strongest configuration',
+  excerpt: 'Simulation 1 shows strong, clear separation: curated cohorts outperform non-curated ones with healthy engagement gradients.',
+  details:
+    'The Simulation 1 run shows strong, clean separation: curated groups (CA, CNA) far exceed non-curated (NCA, NCNA), and "Eventually Engaged" consistently outperforms "Never Engaged"—a healthy engagement gradient and clear waste reduction. Simulation 2 keeps the right ordering but with tighter gaps (e.g., CA 1,860 vs NCA 1,240), implying moderate targeting value. Simulation 3 is misaligned: CA (720) trails NCA (940) and curated gains are weak, indicating poor list quality. My suggestion: choose the Simulation 1 set—it best represents effective curation with high lift and sensible engagement stratification.'
+};
+
+const SIMULATION_CONTENT: Record<SimulationId, SimulationContent> = {
   'simulation-1': {
     id: 'simulation-1',
     title: 'Odaiazol 80/20',
@@ -85,10 +100,11 @@ const SIMULATION_CONTENT: Record<SimulationId, SimulationConfig> = {
       'Lift per 1K HCP (CNA) – 29.5',
       'Lift per 1K HCP (NCA) – 33.9',
       'Lift per 1K HCP (NCNA) – 17.0',
-      'HCPs Curated – 2.4%',
-      'Adherence – 5.1%',
-      'Coverage – 7.4%'
-    ]
+      'HCPs Curated – 2.4%','Adherence – 5.1%','Coverage – 7.4%'
+    ],
+    recommendation: SHARED_RECOMMENDATION_COPY,
+    narrative:
+      'CA clearly outperforms the other buckets, with CNA also ahead of both non-curated groups—showing that the curation signal adds value even before adoption, and adoption then amplifies it. NCA trails the curated cohorts but remains above NCNA, which serves as the baseline. The clean gradient (CA > CNA > NCA > NCNA) indicates precise targeting, strong field execution on curated targets, and meaningful waste reduction in non-curated segments.'
   },
   'simulation-2': {
     id: 'simulation-2',
@@ -132,14 +148,11 @@ const SIMULATION_CONTENT: Record<SimulationId, SimulationConfig> = {
       { date: '2025-09-23', ca: 5.6, nca: 3.3, ncna: 1.9 }
     ],
     summaryBullets: [
-      'Lift per 1K HCP (CA) – 35.7',
-      'Lift per 1K HCP (CNA) – 27.7',
-      'Lift per 1K HCP (NCA) – 21.1',
-      'Lift per 1K HCP (NCNA) – 16.8',
-      'HCPs Curated – 2.4%',
-      'Adherence – 5.1%',
-      'Coverage – 7.4%'
-    ]
+      'Lift per 1K HCP (CA) – 35.7','Lift per 1K HCP (CNA) – 27.7','Lift per 1K HCP (NCA) – 21.1','Lift per 1K HCP (NCNA) – 16.8','HCPs Curated – 2.4%','Adherence – 5.1%','Coverage – 7.4%'
+    ],
+    recommendation: SHARED_RECOMMENDATION_COPY,
+    narrative:
+      'The same ordering holds (CA > CNA > NCA > NCNA), but the separations are modest. CA only modestly beats NCA, and CNA is only a step above NCNA, suggesting the curation signal is present but not sharp. This points to middling targeting precision and uneven execution—useful, but with limited efficiency gains and a smaller waste-reduction story.'
   },
   'simulation-3': {
     id: 'simulation-3',
@@ -183,14 +196,11 @@ const SIMULATION_CONTENT: Record<SimulationId, SimulationConfig> = {
       { date: '2025-09-23', ca: 3.2, nca: 3.0, ncna: 2.2 }
     ],
     summaryBullets: [
-      'Lift per 1K HCP (CA) – 24.3',
-      'Lift per 1K HCP (CNA) – 11.7',
-      'Lift per 1K HCP (NCA) – 18.6',
-      'Lift per 1K HCP (NCNA) – 9.8',
-      'HCPs Curated – 1.1%',
-      'Adherence – 3.4%',
-      'Coverage – 4.2%'
-    ]
+      'Lift per 1K HCP (CA) – 24.3','Lift per 1K HCP (CNA) – 11.7','Lift per 1K HCP (NCA) – 18.6','Lift per 1K HCP (NCNA) – 9.8','HCPs Curated – 1.1%','Adherence – 3.4%','Coverage – 4.2%'
+    ],
+    recommendation: SHARED_RECOMMENDATION_COPY,
+    narrative:
+      'The pattern breaks: NCA rivals or exceeds CA, while CNA sits near NCNA. That means adoption without curation is doing as well as—or better than—the curated paths, implying mis-targeted lists, stale scoring, or execution that’s not aligned with the curated priorities. The lack of a curated advantage signals high waste and weak incremental value from the curation strategy.'
   }
 };
 
@@ -200,6 +210,8 @@ interface CurationSimulationOutputProps {
 
 export const CurationSimulationOutput: React.FC<CurationSimulationOutputProps> = ({ onSimulationChange }) => {
   const [activeSimulation, setActiveSimulation] = useState<SimulationId>('simulation-1');
+  const [altPopoverVisible, setAltPopoverVisible] = useState<'recommendation' | 'narrative' | null>(null);
+  const hoverTimerRef = useRef<number | null>(null);
 
   const simulation = useMemo(() => SIMULATION_CONTENT[activeSimulation], [activeSimulation]);
 
@@ -208,8 +220,198 @@ export const CurationSimulationOutput: React.FC<CurationSimulationOutputProps> =
     onSimulationChange?.(id);
   };
 
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) {
+        window.clearTimeout(hoverTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    setAltPopoverVisible(null);
+  }, [activeSimulation]);
+
+  const schedulePopover = (key: 'recommendation' | 'narrative') => {
+    if (hoverTimerRef.current) {
+      window.clearTimeout(hoverTimerRef.current);
+    }
+    hoverTimerRef.current = window.setTimeout(() => {
+      setAltPopoverVisible(key);
+    }, 700);
+  };
+
+  const clearPopover = () => {
+    if (hoverTimerRef.current) {
+      window.clearTimeout(hoverTimerRef.current);
+    }
+    hoverTimerRef.current = null;
+    setAltPopoverVisible(null);
+  };
+
   return (
     <div style={{ color: 'var(--text-primary)' }}>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        marginBottom: '24px'
+      }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: '14px',
+            alignItems: 'flex-start',
+            padding: '18px 20px',
+            borderRadius: '12px',
+            border: '1px solid rgba(59,130,246,0.25)',
+            background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.16), rgba(15, 23, 42, 0.6))',
+            position: 'relative'
+          }}
+        >
+          <div style={{ flex: 1 }}>
+            <div style={{
+              fontSize: '12px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.16em',
+              color: 'rgba(191, 219, 254, 0.9)',
+              marginBottom: '8px'
+            }}>
+              AI Recommendation
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: 600,
+                margin: 0,
+                color: 'var(--text-primary)'
+              }}>
+                {simulation.recommendation.title}
+              </h3>
+              <button
+                onMouseEnter={() => schedulePopover('recommendation')}
+                onMouseLeave={clearPopover}
+                onFocus={() => schedulePopover('recommendation')}
+                onBlur={clearPopover}
+                onClick={() => setAltPopoverVisible('recommendation')}
+                style={{
+                  fontSize: '11px',
+                  color: 'rgba(191, 219, 254, 0.85)',
+                  padding: '6px 12px',
+                  backgroundColor: 'rgba(37, 99, 235, 0.15)',
+                  borderRadius: '999px',
+                  border: '1px solid rgba(37, 99, 235, 0.35)',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                  transition: 'background 0.2s ease'
+                }}
+              >
+                View full recommendation
+              </button>
+            </div>
+            <p style={{
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+              marginTop: '10px',
+              marginBottom: 0
+            }}>
+              {SHARED_RECOMMENDATION_COPY.excerpt}
+            </p>
+            {altPopoverVisible === 'recommendation' && (
+              <div
+                onMouseEnter={() => schedulePopover('recommendation')}
+                onMouseLeave={clearPopover}
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  marginTop: '12px',
+                  maxWidth: '540px',
+                  background: 'linear-gradient(160deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.96))',
+                  border: '1px solid rgba(96, 165, 250, 0.35)',
+                  borderRadius: '16px',
+                  padding: '18px 22px',
+                  boxShadow: '0 24px 70px rgba(15, 23, 42, 0.65)',
+                  color: 'rgba(226, 232, 240, 0.95)',
+                  zIndex: 10
+                }}
+              >
+                <h4 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '10px', letterSpacing: '-0.01em' }}>
+                  AI Recommendation
+                </h4>
+                <p style={{ fontSize: '13px', lineHeight: 1.7, margin: 0 }}>
+                  {SHARED_RECOMMENDATION_COPY.details}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div
+          style={{
+            padding: '16px 18px',
+            borderRadius: '10px',
+            border: '1px solid rgba(148, 163, 184, 0.25)',
+            backgroundColor: 'rgba(30, 41, 59, 0.55)',
+            position: 'relative'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+            <div style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: activeSimulation === 'simulation-1' ? '#22c55e' : activeSimulation === 'simulation-2' ? '#38bdf8' : '#f97316'
+            }} />
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>Simulation Narrative</span>
+          </div>
+          <button
+            onMouseEnter={() => schedulePopover('narrative')}
+            onMouseLeave={clearPopover}
+            onFocus={() => schedulePopover('narrative')}
+            onBlur={clearPopover}
+            onClick={() => setAltPopoverVisible('narrative')}
+            style={{
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+              margin: 0,
+              lineHeight: 1.6,
+              cursor: 'pointer',
+              textAlign: 'left',
+              background: 'transparent',
+              border: 'none',
+              padding: 0
+            }}
+          >
+            {simulation.narrative.slice(0, 180)}{simulation.narrative.length > 180 ? '…' : ''}
+          </button>
+          {altPopoverVisible === 'narrative' && (
+            <div
+              onMouseEnter={() => schedulePopover('narrative')}
+              onMouseLeave={clearPopover}
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                marginTop: '12px',
+                maxWidth: '520px',
+                background: 'linear-gradient(160deg, rgba(15, 23, 42, 0.95), rgba(17, 24, 39, 0.92))',
+                border: '1px solid rgba(148, 163, 184, 0.32)',
+                borderRadius: '14px',
+                padding: '16px 20px',
+                boxShadow: '0 20px 60px rgba(15, 23, 42, 0.55)',
+                color: 'rgba(226, 232, 240, 0.92)',
+                zIndex: 9
+              }}
+            >
+              <h4 style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px', letterSpacing: '-0.01em' }}>
+                Simulation Narrative
+              </h4>
+              <p style={{ fontSize: '13px', lineHeight: 1.65, margin: 0 }}>{simulation.narrative}</p>
+            </div>
+          )}
+        </div>
+      </div>
       <div style={{
         display: 'flex',
         alignItems: 'center',

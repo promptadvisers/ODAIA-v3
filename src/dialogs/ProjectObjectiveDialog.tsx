@@ -67,7 +67,7 @@ export const ProjectObjectiveDialog: React.FC<ProjectObjectiveDialogProps> = ({
           basketScore: '7',
           therapeuticArea: '',
           product: '',
-          indications: { 'SEA': true, 'EGPA': true, 'NP': true },
+          indications: { 'SEA': true, 'NP': true },
           metrics: [
             'IOVIA TRx Share Monthly',
             'IOVIA TRx Share Monthly',

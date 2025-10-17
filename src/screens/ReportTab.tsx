@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Settings, ChevronLeft, ChevronRight, ChevronDown, X } from 'lucide-react';
+import { Settings, ChevronLeft, ChevronRight, ChevronDown, Triangle } from 'lucide-react';
 import { SimulationRunner } from '../components/Report/SimulationRunner';
 import { useChatStore } from '../store/chatStore';
 import { CurationSimulationOutput } from '../components/Report/CurationSimulationOutput';
@@ -488,12 +488,10 @@ export const ReportTab: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState('Odaiazol (Sept 16, 2025)');
   const [selectedObjective, setSelectedObjective] = useState('Odaiazol vs 2L Therapy HER+');
   const [selectedRegion, setSelectedRegion] = useState('National');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [activeReport, setActiveReport] = useState<'powerscore' | 'curation'>('powerscore');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const [activeReport, setActiveReport] = useState<'powerscore' | 'curation'>('curation');
   const [isReportMenuOpen, setIsReportMenuOpen] = useState(false);
   const reportMenuRef = useRef<HTMLDivElement | null>(null);
-  const [showCurationToast, setShowCurationToast] = useState(false);
-  const toastTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -511,28 +509,10 @@ export const ReportTab: React.FC = () => {
     };
   }, [isReportMenuOpen]);
 
-  useEffect(() => {
-    if (activeReport === 'curation') {
-      setShowCurationToast(false);
-      if (toastTimerRef.current) {
-        window.clearTimeout(toastTimerRef.current);
-      }
-      toastTimerRef.current = window.setTimeout(() => {
-        setShowCurationToast(true);
-      }, 5000);
-    } else {
-      if (toastTimerRef.current) {
-        window.clearTimeout(toastTimerRef.current);
-      }
-      setShowCurationToast(false);
-    }
-
-    return () => {
-      if (toastTimerRef.current) {
-        window.clearTimeout(toastTimerRef.current);
-      }
-    };
-  }, [activeReport]);
+const NAV_WIDTH = 72;
+  const PANEL_WIDTH = 260;
+  const TOGGLE_SIZE = 26;
+  // const expandedToggleLeft = NAV_WIDTH + PANEL_WIDTH - TOGGLE_SIZE / 2;
 
   // Compute current data based on filter selections
   const currentData = useMemo(() => {
@@ -550,7 +530,7 @@ export const ReportTab: React.FC = () => {
     const baseData = SIMULATION_DATA[dataKey] || SIMULATION_DATA['Simulation (Odaiazol 70/30)'];
 
     // Apply filter-specific variations
-    let data = JSON.parse(JSON.stringify(baseData)); // Deep clone
+    const data = JSON.parse(JSON.stringify(baseData)); // Deep clone
 
     // Parse date range (format: "MM/DD/YYYY - MM/DD/YYYY")
     const dateRangeParts = selectedDateRange.split(' - ');
@@ -680,7 +660,7 @@ export const ReportTab: React.FC = () => {
       {/* Control Panel Sidebar */}
       <div
         style={{
-          width: isSidebarCollapsed ? '0px' : '260px',
+          width: isSidebarCollapsed ? '0px' : `${PANEL_WIDTH}px`,
           transition: 'width 0.3s ease',
           backgroundColor: 'var(--bg-secondary)',
           borderRight: isSidebarCollapsed ? 'none' : '1px solid var(--border-subtle)',
@@ -690,7 +670,7 @@ export const ReportTab: React.FC = () => {
       >
         <div
           style={{
-            width: '260px',
+            width: `${PANEL_WIDTH}px`,
             padding: '20px 16px',
             overflowY: 'auto',
             height: '100%',
@@ -702,22 +682,29 @@ export const ReportTab: React.FC = () => {
             onClick={() => setIsSidebarCollapsed(true)}
             style={{
               position: 'absolute',
-              top: '16px',
-              right: '-16px',
-              width: '32px',
-              height: '32px',
-              borderRadius: '16px',
-              backgroundColor: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
+              top: '50%',
+              right: '0',
+              transform: 'translate(100%, -50%)',
+              width: '18px',
+              height: '52px',
+              borderRadius: '0 8px 8px 0',
+              background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.85))',
+              border: '1px solid rgba(100, 116, 139, 0.45)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+              transition: 'opacity 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.opacity = '1';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.opacity = '0.9';
             }}
             aria-label="Collapse control panel"
           >
-            <ChevronLeft size={14} color="var(--text-secondary)" />
+            <Triangle size={13} color="rgba(226, 232, 240, 0.9)" style={{ transform: 'rotate(-90deg)' }} />
           </button>
           <h2 style={{
           fontSize: '14px',
@@ -997,28 +984,36 @@ export const ReportTab: React.FC = () => {
       </div>
     </div>
 
-      {isSidebarCollapsed && (
+      {!isSidebarCollapsed && (
         <button
           onClick={() => setIsSidebarCollapsed(false)}
           style={{
-            position: 'absolute',
-            top: '20px',
-            left: '12px',
-            zIndex: 2,
-            width: '32px',
-            height: '32px',
-            borderRadius: '16px',
-            backgroundColor: 'var(--bg-card)',
-            border: '1px solid var(--border-subtle)',
+            position: 'fixed',
+            top: '50%',
+            left: `${NAV_WIDTH}px`,
+            transform: 'translate(-130%, -50%)',
+            zIndex: 30,
+            width: '18px',
+            height: '52px',
+            borderRadius: '8px 0 0 8px',
+            background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(7, 11, 17, 0.85))',
+            border: '1px solid rgba(71, 85, 105, 0.5)',
+            borderLeft: 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.25)'
+            transition: 'opacity 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.opacity = '1';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.opacity = '0.85';
           }}
           aria-label="Expand control panel"
         >
-          <ChevronRight size={14} color="var(--text-secondary)" />
+          <Triangle size={13} color="rgba(226, 232, 240, 0.85)" style={{ transform: 'rotate(90deg)' }} />
         </button>
       )}
 
@@ -1124,85 +1119,6 @@ export const ReportTab: React.FC = () => {
               console.log('Selected curation simulation', id);
             }}
           />
-        )}
-
-        {showCurationToast && activeReport === 'curation' && (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'rgba(15, 23, 42, 0.55)',
-              zIndex: 20,
-              animation: 'fadeIn 0.3s ease'
-            }}
-          >
-            <div
-              style={{
-                width: 'min(520px, 90%)',
-                background: 'linear-gradient(145deg, rgba(30,41,59,0.95), rgba(15,23,42,0.95))',
-                border: '1px solid rgba(148,163,184,0.35)',
-                borderRadius: '18px',
-                padding: '28px',
-                boxShadow: '0 30px 80px rgba(15, 23, 42, 0.65)',
-                color: 'var(--text-primary)',
-                position: 'relative',
-                backdropFilter: 'blur(16px)',
-                animation: 'scaleIn 0.3s ease'
-              }}
-            >
-              <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.24em', color: 'var(--text-muted)', marginBottom: '12px' }}>
-                AI Recommendation
-              </div>
-              <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '14px', letterSpacing: '-0.01em' }}>Simulation 1 is the strongest configuration</h3>
-              <p style={{ fontSize: '14px', lineHeight: 1.7, color: 'var(--text-secondary)', marginBottom: '24px' }}>
-                The Simulation 1 run shows strong, clean separation: curated groups (CA, CNA) far exceed non-curated (NCA, NCNA), and “Eventually Engaged” consistently outperforms “Never Engaged”—a healthy engagement gradient and clear waste reduction. Simulation 2 keeps the right ordering but with tighter gaps (e.g., CA 1,860 vs NCA 1,240), implying moderate targeting value. Simulation 3 is misaligned: CA (720) trails NCA (940) and curated gains are weak, indicating poor list quality. My suggestion: choose the Simulation 1 set—it best represents effective curation with high lift and sensible engagement stratification.
-              </p>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                <button
-                  onClick={() => setShowCurationToast(false)}
-                  style={{
-                    padding: '10px 18px',
-                    borderRadius: '999px',
-                    border: '1px solid rgba(148,163,184,0.35)',
-                    backgroundColor: 'transparent',
-                    color: 'var(--text-primary)',
-                    fontSize: '13px',
-                    letterSpacing: '0.02em',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Dismiss
-                </button>
-              </div>
-              <button
-                onClick={() => setShowCurationToast(false)}
-                aria-label="Dismiss recommendation"
-                style={{
-                  position: 'absolute',
-                  top: '16px',
-                  right: '16px',
-                  background: 'rgba(148,163,184,0.15)',
-                  border: '1px solid rgba(148,163,184,0.2)',
-                  borderRadius: '999px',
-                  width: '32px',
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer'
-                }}
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </div>
         )}
       </div>
     </div>

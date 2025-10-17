@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '../lib/utils';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   children: React.ReactNode;
 }
@@ -44,6 +44,15 @@ export const Button: React.FC<ButtonProps> = ({
           fontSize: '13px',
           fontWeight: '500'
         };
+      case 'danger':
+        return {
+          backgroundColor: 'rgba(239, 68, 68, 0.15)',
+          color: 'rgb(248, 113, 113)',
+          border: '1px solid rgba(239, 68, 68, 0.4)',
+          padding: size === 'sm' ? '8px 18px' : '10px 24px',
+          fontSize: '13px',
+          fontWeight: '500'
+        };
     }
   };
 
@@ -71,6 +80,10 @@ export const Button: React.FC<ButtonProps> = ({
         } else if (variant === 'ghost') {
           e.currentTarget.style.color = 'var(--text-primary)';
           e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+        } else if (variant === 'danger') {
+          e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.7)';
+          e.currentTarget.style.color = 'rgb(252, 165, 165)';
+          e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
         }
       }}
       onMouseLeave={(e) => {
@@ -84,6 +97,10 @@ export const Button: React.FC<ButtonProps> = ({
         } else if (variant === 'ghost') {
           e.currentTarget.style.color = 'var(--text-secondary)';
           e.currentTarget.style.backgroundColor = 'transparent';
+        } else if (variant === 'danger') {
+          e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+          e.currentTarget.style.color = 'rgb(248, 113, 113)';
+          e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
         }
       }}
       {...props}

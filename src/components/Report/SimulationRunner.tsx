@@ -12,6 +12,7 @@ export interface Simulation {
   status: 'pending' | 'running' | 'completed';
   progress: number;
   startTime?: number;
+  duration?: number;
   config: {
     establishedProduct: string;
     labels?: string[];
@@ -57,7 +58,7 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
 
   // Use configured scenarios if provided, otherwise use setupSimulations, fallback to defaults
   const getInitialSimulations = (): Simulation[] => {
-    // Always include the 2 original cards
+    // Always include the 2 original cards with random durations for variation
     const originalSimulations: Simulation[] = [
       {
         id: 'value-engine-option-1',
@@ -71,7 +72,8 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
             '70/30 Value Weighting'
           ],
           parameters: []
-        }
+        },
+        duration: Math.floor(Math.random() * 4000) + 6000
       },
       {
         id: 'value-engine-option-2',
@@ -86,7 +88,8 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
             'XPO TRx Weight to 0.2'
           ],
           parameters: []
-        }
+        },
+        duration: Math.floor(Math.random() * 4000) + 6000
       }
     ];
 
@@ -110,66 +113,54 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
   // Check if simulation was triggered from chat
   useEffect(() => {
     if (simulationTriggered) {
-      // Start ONLY the first simulation, leave others as pending
       const startTime = Date.now();
-      console.log('[SimulationRunner] Simulation triggered! Starting first simulation at:', startTime);
+      console.log('[SimulationRunner] Simulation triggered! Starting all simulations at:', startTime);
       setSimulations(prev => {
         const updated = prev.map((sim, index) => {
-          if (index === 0) {
-            // Start the first simulation
-            return {
-              ...sim,
-              status: 'running' as const,
-              progress: 0,
-              startTime: startTime
-            };
-          } else {
-            // Keep others as pending
-            return {
-              ...sim,
-              status: 'pending' as const,
-              progress: 0,
-              startTime: undefined
-            };
-          }
+          const randomizedDuration = Math.floor(Math.random() * 4000) + 6000; // 6-10 seconds
+          return {
+            ...sim,
+            status: 'running' as const,
+            progress: 0,
+            startTime: startTime + index * 25, // slight stagger for visual variation
+            duration: randomizedDuration,
+            results: undefined
+          };
         });
         console.log('[SimulationRunner] Updated simulations:', updated);
         return updated;
       });
-
-      // DON'T reset the trigger here - let it stay true while simulations run
-      // It will be reset when all simulations complete (see effect below)
     }
   }, [simulationTriggered, setSimulationTriggered]);
 
   // Simulate progress for running simulations - runs for exactly 12 seconds
   useEffect(() => {
-    const duration = 12000; // 12 seconds total
     const intervalTime = 100; // Update every 100ms for smooth animation
 
     console.log('[SimulationRunner] Setting up progress interval');
 
     const interval = setInterval(() => {
       setSimulations(prev => {
-        let hasJustCompleted = false;
-
-        // First pass: update progress for running simulations
-        const updated = prev.map(sim => {
-          if (sim.status === 'running' && sim.startTime) {
+      const updated = prev.map(sim => {
+        if (sim.status === 'running' && sim.startTime) {
+          const effectiveDuration = sim.duration ?? Math.floor(Math.random() * 4000) + 6000;
+          if (!sim.duration || sim.duration !== effectiveDuration) {
+            sim = { ...sim, duration: effectiveDuration };
+          }
             // Calculate progress based on elapsed time since start
             const elapsed = Date.now() - sim.startTime;
-            const newProgress = Math.min((elapsed / duration) * 100, 100);
+          const newProgress = Math.min((elapsed / effectiveDuration) * 100, 100);
 
             console.log(`[SimulationRunner] ${sim.name}: elapsed=${elapsed}ms, progress=${newProgress.toFixed(2)}%`);
 
             // Complete simulation when progress reaches 100
             if (newProgress >= 100) {
               console.log(`[SimulationRunner] ${sim.name}: COMPLETED`);
-              hasJustCompleted = true;
               return {
                 ...sim,
                 progress: 100,
                 status: 'completed' as const,
+                startTime: undefined,
                 results: generateMockResults(sim.id)
               };
             }
@@ -178,21 +169,6 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
           }
           return sim;
         });
-
-        // Second pass: if a simulation just completed, start the next pending one
-        if (hasJustCompleted) {
-          const nextPendingIndex = updated.findIndex(s => s.status === 'pending');
-          if (nextPendingIndex !== -1) {
-            console.log(`[SimulationRunner] Starting next simulation: ${updated[nextPendingIndex].name}`);
-            updated[nextPendingIndex] = {
-              ...updated[nextPendingIndex],
-              status: 'running' as const,
-              progress: 0,
-              startTime: Date.now()
-            };
-          }
-        }
-
         return updated;
       });
     }, intervalTime);

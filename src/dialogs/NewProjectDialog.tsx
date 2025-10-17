@@ -30,7 +30,6 @@ export const NewProjectDialog: React.FC<NewProjectDialogProps> = ({ isOpen, onCl
 
   const [selectedOptions, setSelectedOptions] = useState({
     SEA: true,
-    EGPA: true,
     NP: true
   });
 

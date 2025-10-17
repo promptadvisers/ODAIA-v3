@@ -98,7 +98,10 @@ export interface SimulationScenario {
   };
   status: 'draft' | 'configured';
   createdAt: Date;
+  approved: boolean;
 }
+
+type SetupApprovalKey = 'valueEngine' | 'orchestration' | 'curation';
 
 interface AppState {
   // File management
@@ -139,18 +142,154 @@ interface AppState {
   setSelectedWorkflow: (workflow: 'sales' | 'marketing') => void;
   setupReady: boolean;
   setSetupReady: (ready: boolean) => void;
+  setupApprovals: Record<SetupApprovalKey, boolean>;
+  setSetupApproval: (item: SetupApprovalKey, approved: boolean) => void;
+  approveAllSetup: (workflow: 'sales' | 'marketing') => void;
 
   // Simulations
   simulations: SimulationScenario[];
-  addSimulation: (simulation: Omit<SimulationScenario, 'id' | 'createdAt'>) => void;
+  addSimulation: (simulation: Omit<SimulationScenario, 'id' | 'createdAt' | 'approved'>) => void;
   updateSimulation: (id: string, updates: Partial<SimulationScenario>) => void;
   removeSimulation: (id: string) => void;
   getSimulationById: (id: string) => SimulationScenario | undefined;
+  setSimulationApproval: (id: string, approved: boolean) => void;
 
   // PSP Metric Demo
   pspMetricAdded: boolean;
   setPspMetricAdded: (added: boolean) => void;
 }
+
+// Mock products data - must be defined before the store
+export const MOCK_PRODUCTS: Product[] = [
+  {
+    id: 'prod-1',
+    name: 'Odaiazol',
+    indication: '2L HER2+ Metastatic Breast Cancer',
+    therapeuticArea: 'Oncology',
+    launchStatus: 'Established'
+  },
+  {
+    id: 'prod-2',
+    name: 'Nucala',
+    indication: 'Severe Eosinophilic Asthma',
+    therapeuticArea: 'Respiratory',
+    launchStatus: 'Established'
+  },
+  {
+    id: 'prod-3',
+    name: 'Fasenra',
+    indication: 'Severe Eosinophilic Asthma',
+    therapeuticArea: 'Respiratory',
+    launchStatus: 'Established'
+  },
+  {
+    id: 'prod-4',
+    name: 'Xolair',
+    indication: 'Chronic Spontaneous Urticaria',
+    therapeuticArea: 'Immunology',
+    launchStatus: 'Established'
+  },
+  {
+    id: 'prod-5',
+    name: 'Dupixent',
+    indication: 'Moderate-to-Severe Atopic Dermatitis',
+    therapeuticArea: 'Dermatology',
+    launchStatus: 'New Launch'
+  },
+  {
+    id: 'prod-6',
+    name: 'Keytruda',
+    indication: 'Non-Small Cell Lung Cancer',
+    therapeuticArea: 'Oncology',
+    launchStatus: 'Established'
+  }
+];
+
+const SIMULATIONS_STORAGE_KEY = 'setupSimulations';
+
+const DEFAULT_SIMULATIONS: SimulationScenario[] = [
+  {
+    id: 'sim-1',
+    name: 'Simulation 1',
+    product: MOCK_PRODUCTS[0],
+    valueEngine: {
+      product: 'Odaiazol',
+      therapeuticArea: 'Oncology',
+      indication: '2L HER2+ Metastatic Breast Cancer',
+      metrics: [
+        { name: 'XPO TRx Volume', weight: 70, visualize: true },
+        { name: '2L HER2+ Overall Market Share', weight: 20, visualize: true },
+        { name: 'PSP Enrollment Growth', weight: 10, visualize: false }
+      ],
+      basketWeight: '7'
+    },
+    curationEngine: {
+      suggestionsPerWeek: '5-10',
+      signals: 12,
+      strategy: 'Reach & Frequency',
+      reachFrequency: '4-6 calls/month'
+    },
+    status: 'configured',
+    createdAt: new Date(),
+    approved: false
+  },
+  {
+    id: 'sim-2',
+    name: 'Simulation 2',
+    product: MOCK_PRODUCTS[0],
+    valueEngine: {
+      product: 'Odaiazol',
+      therapeuticArea: 'Oncology',
+      indication: '2L HER2+ Metastatic Breast Cancer',
+      metrics: [
+        { name: 'XPO TRx Volume', weight: 60, visualize: true },
+        { name: 'NBRx Opportunity', weight: 25, visualize: true },
+        { name: 'Targeted Biomarker Share', weight: 15, visualize: false }
+      ],
+      basketWeight: '6'
+    },
+    curationEngine: {
+      suggestionsPerWeek: '4-6',
+      signals: 10,
+      strategy: 'Switch & Persist',
+      reachFrequency: '3 calls/month'
+    },
+    status: 'configured',
+    createdAt: new Date(),
+    approved: false
+  }
+];
+
+const loadStoredSimulations = (): SimulationScenario[] => {
+  try {
+    const stored = localStorage.getItem(SIMULATIONS_STORAGE_KEY);
+    if (!stored) {
+      localStorage.setItem(SIMULATIONS_STORAGE_KEY, JSON.stringify(DEFAULT_SIMULATIONS));
+      return DEFAULT_SIMULATIONS;
+    }
+
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed)) {
+      return DEFAULT_SIMULATIONS;
+    }
+
+    return parsed.map((simulation: SimulationScenario & { createdAt?: string | number }) => ({
+      ...simulation,
+      createdAt: simulation.createdAt ? new Date(simulation.createdAt) : new Date()
+    }));
+  } catch (error) {
+    console.error('Failed to load simulations from storage:', error);
+    return DEFAULT_SIMULATIONS;
+  }
+};
+
+const persistSimulations = (simulations: SimulationScenario[]) => {
+  try {
+    localStorage.setItem(SIMULATIONS_STORAGE_KEY, JSON.stringify(simulations));
+  } catch (error) {
+    console.error('Failed to persist simulations:', error);
+  }
+};
 
 export const useAppStore = create<AppState>((set): AppState => ({
   // File management
@@ -215,7 +354,7 @@ export const useAppStore = create<AppState>((set): AppState => ({
       basketScore: 7,
       therapeuticArea: '',
       product: '',
-      indications: ['SEA', 'EGPA', 'NP'],
+      indications: ['SEA', 'NP'],
       scoringWeights: [
         { metric: 'IOVIA TRx Share Monthly', weight: 50, baseline: true, percentile: false },
         { metric: '2L Therapy HER+ Market', weight: 50, baseline: true, percentile: false },
@@ -303,79 +442,71 @@ export const useAppStore = create<AppState>((set): AppState => ({
   setSelectedWorkflow: (workflow) => set({ selectedWorkflow: workflow }),
   setupReady: false,
   setSetupReady: (ready) => set({ setupReady: ready }),
+  setupApprovals: {
+    valueEngine: false,
+    orchestration: false,
+    curation: false
+  },
+  setSetupApproval: (item, approved) => set((state) => ({
+    setupApprovals: {
+      ...state.setupApprovals,
+      [item]: approved
+    }
+  })),
+  approveAllSetup: (workflow) =>
+    set((state) => {
+      const updatedSimulations = state.simulations.map((sim: SimulationScenario) => ({
+        ...sim,
+        approved: true
+      }));
+      persistSimulations(updatedSimulations);
+      return {
+        setupApprovals: {
+          valueEngine: true,
+          orchestration: workflow === 'marketing' ? true : state.setupApprovals.orchestration,
+          curation: workflow === 'sales' ? true : state.setupApprovals.curation
+        },
+        simulations: updatedSimulations
+      };
+    }),
 
   // Simulations
-  simulations: [],
-  addSimulation: (simulation) => set((state) => ({
-    simulations: [
-      ...state.simulations,
-      {
-        ...simulation,
-        id: `sim-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        createdAt: new Date()
-      }
-    ]
-  })),
-  updateSimulation: (id, updates) => set((state) => ({
-    simulations: state.simulations.map(sim =>
+  simulations: loadStoredSimulations(),
+  addSimulation: (simulation) => set((state) => {
+    const newSimulation: SimulationScenario = {
+      ...simulation,
+      id: `sim-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: new Date(),
+      approved: false
+    };
+    const updatedSimulations = [...state.simulations, newSimulation];
+    persistSimulations(updatedSimulations);
+    return { simulations: updatedSimulations };
+  }),
+  updateSimulation: (id, updates) => set((state) => {
+    const updatedSimulations = state.simulations.map(sim =>
       sim.id === id ? { ...sim, ...updates } : sim
-    )
-  })),
-  removeSimulation: (id) => set((state) => ({
-    simulations: state.simulations.filter((sim: SimulationScenario) => sim.id !== id)
-  })),
+    );
+    persistSimulations(updatedSimulations);
+    return { simulations: updatedSimulations };
+  }),
+  removeSimulation: (id) => set((state) => {
+    const updatedSimulations = state.simulations.filter((sim: SimulationScenario) => sim.id !== id);
+    persistSimulations(updatedSimulations);
+    return { simulations: updatedSimulations };
+  }),
   getSimulationById: (id): SimulationScenario | undefined => {
     const state: AppState = useAppStore.getState();
     return state.simulations.find((sim: SimulationScenario) => sim.id === id);
   },
+  setSimulationApproval: (id, approved) =>
+    set((state) => ({
+      simulations: state.simulations.map((sim: SimulationScenario) =>
+        sim.id === id ? { ...sim, approved } : sim
+      )
+    })),
 
   // PSP Metric Demo
   pspMetricAdded: false,
   setPspMetricAdded: (added) => set({ pspMetricAdded: added })
 }));
-
-// Mock products data
-export const MOCK_PRODUCTS: Product[] = [
-  {
-    id: 'prod-1',
-    name: 'Odaiazol',
-    indication: '2L HER2+ Metastatic Breast Cancer',
-    therapeuticArea: 'Oncology',
-    launchStatus: 'Established'
-  },
-  {
-    id: 'prod-2',
-    name: 'Nucala',
-    indication: 'Severe Eosinophilic Asthma',
-    therapeuticArea: 'Respiratory',
-    launchStatus: 'Established'
-  },
-  {
-    id: 'prod-3',
-    name: 'Fasenra',
-    indication: 'Severe Eosinophilic Asthma',
-    therapeuticArea: 'Respiratory',
-    launchStatus: 'Established'
-  },
-  {
-    id: 'prod-4',
-    name: 'Xolair',
-    indication: 'Chronic Spontaneous Urticaria',
-    therapeuticArea: 'Immunology',
-    launchStatus: 'Established'
-  },
-  {
-    id: 'prod-5',
-    name: 'Dupixent',
-    indication: 'Moderate-to-Severe Atopic Dermatitis',
-    therapeuticArea: 'Dermatology',
-    launchStatus: 'New Launch'
-  },
-  {
-    id: 'prod-6',
-    name: 'Keytruda',
-    indication: 'Non-Small Cell Lung Cancer',
-    therapeuticArea: 'Oncology',
-    launchStatus: 'Established'
-  }
-];

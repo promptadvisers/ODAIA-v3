@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
+import { AddSimulationModal } from '../dialogs/AddSimulationModal';
 import { useAppStore } from '../store/appStore';
 import { useChatStore } from '../store/chatStore';
 
@@ -10,12 +11,40 @@ interface SetupTabProps {
 }
 
 export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
-  const { hasUploadedFiles, selectedWorkflow, setActiveModal, simulations } = useAppStore();
+  const {
+    hasUploadedFiles,
+    selectedWorkflow,
+    setActiveModal,
+    simulations,
+    setupApprovals,
+    setSetupApproval,
+    approveAllSetup,
+    setSimulationApproval,
+    updateSimulation,
+    removeSimulation,
+    setSetupReady
+  } = useAppStore();
   const { setSimulationTriggered } = useChatStore();
   const [isLoading, setIsLoading] = useState(true);
   const [setupComplete, setSetupComplete] = useState(false);
   const [highlightedSimId] = useState<string | null>(null);
   const [simulationCount, setSimulationCount] = useState(3);
+  const [showAddSimulationModal, setShowAddSimulationModal] = useState(false);
+  const [editingSimulationId, setEditingSimulationId] = useState<string | null>(null);
+  const [editingSimulationName, setEditingSimulationName] = useState('');
+
+  const isOrchestrationEnabled = selectedWorkflow === 'marketing';
+  const isCurationEnabled = selectedWorkflow === 'sales';
+
+  const allSetupApproved =
+    setupApprovals.valueEngine &&
+    (!isOrchestrationEnabled || setupApprovals.orchestration) &&
+    (!isCurationEnabled || setupApprovals.curation) &&
+    simulations.every((simulation) => simulation.approved);
+
+  useEffect(() => {
+    setSetupReady(allSetupApproved);
+  }, [allSetupApproved, setSetupReady]);
 
   // Simulate loading when entering setup tab
   useEffect(() => {
@@ -154,10 +183,18 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
             color: 'var(--text-secondary)',
             margin: 0
           }}>
-            Approve an run reports; {simulationCount} Variants on your setup will be performed
+            {allSetupApproved ? 'Good to go.' : 'Approve and run reports;'} {simulationCount} Variants on your setup will be performed
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => approveAllSetup(selectedWorkflow)}
+            disabled={allSetupApproved}
+          >
+            Approve All
+          </Button>
           <select
             value={simulationCount}
             onChange={(e) => setSimulationCount(parseInt(e.target.value))}
@@ -180,19 +217,6 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
           <Button
             disabled={!setupComplete}
             onClick={handleRunSimulations}
-            style={{
-              opacity: setupComplete ? 1 : 0.5,
-              cursor: setupComplete ? 'pointer' : 'not-allowed',
-              padding: '10px 20px',
-              fontSize: '13px',
-              fontWeight: '600',
-              borderRadius: '6px',
-              backgroundColor: setupComplete ? 'var(--accent-blue)' : 'var(--bg-secondary)',
-              color: setupComplete ? '#ffffff' : 'var(--text-muted)',
-              border: 'none',
-              transition: 'all 0.2s ease',
-              boxShadow: setupComplete ? '0 2px 8px rgba(59, 130, 246, 0.3)' : 'none'
-            }}
           >
             Run
           </Button>
@@ -240,7 +264,9 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                   </span>
                 </div>
               </div>
-              <Badge variant="warning">Review</Badge>
+              <Badge variant={setupApprovals.valueEngine ? 'success' : 'warning'}>
+                {setupApprovals.valueEngine ? 'Ready' : 'Review'}
+              </Badge>
             </div>
           </CardHeader>
           <CardContent>
@@ -260,6 +286,13 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
               >
                 Edit
               </Button>
+                <Button
+                  variant={setupApprovals.valueEngine ? 'ghost' : 'secondary'}
+                  onClick={() => setSetupApproval('valueEngine', true)}
+                  disabled={setupApprovals.valueEngine}
+                >
+                  {setupApprovals.valueEngine ? 'Approved' : 'Approve'}
+                </Button>
             </div>
           </CardContent>
         </Card>
@@ -304,7 +337,9 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                     </span>
                   </div>
                 </div>
-                <Badge variant="warning">Review</Badge>
+                <Badge variant={setupApprovals.orchestration ? 'success' : 'warning'}>
+                  {setupApprovals.orchestration ? 'Ready' : 'Review'}
+                </Badge>
               </div>
             </CardHeader>
             <CardContent>
@@ -323,6 +358,13 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                   onClick={() => setActiveModal('curation-edit')}
                 >
                   Edit
+                </Button>
+                <Button
+                  variant={setupApprovals.orchestration ? 'ghost' : 'secondary'}
+                  onClick={() => setSetupApproval('orchestration', true)}
+                  disabled={setupApprovals.orchestration}
+                >
+                  {setupApprovals.orchestration ? 'Approved' : 'Approve'}
                 </Button>
               </div>
             </CardContent>
@@ -369,7 +411,9 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                     </span>
                   </div>
                 </div>
-                <Badge variant="warning">Review</Badge>
+                <Badge variant={setupApprovals.curation ? 'success' : 'warning'}>
+                  {setupApprovals.curation ? 'Ready' : 'Review'}
+                </Badge>
               </div>
             </CardHeader>
             <CardContent>
@@ -388,6 +432,13 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                   onClick={() => setActiveModal('curation-call-plan-edit')}
                 >
                   Edit
+                </Button>
+                <Button
+                  variant={setupApprovals.curation ? 'ghost' : 'secondary'}
+                  onClick={() => setSetupApproval('curation', true)}
+                  disabled={setupApprovals.curation}
+                >
+                  {setupApprovals.curation ? 'Approved' : 'Approve'}
                 </Button>
               </div>
             </CardContent>
@@ -464,7 +515,9 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                     )}
                   </div>
                 </div>
-                <Badge variant="warning">Review</Badge>
+                <Badge variant={simulation.approved ? 'success' : 'warning'}>
+                  {simulation.approved ? 'Ready' : 'Review'}
+                </Badge>
               </div>
             </CardHeader>
             <CardContent>
@@ -550,7 +603,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                 <Button
                   variant="primary"
                   onClick={() => setActiveModal('value-engine-review')}
@@ -563,11 +616,129 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                 >
                   Edit
                 </Button>
+                <Button
+                  variant={simulation.approved ? 'ghost' : 'secondary'}
+                  onClick={() => setSimulationApproval(simulation.id, true)}
+                  disabled={simulation.approved}
+                >
+                  {simulation.approved ? 'Approved' : 'Approve'}
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => removeSimulation(simulation.id)}
+                >
+                  Remove
+                </Button>
+                {editingSimulationId === simulation.id ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <input
+                      value={editingSimulationName}
+                      onChange={(e) => setEditingSimulationName(e.target.value)}
+                      autoFocus
+                      style={{
+                        width: '220px',
+                        padding: '8px 10px',
+                        borderRadius: '6px',
+                        border: '1px solid var(--border-subtle)',
+                        backgroundColor: 'var(--bg-card)',
+                        color: 'var(--text-primary)',
+                        fontSize: '13px'
+                      }}
+                    />
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        if (editingSimulationName.trim()) {
+                          updateSimulation(simulation.id, { name: editingSimulationName.trim() });
+                        }
+                        setEditingSimulationId(null);
+                        setEditingSimulationName('');
+                      }}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSimulationId(null);
+                        setEditingSimulationName('');
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setEditingSimulationId(simulation.id);
+                      setEditingSimulationName(simulation.name);
+                    }}
+                  >
+                    Rename
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
         ))}
+
+        <div
+          style={{
+            border: '1px dashed var(--border-subtle)',
+            borderRadius: '10px',
+            padding: '14px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backgroundColor: 'rgba(15, 23, 42, 0.4)',
+            cursor: 'pointer',
+            transition: 'border-color 0.2s ease, background-color 0.2s ease'
+          }}
+          onClick={() => setShowAddSimulationModal(true)}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = 'var(--accent-blue)';
+            e.currentTarget.style.backgroundColor = 'rgba(37, 99, 235, 0.12)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'var(--border-subtle)';
+            e.currentTarget.style.backgroundColor = 'rgba(15, 23, 42, 0.4)';
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+              Add Simulation
+            </span>
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+              Create an additional scenario to compare in the run results.
+            </span>
+          </div>
+          <div
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              border: '1px solid var(--accent-blue)',
+              color: 'var(--accent-blue)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '18px',
+              fontWeight: 600
+            }}
+          >
+            +
+          </div>
+        </div>
       </div>
+
+      <AddSimulationModal
+        isOpen={showAddSimulationModal}
+        onClose={() => setShowAddSimulationModal(false)}
+      />
 
 
       <style>{`
