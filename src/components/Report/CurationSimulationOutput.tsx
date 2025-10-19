@@ -44,6 +44,7 @@ interface SimulationContent extends SimulationConfig {
     details: string;
   };
   narrative: string;
+  summaryDescription: string;
 }
 
 const SHARED_RECOMMENDATION_COPY = {
@@ -96,15 +97,18 @@ const SIMULATION_CONTENT: Record<SimulationId, SimulationContent> = {
       { date: '2025-09-23', ca: 7.6, nca: 2.8, ncna: 1.6 }
     ],
     summaryBullets: [
-      'Lift per 1K HCP (CA) – 61.3',
-      'Lift per 1K HCP (CNA) – 29.5',
-      'Lift per 1K HCP (NCA) – 33.9',
-      'Lift per 1K HCP (NCNA) – 17.0',
-      'HCPs Curated – 2.4%','Adherence – 5.1%','Coverage – 7.4%'
+      'Avg % Adherence – 61.3',
+      'Avg % Coverage – 29.5',
+      'Avg % HCP Curated – 33.9',
+      'HCPs Curated – 2.4%',
+      'Adherence – 5.1%',
+      'Coverage – 7.4%'
     ],
     recommendation: SHARED_RECOMMENDATION_COPY,
     narrative:
-      'CA clearly outperforms the other buckets, with CNA also ahead of both non-curated groups—showing that the curation signal adds value even before adoption, and adoption then amplifies it. NCA trails the curated cohorts but remains above NCNA, which serves as the baseline. The clean gradient (CA > CNA > NCA > NCNA) indicates precise targeting, strong field execution on curated targets, and meaningful waste reduction in non-curated segments.'
+      'CA clearly outperforms the other buckets, with CNA also ahead of both non-curated groups—showing that the curation signal adds value even before adoption, and adoption then amplifies it. NCA trails the curated cohorts but remains above NCNA, which serves as the baseline. The clean gradient (CA > CNA > NCA > NCNA) indicates precise targeting, strong field execution on curated targets, and meaningful waste reduction in non-curated segments.',
+    summaryDescription:
+      'Simulation 1 emphasizes the legacy 80/20 weighting, keeping curated groups tightly aligned with historical targeting and producing the highest overall lift story.'
   },
   'simulation-2': {
     id: 'simulation-2',
@@ -148,11 +152,18 @@ const SIMULATION_CONTENT: Record<SimulationId, SimulationContent> = {
       { date: '2025-09-23', ca: 5.6, nca: 3.3, ncna: 1.9 }
     ],
     summaryBullets: [
-      'Lift per 1K HCP (CA) – 35.7','Lift per 1K HCP (CNA) – 27.7','Lift per 1K HCP (NCA) – 21.1','Lift per 1K HCP (NCNA) – 16.8','HCPs Curated – 2.4%','Adherence – 5.1%','Coverage – 7.4%'
+      'Avg % Adherence – 35.7',
+      'Avg % Coverage – 27.7',
+      'Avg % HCP Curated – 21.1',
+      'HCPs Curated – 2.4%',
+      'Adherence – 5.1%',
+      'Coverage – 7.4%'
     ],
     recommendation: SHARED_RECOMMENDATION_COPY,
     narrative:
-      'The same ordering holds (CA > CNA > NCA > NCNA), but the separations are modest. CA only modestly beats NCA, and CNA is only a step above NCNA, suggesting the curation signal is present but not sharp. This points to middling targeting precision and uneven execution—useful, but with limited efficiency gains and a smaller waste-reduction story.'
+      'The same ordering holds (CA > CNA > NCA > NCNA), but the separations are modest. CA only modestly beats NCA, and CNA is only a step above NCNA, suggesting the curation signal is present but not sharp. This points to middling targeting precision and uneven execution—useful, but with limited efficiency gains and a smaller waste-reduction story.',
+    summaryDescription:
+      'Simulation 2 shifts the weighting to 60/40, trading some lift for broader coverage and a more balanced, lower-risk deployment of curation resources.'
   },
   'simulation-3': {
     id: 'simulation-3',
@@ -196,11 +207,18 @@ const SIMULATION_CONTENT: Record<SimulationId, SimulationContent> = {
       { date: '2025-09-23', ca: 3.2, nca: 3.0, ncna: 2.2 }
     ],
     summaryBullets: [
-      'Lift per 1K HCP (CA) – 24.3','Lift per 1K HCP (CNA) – 11.7','Lift per 1K HCP (NCA) – 18.6','Lift per 1K HCP (NCNA) – 9.8','HCPs Curated – 1.1%','Adherence – 3.4%','Coverage – 4.2%'
+      'Avg % Adherence – 24.3',
+      'Avg % Coverage – 11.7',
+      'Avg % HCP Curated – 18.6',
+      'HCPs Curated – 1.1%',
+      'Adherence – 3.4%',
+      'Coverage – 4.2%'
     ],
     recommendation: SHARED_RECOMMENDATION_COPY,
     narrative:
-      'The pattern breaks: NCA rivals or exceeds CA, while CNA sits near NCNA. That means adoption without curation is doing as well as—or better than—the curated paths, implying mis-targeted lists, stale scoring, or execution that’s not aligned with the curated priorities. The lack of a curated advantage signals high waste and weak incremental value from the curation strategy.'
+      'The pattern breaks: NCA rivals or exceeds CA, while CNA sits near NCNA. That means adoption without curation is doing as well as—or better than—the curated paths, implying mis-targeted lists, stale scoring, or execution that’s not aligned with the curated priorities. The lack of a curated advantage signals high waste and weak incremental value from the curation strategy.',
+    summaryDescription:
+      'Simulation 3 rebalances to 40/60, emphasizing potential over current value and revealing the risk of under-curating high-value segments.'
   }
 };
 
@@ -214,6 +232,18 @@ export const CurationSimulationOutput: React.FC<CurationSimulationOutputProps> =
   const hoverTimerRef = useRef<number | null>(null);
 
   const simulation = useMemo(() => SIMULATION_CONTENT[activeSimulation], [activeSimulation]);
+  const simulationTitle = useMemo(() => {
+    switch (activeSimulation) {
+      case 'simulation-1':
+        return 'Odaiazol 80/20';
+      case 'simulation-2':
+        return 'Odaiazol 60/40';
+      case 'simulation-3':
+        return 'Odaiazol 40/60';
+      default:
+        return 'Odaiazol';
+    }
+  }, [activeSimulation]);
 
   const handleSimulationChange = (id: SimulationId) => {
     setActiveSimulation(id);
@@ -248,6 +278,22 @@ export const CurationSimulationOutput: React.FC<CurationSimulationOutputProps> =
     hoverTimerRef.current = null;
     setAltPopoverVisible(null);
   };
+
+  const isLiftLabel = (label: string) => label.toLowerCase().includes('lift');
+  const greenPrimary = '#22c55e';
+  const bluePrimary = '#3b82f6';
+  const orangePrimary = '#f97316';
+  const neutralText = 'var(--text-primary)';
+  const chartData = useMemo(
+    () =>
+      simulation.kpiHistory.map((entry) => ({
+        ...entry,
+        ca: entry.ca * 10,
+        nca: entry.nca * 10,
+        ncna: entry.ncna * 10
+      })),
+    [simulation]
+  );
 
   return (
     <div style={{ color: 'var(--text-primary)' }}>
@@ -419,10 +465,10 @@ export const CurationSimulationOutput: React.FC<CurationSimulationOutputProps> =
         marginBottom: '20px'
       }}>
         <div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>CASPER - Deployed</div>
-          <h2 style={{ fontSize: '24px', fontWeight: 600, letterSpacing: '-0.02em', margin: 0 }}>Odaiazol {simulation.title.split(' ')[1]}</h2>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>CASPER - Simulated</div>
+          <h2 style={{ fontSize: '24px', fontWeight: 600, letterSpacing: '-0.02em', margin: 0 }}>P3: US XL (Odaiazol)</h2>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Simulation curation run overview & Key Performance Engagement Report
+            {simulationTitle}
           </div>
         </div>
 
@@ -477,8 +523,8 @@ export const CurationSimulationOutput: React.FC<CurationSimulationOutputProps> =
           <Card key={metric.title}>
             <CardContent className="p-6">
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{metric.title}</div>
-              <div style={{ fontSize: '24px', fontWeight: 600 }}>{metric.value}</div>
-              {metric.sublabel && <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{metric.sublabel}</div>}
+              <div style={{ fontSize: '24px', fontWeight: 600, color: metric.title.toLowerCase().includes('lift') ? greenPrimary : neutralText }}>{metric.value}</div>
+              {metric.sublabel && <div style={{ fontSize: '11px', color: metric.sublabel.toLowerCase().includes('lift') ? greenPrimary : 'var(--text-muted)', marginTop: '4px' }}>{metric.sublabel}</div>}
             </CardContent>
           </Card>
         ))}
@@ -500,11 +546,11 @@ export const CurationSimulationOutput: React.FC<CurationSimulationOutputProps> =
           <Card key={entry.label}>
             <CardContent className="p-4">
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>{entry.label}</div>
-              <div style={{ fontSize: '22px', fontWeight: 600 }}>{entry.value.toLocaleString()}</div>
+              <div style={{ fontSize: '22px', fontWeight: 600, color: isLiftLabel(entry.label) ? greenPrimary : neutralText }}>{entry.value.toLocaleString()}</div>
               {entry.variants && (
                 <div style={{ marginTop: '12px', display: 'grid', gap: '6px' }}>
                   {entry.variants.map((variant) => (
-                    <div key={variant.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    <div key={variant.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: isLiftLabel(variant.label) ? greenPrimary : neutralText }}>
                       <span>{variant.label}</span>
                       <span>{variant.value.toLocaleString()}</span>
                     </div>
@@ -523,14 +569,18 @@ export const CurationSimulationOutput: React.FC<CurationSimulationOutputProps> =
         <CardContent>
           <div style={{ width: '100%', height: 280 }}>
             <ResponsiveContainer>
-              <LineChart data={simulation.kpiHistory} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
+              <LineChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
                 <XAxis
                   dataKey="date"
                   tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
                   tickMargin={8}
                 />
-                <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} domain={['auto', 'auto']} />
+                <YAxis
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
+                  domain={['auto', 'auto']}
+                  tickFormatter={(value) => `${Number(value).toFixed(0)}%`}
+                />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'var(--bg-modal)',
@@ -538,11 +588,12 @@ export const CurationSimulationOutput: React.FC<CurationSimulationOutputProps> =
                     borderRadius: '8px',
                     fontSize: '12px'
                   }}
+                  formatter={(value: number, name: string) => [`${value.toFixed(0)}%`, name]}
                 />
                 <Legend wrapperStyle={{ fontSize: '12px', color: 'var(--text-secondary)' }} />
-                <Line type="monotone" dataKey="ca" stroke="#22c55e" strokeWidth={2} dot={{ stroke: '#22c55e', strokeWidth: 2 }} name="CA" />
-                <Line type="monotone" dataKey="nca" stroke="#60a5fa" strokeWidth={2} dot={{ stroke: '#60a5fa', strokeWidth: 2 }} name="NCA" />
-                <Line type="monotone" dataKey="ncna" stroke="#f97316" strokeWidth={2} dot={{ stroke: '#f97316', strokeWidth: 2 }} name="NCNA" />
+                <Line type="monotone" dataKey="ca" stroke={greenPrimary} strokeWidth={2} dot={{ stroke: greenPrimary, strokeWidth: 2 }} name="Avg % Adherence" />
+                <Line type="monotone" dataKey="nca" stroke={bluePrimary} strokeWidth={2} dot={{ stroke: bluePrimary, strokeWidth: 2 }} name="Avg % Coverage" />
+                <Line type="monotone" dataKey="ncna" stroke={orangePrimary} strokeWidth={2} dot={{ stroke: orangePrimary, strokeWidth: 2 }} name="Avg % HCP Curated" />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -582,8 +633,8 @@ export const CurationSimulationOutput: React.FC<CurationSimulationOutputProps> =
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
               {simulation.summaryBullets.map((text) => (
                 <li key={text} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed var(--border-subtle)', paddingBottom: '6px' }}>
-                  <span>{text.split(' – ')[0]}</span>
-                  <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{text.split(' – ')[1]}</span>
+                  <span style={{ color: neutralText }}>{text.split(' – ')[0]}</span>
+                  <span style={{ color: isLiftLabel(text) ? greenPrimary : neutralText, fontWeight: 600 }}>{text.split(' – ')[1]}</span>
                 </li>
               ))}
             </ul>

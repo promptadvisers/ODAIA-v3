@@ -1,11 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Check, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Toggle } from '../components/Toggle';
 import { useAppStore } from '../store/appStore';
 
-type ObjectiveTab = 'objective1' | 'objective2';
+type ObjectiveTab = 'odaiazol' | 'vectoral';
 type SignalLevel = 'Low' | 'Medium' | 'High';
 
 type BucketConfigInput = {
@@ -20,6 +20,7 @@ type TableRow = {
   specialty: string;
   segment: string;
   bucket?: string;
+  product?: string;
 };
 
 type EventActivityOption = {
@@ -37,6 +38,8 @@ type SegmentOption = {
   name: string;
   frequency: string;
 };
+
+type ImpactLevel = 'baseline' | 'slight' | 'medium' | 'drastic';
 
 type ToggleRowProps = {
   label: string;
@@ -68,23 +71,64 @@ const REGION_OPTIONS = [
   'Bottom Quartile Region (120 HCPs)'
 ];
 
-const PRIMARY_TABLE_ROWS: TableRow[] = [
+const PRIMARY_BASE_POOL: TableRow[] = [
   { name: 'Crystal Ball', score: 10, specialty: 'Breast Cancer', segment: 'Loyalist', bucket: 'A' },
   { name: 'Meridith Kvyst', score: 10, specialty: 'Breast Cancer', segment: 'Loyalist', bucket: 'A' },
   { name: 'George Smith', score: 10, specialty: 'Breast Cancer', segment: 'Loyalist', bucket: 'A' },
-  { name: 'Samantha White', score: 9, specialty: 'Breast Cancer', segment: 'Loyalist', bucket: 'B' },
-  { name: 'Alexander Lee', score: 9, specialty: 'Breast Cancer', segment: 'Grower', bucket: 'B' }
+  { name: 'Samantha White', score: 9, specialty: 'Breast Cancer', segment: 'Believer', bucket: 'B' },
+  { name: 'Alexander Lee', score: 9, specialty: 'Breast Cancer', segment: 'Grower', bucket: 'B' },
+  { name: 'Layla Brooks', score: 9, specialty: 'Breast Cancer', segment: 'Loyalist', bucket: 'B' },
+  { name: 'Priya Desai', score: 8, specialty: 'Breast Cancer', segment: 'Dabbler', bucket: 'C' },
+  { name: 'Noah Garcia', score: 8, specialty: 'Breast Cancer', segment: 'New-to-Goal', bucket: 'C' }
 ];
 
-const SECONDARY_TABLE_ROWS: TableRow[] = [
+const PRIMARY_ALT_POOL: TableRow[] = [
+  { name: 'Isabella Chen', score: 8, specialty: 'Breast Cancer', segment: 'Grower', bucket: 'C' },
+  { name: 'Georgia Patel', score: 9, specialty: 'Breast Cancer', segment: 'Grower', bucket: 'A' },
+  { name: 'Hannah Wells', score: 7, specialty: 'Lung Cancer', segment: 'Dabbler', bucket: 'C' },
+  { name: 'Luca Moretti', score: 7, specialty: 'Lung Cancer', segment: 'Defector', bucket: 'D' },
+  { name: 'Miguel Alvarez', score: 6, specialty: 'Lung Cancer', segment: 'Defector', bucket: 'D' },
+  { name: 'Emily Park', score: 6, specialty: 'Lung Cancer', segment: 'Dabbler', bucket: 'D' },
+  { name: 'Oliver Singh', score: 5, specialty: 'Lung Cancer', segment: 'New-to-Goal', bucket: 'D' },
+  { name: 'Sara Nasser', score: 8, specialty: 'Breast Cancer', segment: 'Believer', bucket: 'B' }
+];
+
+const SECONDARY_BASE_POOL: TableRow[] = [
   { name: 'Crystal Ball', score: 10, specialty: 'Odaiazol Expert', segment: 'Odaiazol Adopter' },
   { name: 'Meridith Kvyst', score: 10, specialty: 'Odaiazol Expert', segment: 'Odaiazol Expert' },
   { name: 'George Smith', score: 10, specialty: 'Lorem ipsum', segment: 'Odaiazol Adopter' },
   { name: 'Samantha White', score: 9, specialty: 'Odaiazol Expert', segment: 'Odaiazol Adopter' },
   { name: 'Alexander Lee', score: 7, specialty: 'Odaiazol Expert', segment: 'Odaiazol Adopter' },
   { name: 'Olivia Johnson', score: 7, specialty: 'Odaiazol Adopter', segment: 'Odaiazol Adopter' },
-  { name: 'Ethan Brown', score: 5, specialty: 'Odaiazol Expert', segment: 'Odaiazol Expert' }
+  { name: 'Ethan Brown', score: 5, specialty: 'Odaiazol Expert', segment: 'Odaiazol Expert' },
+  { name: 'Daniel Ortiz', score: 7, specialty: 'Odaiazol Expert', segment: 'Odaiazol Explorer' }
 ];
+
+const SECONDARY_ALT_POOL: TableRow[] = [
+  { name: 'Isabella Chen', score: 8, specialty: 'Odaiazol Adopter', segment: 'Odaiazol Explorer' },
+  { name: 'Priya Desai', score: 7, specialty: 'Odaiazol Explorer', segment: 'Odaiazol Explorer' },
+  { name: 'Noah Garcia', score: 8, specialty: 'Odaiazol Adopter', segment: 'Odaiazol Explorer' },
+  { name: 'Georgia Patel', score: 9, specialty: 'Odaiazol Expert', segment: 'Odaiazol Loyalist' },
+  { name: 'Hannah Wells', score: 7, specialty: 'Vectoral Explorer', segment: 'Vectoral Explorer' },
+  { name: 'Luca Moretti', score: 7, specialty: 'Vectoral Explorer', segment: 'Vectoral Explorer' },
+  { name: 'Miguel Alvarez', score: 6, specialty: 'Vectoral Explorer', segment: 'Vectoral Defector' },
+  { name: 'Emily Park', score: 6, specialty: 'Vectoral Explorer', segment: 'Vectoral Explorer' },
+  { name: 'Oliver Singh', score: 5, specialty: 'Vectoral Explorer', segment: 'Vectoral Explorer' }
+];
+
+const IMPACT_LABELS: Record<ImpactLevel, string> = {
+  baseline: 'Baseline Cohort',
+  slight: 'Slight Shift',
+  medium: 'Directional Change',
+  drastic: 'Major Reprioritization'
+};
+
+const IMPACT_BADGE_COLORS: Record<ImpactLevel, string> = {
+  baseline: '#64748b',
+  slight: '#60a5fa',
+  medium: '#f59e0b',
+  drastic: '#f97316'
+};
 
 const BUCKET_CONFIGS: BucketConfigInput[] = [
   { label: 'Bucket A Configs', defaultPercent: '50', defaultFrequency: 72 },
@@ -92,6 +136,11 @@ const BUCKET_CONFIGS: BucketConfigInput[] = [
   { label: 'Bucket C Configs', defaultPercent: '15', defaultFrequency: 40 },
   { label: 'Bucket D Configs', defaultPercent: '10', defaultFrequency: 24 }
 ];
+
+const DEFAULT_BUCKET_PERCENT_VALUES = BUCKET_CONFIGS.map((config) => config.defaultPercent);
+const DEFAULT_BUCKET_FREQUENCY_VALUES = BUCKET_CONFIGS.map((config) => config.defaultFrequency);
+const DEFAULT_OVERFLOW_FREQUENCY = 12;
+const DEFAULT_MAX_LIST_SIZE = '30';
 
 const EVENT_ACTIVITY_OPTIONS: EventActivityOption[] = [
   { label: 'Phone Call', defaultChecked: true, defaultLevel: 'Medium' },
@@ -134,8 +183,8 @@ const ToggleRow: React.FC<ToggleRowProps> = ({
     <div style={{ marginBottom: children ? (compact ? '6px' : '10px') : compact ? '4px' : '12px' }}>
       <div
         style={{
-            display: 'flex',
-            alignItems: 'center',
+          display: 'flex',
+          alignItems: 'center',
           gap: '12px',
           padding: compact ? '6px 0' : '8px 0',
           marginLeft: indent
@@ -143,37 +192,37 @@ const ToggleRow: React.FC<ToggleRowProps> = ({
       >
         <Toggle checked={checked} onChange={onToggle} size={toggleSize} ariaLabel={label} />
         <div
-                style={{
-          display: 'flex',
-          flexDirection: 'column',
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
             gap: description ? '4px' : '0',
             lineHeight: 1.3
           }}
         >
           <span style={{ fontSize: '13px', fontWeight: 500, color: '#f8fafc', letterSpacing: '0.02em' }}>{label}</span>
           {description && <span style={{ fontSize: '12px', color: '#94a3b8', letterSpacing: '0.01em' }}>{description}</span>}
-            </div>
+        </div>
         {children && (
           <div
             style={{
               marginLeft: 'auto',
-            display: 'flex',
+              display: 'flex',
               alignItems: 'center'
             }}
           >
             {children}
-            </div>
+          </div>
         )}
-          </div>
-          </div>
+      </div>
+    </div>
   );
 };
 
 const SectionHeader: React.FC<SectionHeaderProps> = ({ title, description }) => (
   <div style={{ marginBottom: '20px' }}>
     <h3
-              style={{
-                fontSize: '13px',
+      style={{
+        fontSize: '13px',
         fontWeight: 600,
         letterSpacing: '0.18em',
         textTransform: 'uppercase',
@@ -191,7 +240,7 @@ const LevelSelect: React.FC<LevelSelectProps> = ({ value, onChange, indent = 32 
   <select
     value={value}
     onChange={(event) => onChange(event.target.value as SignalLevel)}
-              style={{
+    style={{
       marginLeft: `${indent}px`,
       marginTop: '6px',
       padding: '8px 12px',
@@ -203,7 +252,7 @@ const LevelSelect: React.FC<LevelSelectProps> = ({ value, onChange, indent = 32 
       fontWeight: 600,
       letterSpacing: '0.08em',
       textTransform: 'uppercase',
-                cursor: 'pointer',
+      cursor: 'pointer',
       outline: 'none',
       minWidth: '130px'
     }}
@@ -223,11 +272,154 @@ const getScoreColor = (score: number): string => {
   return '#818cf8';
 };
 
+const deriveImpactLevel = (state: {
+  nearbyAnchorLevel: SignalLevel;
+  includeUpcomingAppointments: boolean;
+  powerScore: boolean;
+  powerScoreLevel: SignalLevel;
+  last7Days: boolean;
+  lastMonth: boolean;
+  lastQuarter: boolean;
+  selectedSegment: string;
+  eventChecks: Record<string, boolean>;
+  bucketPercents: string[];
+  bucketFrequencies: number[];
+  maxListSize: string;
+  overflowFrequency: number;
+  assignZeroPowerScore: boolean;
+  includeAppointmentsInOverflow: boolean;
+}): ImpactLevel => {
+  let score = 0;
+
+  if (state.nearbyAnchorLevel === 'High') score += 2;
+  if (state.nearbyAnchorLevel === 'Low') score += 0.5;
+  if (state.includeUpcomingAppointments) score += 1;
+
+  if (!state.powerScore) score += 1.5;
+  else if (state.powerScoreLevel === 'High') score += 1;
+  else if (state.powerScoreLevel === 'Low') score += 0.5;
+
+  if (state.last7Days) score += 0.7;
+  if (state.lastMonth) score += 0.5;
+  if (state.lastQuarter) score += 0.5;
+
+  if (state.selectedSegment !== 'Starters') score += 1;
+
+  const activeEvents = Object.values(state.eventChecks).filter(Boolean).length;
+  if (activeEvents <= 2) score += 1;
+  else if (activeEvents >= Math.ceil(EVENT_ACTIVITY_OPTIONS.length * 0.8)) score += 1;
+
+  const totalPercent = state.bucketPercents.reduce((acc, value) => acc + Number(value || 0), 0);
+  if (totalPercent < 90) score += 1;
+  else if (totalPercent > 110) score += 1;
+
+  const averageFrequency = state.bucketFrequencies.reduce((acc, value) => acc + value, 0) / state.bucketFrequencies.length;
+  if (averageFrequency >= 75) score += 0.8;
+  if (averageFrequency <= 25) score += 0.8;
+
+  if (Number(state.maxListSize) > Number(DEFAULT_MAX_LIST_SIZE) + 10) score += 1;
+  if (Number(state.maxListSize) < Number(DEFAULT_MAX_LIST_SIZE) - 10) score += 1;
+
+  if (state.overflowFrequency >= 70) score += 1;
+  if (!state.assignZeroPowerScore) score += 0.8;
+  if (!state.includeAppointmentsInOverflow) score += 0.5;
+
+  if (score < 3) return 'baseline';
+  if (score < 6) return 'slight';
+  if (score < 9) return 'medium';
+  return 'drastic';
+};
+
+const computeImpactSignature = (state: {
+  nearbyAnchorLevel: SignalLevel;
+  includeUpcomingAppointments: boolean;
+  powerScore: boolean;
+  powerScoreLevel: SignalLevel;
+  last7Days: boolean;
+  lastMonth: boolean;
+  lastQuarter: boolean;
+  selectedSegment: string;
+  eventChecks: Record<string, boolean>;
+  bucketPercents: string[];
+  bucketFrequencies: number[];
+  maxListSize: string;
+  overflowFrequency: number;
+  assignZeroPowerScore: boolean;
+  includeAppointmentsInOverflow: boolean;
+}): number => {
+  const parts = [
+    state.nearbyAnchorLevel,
+    state.includeUpcomingAppointments ? '1' : '0',
+    state.powerScore ? '1' : '0',
+    state.powerScoreLevel,
+    state.last7Days ? '1' : '0',
+    state.lastMonth ? '1' : '0',
+    state.lastQuarter ? '1' : '0',
+    state.selectedSegment,
+    Object.entries(state.eventChecks)
+      .map(([key, value]) => `${key}:${value ? '1' : '0'}`)
+      .join('|'),
+    state.bucketPercents.join(','),
+    state.bucketFrequencies.join(','),
+    state.maxListSize,
+    String(state.overflowFrequency),
+    state.assignZeroPowerScore ? '1' : '0',
+    state.includeAppointmentsInOverflow ? '1' : '0'
+  ];
+
+  const signatureString = parts.join('||');
+  let hash = 0;
+  for (let i = 0; i < signatureString.length; i += 1) {
+    hash = (hash * 31 + signatureString.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+};
+
+const selectRowsForImpact = (impact: ImpactLevel, signature: number): { primary: TableRow[]; secondary: TableRow[] } => {
+  if (impact === 'baseline') {
+    return {
+      primary: PRIMARY_BASE_POOL.slice(0, 5),
+      secondary: SECONDARY_BASE_POOL.slice(0, 7)
+    };
+  }
+
+  const additionCount = impact === 'slight' ? 2 : impact === 'medium' ? 3 : 5;
+  const removalCount = impact === 'slight' ? 1 : impact === 'medium' ? 2 : 3;
+
+  const rotateFromSignature = <T,>(items: T[], count: number) => {
+    if (count <= 0) return [] as T[];
+    const result: T[] = [];
+    for (let idx = 0; idx < count; idx += 1) {
+      result.push(items[(signature + idx) % items.length]);
+    }
+    return result;
+  };
+
+  const altPrimary = rotateFromSignature(PRIMARY_ALT_POOL, additionCount);
+  const altSecondary = rotateFromSignature(SECONDARY_ALT_POOL, additionCount + 1);
+
+  const basePrimary = [...PRIMARY_BASE_POOL];
+  const baseSecondary = [...SECONDARY_BASE_POOL];
+
+  for (let i = 0; i < removalCount; i += 1) {
+    basePrimary.pop();
+    baseSecondary.pop();
+  }
+
+  const mergedPrimary = [...basePrimary, ...altPrimary];
+  const mergedSecondary = [...baseSecondary, ...altSecondary].slice(0, 8 + additionCount);
+
+  return {
+    primary: mergedPrimary,
+    secondary: mergedSecondary
+  };
+};
+
 export const CurationCallPlanEditDialog: React.FC = () => {
   const { activeModal, setActiveModal, selectedWorkflow } = useAppStore();
   const isOpen = selectedWorkflow === 'sales' && activeModal === 'curation-call-plan-edit';
 
-  const [activeTab, setActiveTab] = useState<ObjectiveTab>('objective1');
+  const [activeTab, setActiveTab] = useState<ObjectiveTab>('odaiazol');
 
   const [nearbyAnchorLevel, setNearbyAnchorLevel] = useState<SignalLevel>('Medium');
   const [includeUpcomingAppointments, setIncludeUpcomingAppointments] = useState(false);
@@ -264,18 +456,35 @@ export const CurationCallPlanEditDialog: React.FC = () => {
   const [bucketConfigsExpanded, setBucketConfigsExpanded] = useState(true);
   const [specialtiesExpanded, setSpecialtiesExpanded] = useState(true);
 
-  const [bucketPercents, setBucketPercents] = useState(() =>
-    BUCKET_CONFIGS.map((config) => config.defaultPercent)
-  );
+  const [bucketPercents, setBucketPercents] = useState(() => [...DEFAULT_BUCKET_PERCENT_VALUES]);
 
-  const [bucketFrequencies, setBucketFrequencies] = useState(() =>
-    BUCKET_CONFIGS.map((config) => config.defaultFrequency)
-  );
+  const [bucketFrequencies, setBucketFrequencies] = useState(() => [...DEFAULT_BUCKET_FREQUENCY_VALUES]);
 
-  const [maxListSize, setMaxListSize] = useState('30');
-  const [overflowFrequency, setOverflowFrequency] = useState(12);
+  const [maxListSize, setMaxListSize] = useState(DEFAULT_MAX_LIST_SIZE);
+  const [overflowFrequency, setOverflowFrequency] = useState(DEFAULT_OVERFLOW_FREQUENCY);
   const [assignZeroPowerScore, setAssignZeroPowerScore] = useState(true);
   const [includeAppointmentsInOverflow, setIncludeAppointmentsInOverflow] = useState(true);
+
+  const [impactLevel, setImpactLevel] = useState<ImpactLevel>('baseline');
+  const [impactSignature, setImpactSignature] = useState<number>(() => computeImpactSignature({
+    nearbyAnchorLevel,
+    includeUpcomingAppointments,
+    powerScore,
+    powerScoreLevel,
+    last7Days,
+    lastMonth,
+    lastQuarter,
+    selectedSegment,
+    eventChecks,
+    bucketPercents,
+    bucketFrequencies,
+    maxListSize,
+    overflowFrequency,
+    assignZeroPowerScore,
+    includeAppointmentsInOverflow
+  }));
+  const [primaryRows, setPrimaryRows] = useState<TableRow[]>(() => selectRowsForImpact('baseline', impactSignature).primary);
+  const [secondaryRows, setSecondaryRows] = useState<TableRow[]>(() => selectRowsForImpact('baseline', impactSignature).secondary);
 
   const [selectedSpecialties, setSelectedSpecialties] = useState<Record<string, boolean>>(() =>
     SPECIALTY_OPTIONS.reduce((acc, option) => {
@@ -294,6 +503,51 @@ export const CurationCallPlanEditDialog: React.FC = () => {
   const specialtyList = useMemo(() => SPECIALTY_OPTIONS, []);
   const segmentList = useMemo(() => SEGMENT_OPTIONS, []);
 
+  useEffect(() => {
+    const controlState = {
+      nearbyAnchorLevel,
+      includeUpcomingAppointments,
+      powerScore,
+      powerScoreLevel,
+      last7Days,
+      lastMonth,
+      lastQuarter,
+      selectedSegment,
+      eventChecks,
+      bucketPercents,
+      bucketFrequencies,
+      maxListSize,
+      overflowFrequency,
+      assignZeroPowerScore,
+      includeAppointmentsInOverflow
+    };
+
+    const level = deriveImpactLevel(controlState);
+    const signature = computeImpactSignature(controlState);
+
+    setImpactLevel(level);
+    setImpactSignature(signature);
+    const selection = selectRowsForImpact(level, signature);
+    setPrimaryRows(selection.primary);
+    setSecondaryRows(selection.secondary);
+  }, [
+    nearbyAnchorLevel,
+    includeUpcomingAppointments,
+    powerScore,
+    powerScoreLevel,
+    last7Days,
+    lastMonth,
+    lastQuarter,
+    selectedSegment,
+    eventChecks,
+    bucketPercents,
+    bucketFrequencies,
+    maxListSize,
+    overflowFrequency,
+    assignZeroPowerScore,
+    includeAppointmentsInOverflow
+  ]);
+
   const handleSave = () => {
     setActiveModal(null);
   };
@@ -309,7 +563,7 @@ export const CurationCallPlanEditDialog: React.FC = () => {
 
   const renderTable = (title: string, rows: TableRow[], showBucket?: boolean) => (
     <div
-                      style={{
+      style={{
         background: 'rgba(12, 19, 33, 0.82)',
         border: '1px solid rgba(148, 163, 184, 0.18)',
         borderRadius: '12px',
@@ -321,24 +575,24 @@ export const CurationCallPlanEditDialog: React.FC = () => {
         style={{
           padding: '18px 20px',
           borderBottom: '1px solid rgba(148, 163, 184, 0.12)',
-                        display: 'flex',
-                        alignItems: 'center',
+          display: 'flex',
+          alignItems: 'center',
           justifyContent: 'space-between'
-                      }}
-                    >
+        }}
+      >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#f8fafc', margin: 0 }}>{title}</h3>
           <span style={{ fontSize: '12px', color: '#64748b' }}>Reference view for configured cohort</span>
-                    </div>
-                    <select
+        </div>
+        <select
           defaultValue={REGION_OPTIONS[0]}
-                      style={{
+          style={{
             padding: '8px 12px',
             borderRadius: '6px',
             border: '1px solid rgba(148, 163, 184, 0.25)',
             backgroundColor: '#0f172a',
             color: '#e2e8f0',
-                        fontSize: '12px',
+            fontSize: '12px',
             fontWeight: 500,
             letterSpacing: '0.03em',
             cursor: 'pointer',
@@ -350,8 +604,8 @@ export const CurationCallPlanEditDialog: React.FC = () => {
               {option}
             </option>
           ))}
-                    </select>
-                </div>
+        </select>
+      </div>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ backgroundColor: 'rgba(10, 16, 28, 0.95)' }}>
@@ -368,7 +622,7 @@ export const CurationCallPlanEditDialog: React.FC = () => {
               <td style={bodyCellStyle}>{row.name}</td>
               <td style={bodyCellStyleScore}>
                 <div
-                      style={{
+                  style={{
                     width: '34px',
                     height: '34px',
                     borderRadius: '50%',
@@ -376,20 +630,20 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                     color: '#0f172a',
                     fontSize: '14px',
                     fontWeight: 700,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     boxShadow: '0 6px 12px rgba(249, 115, 22, 0.25)'
-                      }}
-                    >
+                  }}
+                >
                   {row.score}
-                    </div>
+                </div>
               </td>
               <td style={{ ...bodyCellStyle }}>
                 <div
-                      style={{
+                  style={{
                     display: 'inline-flex',
-                        alignItems: 'center',
+                    alignItems: 'center',
                     gap: '8px'
                   }}
                 >
@@ -406,13 +660,13 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                     }}
                   >
                     Odaiazol
-                    </span>
+                  </span>
                   <span style={{ color: '#f8fafc', fontWeight: 500 }}>{row.specialty}</span>
-                  </div>
+                </div>
               </td>
               <td style={{ ...bodyCellStyle }}>
                 <span
-                      style={{
+                  style={{
                     padding: '4px 12px',
                     borderRadius: '999px',
                     backgroundColor: 'var(--curation-segment-pill-bg)',
@@ -429,28 +683,28 @@ export const CurationCallPlanEditDialog: React.FC = () => {
               {showBucket && (
                 <td style={bodyCellStyle}>
                   <div
-                      style={{
+                    style={{
                       width: '32px',
                       height: '32px',
                       borderRadius: '8px',
                       border: '1px solid rgba(148, 163, 184, 0.22)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       fontSize: '13px',
                       fontWeight: 700,
                       color: '#f8fafc'
-                      }}
-                    >
+                    }}
+                  >
                     {row.bucket}
-                    </div>
+                  </div>
                 </td>
               )}
             </tr>
           ))}
         </tbody>
       </table>
-                  </div>
+    </div>
   );
 
   if (!isOpen) {
@@ -461,7 +715,7 @@ export const CurationCallPlanEditDialog: React.FC = () => {
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && setActiveModal(null)}>
       <Dialog.Portal>
         <Dialog.Overlay
-                      style={{
+          style={{
             position: 'fixed',
             inset: 0,
             backgroundColor: 'rgba(2, 6, 17, 0.8)',
@@ -470,7 +724,7 @@ export const CurationCallPlanEditDialog: React.FC = () => {
           }}
         />
         <Dialog.Content
-                      style={{
+          style={{
             position: 'fixed',
             top: '50%',
             left: '50%',
@@ -489,9 +743,9 @@ export const CurationCallPlanEditDialog: React.FC = () => {
           }}
         >
           <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
+            style={{
+              display: 'flex',
+              alignItems: 'center',
               justifyContent: 'space-between',
               padding: '26px 36px',
               borderBottom: '1px solid rgba(148, 163, 184, 0.18)',
@@ -501,7 +755,7 @@ export const CurationCallPlanEditDialog: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
               <button
                 onClick={() => setActiveModal('curation-call-plan-review')}
-                      style={{
+                style={{
                   background: 'rgba(148, 163, 184, 0.16)',
                   border: '1px solid rgba(148, 163, 184, 0.3)',
                   borderRadius: '999px',
@@ -509,9 +763,9 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                   fontSize: '18px',
                   width: '36px',
                   height: '36px',
-                        cursor: 'pointer'
-                      }}
-                    >
+                  cursor: 'pointer'
+                }}
+              >
                 ←
               </button>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -539,25 +793,28 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                 Save Configs
               </Button>
             </div>
-                </div>
+          </div>
 
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
               gap: '0',
               padding: '0 36px',
               borderBottom: '1px solid rgba(148, 163, 184, 0.12)',
               background: 'rgba(12, 20, 31, 0.65)'
             }}
           >
-            {[{ id: 'objective1', label: 'Objective 1 Name' }, { id: 'objective2', label: 'Objective 2 Name' }].map((tab) => {
+            {[
+              { id: 'odaiazol', label: 'Odaiazol Objective' },
+              { id: 'vectoral', label: 'Vectoral Objective' }
+            ].map((tab) => {
               const isActive = activeTab === (tab.id as ObjectiveTab);
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as ObjectiveTab)}
-                      style={{
+                  style={{
                     padding: '16px 32px',
                     background: 'transparent',
                     border: 'none',
@@ -567,18 +824,18 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                     fontWeight: 600,
                     letterSpacing: '0.04em',
                     textTransform: 'uppercase',
-                        cursor: 'pointer'
-                      }}
-                    >
+                    cursor: 'pointer'
+                  }}
+                >
                   {tab.label}
                 </button>
               );
             })}
-              </div>
+          </div>
 
           <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-                    <div
-                          style={{
+            <div
+              style={{
                 width: '460px',
                 background: 'linear-gradient(185deg, rgba(12, 19, 33, 0.9) 0%, rgba(2, 6, 17, 0.95) 80%)',
                 borderRight: '1px solid rgba(148, 163, 184, 0.16)',
@@ -593,12 +850,12 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                     <div style={{ fontSize: '13px', fontWeight: 500, color: '#f8fafc', letterSpacing: '0.02em' }}>Nearby Anchor</div>
                     <div style={{ fontSize: '12px', color: '#94a3b8', letterSpacing: '0.01em', marginTop: '4px' }}>
                       Medium sensitivity to anchor appointments affecting curated list
-                        </div>
-                      </div>
-                        <select
+                    </div>
+                  </div>
+                  <select
                     value={nearbyAnchorLevel}
                     onChange={(event) => setNearbyAnchorLevel(event.target.value as SignalLevel)}
-                          style={{
+                    style={{
                       padding: '8px 14px',
                       backgroundColor: '#10131a',
                       border: '1px solid rgba(148, 163, 184, 0.28)',
@@ -607,17 +864,17 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                       fontSize: '12px',
                       letterSpacing: '0.08em',
                       textTransform: 'uppercase',
-                            cursor: 'pointer'
-                          }}
-                        >
+                      cursor: 'pointer'
+                    }}
+                  >
                     {SIGNAL_LEVELS.map((level) => (
                       <option key={level} value={level} style={{ background: '#10131a' }}>
                         {level}
                       </option>
                     ))}
-                        </select>
-                    </div>
+                  </select>
                 </div>
+              </div>
               <ToggleRow
                 label="Include upcoming appointments in curation"
                 checked={includeUpcomingAppointments}
@@ -670,7 +927,7 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                 >
                   {lastQuarter && <LevelSelect value={lastQuarterLevel} onChange={setLastQuarterLevel} />}
                 </ToggleRow>
-                      </div>
+              </div>
 
               <div style={{ marginTop: '32px' }}>
                 <SectionHeader
@@ -678,21 +935,21 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                   description="Specifies how much segment scores influence the curated list"
                 />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {['Starters', 'Believers', 'Growers', 'Current Value Defenders'].map((segment) => {
-                  const isSelected = selectedSegment === segment;
-                  return (
-                    <ToggleRow
-                      key={segment}
-                      label={segment}
-                      checked={isSelected}
-                      onToggle={(active) => setSelectedSegment(active ? segment : selectedSegment)}
-                      indent={8}
-                      toggleSize="sm"
-                    >
-                      {isSelected && <LevelSelect value={segmentLevel} onChange={setSegmentLevel} indent={0} />}
-                    </ToggleRow>
-                  );
-                })}
+                  {['Starters', 'Believers', 'Growers', 'Current Value Defenders'].map((segment) => {
+                    const isSelected = selectedSegment === segment;
+                    return (
+                      <ToggleRow
+                        key={segment}
+                        label={segment}
+                        checked={isSelected}
+                        onToggle={(active) => setSelectedSegment(active ? segment : selectedSegment)}
+                        indent={8}
+                        toggleSize="sm"
+                      >
+                        {isSelected && <LevelSelect value={segmentLevel} onChange={setSegmentLevel} indent={0} />}
+                      </ToggleRow>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -764,7 +1021,7 @@ export const CurationCallPlanEditDialog: React.FC = () => {
 
                 {bucketConfigsExpanded && (
                   <div style={{ paddingLeft: '6px', display: 'flex', flexDirection: 'column', gap: '22px' }}>
-                  <div>
+                    <div>
                       <label style={{ fontSize: '12px', color: '#94a3b8', letterSpacing: '0.04em', fontWeight: 500 }}>Maximum List Size</label>
                       <input
                         type="number"
@@ -789,8 +1046,8 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                         <div style={{ display: 'flex', gap: '16px' }}>
                           <div style={{ flex: '0 0 120px' }}>
                             <label style={{ fontSize: '11px', color: '#94a3b8', letterSpacing: '0.06em' }}>Bucket Size (%)</label>
-                        <input
-                          type="number"
+                            <input
+                              type="number"
                               value={bucketPercents[index]}
                               onChange={(event) =>
                                 setBucketPercents((prev) => {
@@ -799,26 +1056,26 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                                   return clone;
                                 })
                               }
-                          style={{
-                            width: '100%',
+                              style={{
+                                width: '100%',
                                 padding: '6px 10px',
                                 borderRadius: '6px',
                                 border: '1px solid rgba(148, 163, 184, 0.35)',
                                 background: '#0b1220',
                                 color: '#f8fafc',
                                 fontSize: '12px',
-                          marginTop: '6px'
-                          }}
-                        />
-                      </div>
+                                marginTop: '6px'
+                              }}
+                            />
+                          </div>
                           <div style={{ flex: 1 }}>
                             <label style={{ fontSize: '11px', color: '#94a3b8', letterSpacing: '0.06em' }}>Relative Frequency</label>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#475569', marginTop: '4px' }}>
-                          <span>Never</span>
-                          <span>Most often</span>
-                        </div>
-                        <input
-                          type="range"
+                              <span>Never</span>
+                              <span>Most often</span>
+                            </div>
+                            <input
+                              type="range"
                               min={0}
                               max={100}
                               value={bucketFrequencies[index]}
@@ -832,22 +1089,22 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                               style={{ width: '100%', accentColor: '#3b82f6' }}
                             />
                             <span style={{ fontSize: '11px', color: '#94a3b8' }}>{calculateFrequencyLabel(bucketFrequencies[index])}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
                     ))}
 
-                      <div>
+                    <div>
                       <h4 style={{ fontSize: '13px', fontWeight: 600, color: '#f8fafc', margin: 0, marginBottom: '8px' }}>
                         Overflow Bucket Configs
                       </h4>
                       <label style={{ fontSize: '11px', color: '#94a3b8', letterSpacing: '0.06em' }}>Relative Frequency</label>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#475569', marginTop: '4px' }}>
-                          <span>Never</span>
-                          <span>Most often</span>
-                        </div>
-                        <input
-                          type="range"
+                        <span>Never</span>
+                        <span>Most often</span>
+                      </div>
+                      <input
+                        type="range"
                         min={0}
                         max={100}
                         value={overflowFrequency}
@@ -868,11 +1125,11 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                           onToggle={() => setIncludeAppointmentsInOverflow((prev) => !prev)}
                           compact
                         />
-                        </div>
                       </div>
+                    </div>
                   </div>
                 )}
-                    </div>
+              </div>
 
               <div style={{ marginTop: '36px', paddingBottom: '16px' }}>
                 <div
@@ -900,24 +1157,24 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                                 onClick={() =>
                                   setSelectedSpecialties((prev) => ({ ...prev, [specialty.name]: !prev[specialty.name] }))
                                 }
-                            style={{
+                                style={{
                                   width: '18px',
                                   height: '18px',
                                   borderRadius: '4px',
                                   border: isChecked ? 'none' : '1px solid rgba(148, 163, 184, 0.35)',
                                   background: isChecked ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' : 'transparent',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
                                   cursor: 'pointer'
                                 }}
                               >
                                 {isChecked && <Check size={12} color="#ffffff" strokeWidth={2.6} />}
-                          </div>
+                              </div>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                                 <span style={{ fontSize: '13px', fontWeight: 500, color: '#f8fafc' }}>{specialty.name}</span>
                                 <span style={{ fontSize: '11px', color: '#64748b' }}>{specialty.frequency}</span>
-                        </div>
+                              </div>
                             </div>
                           );
                         })}
@@ -937,25 +1194,25 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                                 onClick={() =>
                                   setSelectedSegments((prev) => ({ ...prev, [segment.name]: !prev[segment.name] }))
                                 }
-                            style={{
+                                style={{
                                   width: '18px',
                                   height: '18px',
                                   borderRadius: '4px',
                                   border: isChecked ? 'none' : '1px solid rgba(148, 163, 184, 0.35)',
                                   background: isChecked ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' : 'transparent',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
                                   cursor: 'pointer'
                                 }}
                               >
                                 {isChecked && <Check size={12} color="#ffffff" strokeWidth={2.6} />}
-                          </div>
+                              </div>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                                 <span style={{ fontSize: '13px', fontWeight: 500, color: '#f8fafc' }}>{segment.name}</span>
                                 <span style={{ fontSize: '11px', color: '#64748b' }}>{segment.frequency}</span>
-                        </div>
-                      </div>
+                              </div>
+                            </div>
                           );
                         })}
                       </div>
@@ -963,10 +1220,10 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                   </div>
                 )}
               </div>
-              </div>
+            </div>
 
-                <div
-                  style={{
+            <div
+              style={{
                 flex: 1,
                 padding: '34px 40px',
                 background: 'radial-gradient(circle at top left, rgba(14, 20, 35, 0.9) 0%, rgba(8, 11, 21, 0.95) 70%)',
@@ -974,18 +1231,18 @@ export const CurationCallPlanEditDialog: React.FC = () => {
               }}
             >
               <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '28px'
-                            }}
-                          >
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '28px'
+                }}
+              >
                 <div style={{ display: 'flex', gap: '12px' }}>
                   {['Odaiazol', 'Median Region', 'Call Plan'].map((label) => (
                     <span
                       key={label}
-                            style={{
+                      style={{
                         padding: '6px 14px',
                         borderRadius: '999px',
                         border: '1px solid rgba(148, 163, 184, 0.2)',
@@ -997,23 +1254,38 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                       }}
                     >
                       {label}
-                          </span>
+                    </span>
                   ))}
-                        </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ fontSize: '12px', color: '#94a3b8', letterSpacing: '0.04em' }}>Hue: Median Region</div>
-                      </div>
-                    </div>
+                  <span
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '999px',
+                      border: '1px solid rgba(148, 163, 184, 0.28)',
+                      background: 'rgba(12, 23, 43, 0.35)',
+                      color: IMPACT_BADGE_COLORS[impactLevel],
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    {IMPACT_LABELS[impactLevel]}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ fontSize: '12px', color: '#94a3b8', letterSpacing: '0.04em' }}>Hue: Median Region</div>
+                </div>
+              </div>
 
-              {renderTable('Median Region (100 HCPs)', PRIMARY_TABLE_ROWS, true)}
+              {renderTable('Median Region (100 HCPs)', primaryRows, true)}
 
               <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#38bdf8' }} />
                 <span style={{ fontSize: '12px', color: '#64748b' }}>PS - PowerScore</span>
-                    </div>
+              </div>
 
               <div
-                            style={{
+                style={{
                   background: 'rgba(12, 19, 33, 0.82)',
                   border: '1px solid rgba(148, 163, 184, 0.18)',
                   borderRadius: '12px',
@@ -1021,21 +1293,36 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                 }}
               >
                 <div
-                            style={{
+                  style={{
                     padding: '18px 20px',
                     borderBottom: '1px solid rgba(148, 163, 184, 0.12)',
-                              display: 'flex',
-                              alignItems: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
                     justifyContent: 'space-between'
-                            }}
-                          >
+                  }}
+                >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#f8fafc', margin: 0 }}>Sample Curated List (30 HCPs)</h3>
                     <span style={{ fontSize: '12px', color: '#64748b' }}>Derived from current configuration</span>
-                          </div>
+                  </div>
                   <div style={{ display: 'flex', gap: '12px' }}>
+                    <span
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: '999px',
+                        border: '1px solid rgba(148, 163, 184, 0.25)',
+                        background: 'rgba(15, 24, 42, 0.58)',
+                        color: IMPACT_BADGE_COLORS[impactLevel],
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase'
+                      }}
+                    >
+                      {IMPACT_LABELS[impactLevel]}
+                    </span>
                     <button
-                  style={{
+                      style={{
                         padding: '8px 14px',
                         borderRadius: '999px',
                         border: '1px solid rgba(148, 163, 184, 0.25)',
@@ -1043,12 +1330,12 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                         color: '#cbd5f5',
                         fontSize: '12px',
                         letterSpacing: '0.04em',
-                    cursor: 'pointer'
-                  }}
-                >
+                        cursor: 'pointer'
+                      }}
+                    >
                       Export CSV
                     </button>
-              </div>
+                  </div>
                 </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
@@ -1060,19 +1347,19 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {SECONDARY_TABLE_ROWS.map((row) => (
+                    {secondaryRows.map((row) => (
                       <tr key={row.name} style={{ borderTop: '1px solid rgba(148, 163, 184, 0.12)' }}>
                         <td style={bodyCellStyleScore}>
                           <div
                             style={{
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '50%',
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '50%',
                               backgroundColor: getScoreColor(row.score),
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '13px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '13px',
                               fontWeight: 700,
                               color: '#0f172a'
                             }}
@@ -1085,7 +1372,7 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                           <div
                             style={{
                               display: 'inline-flex',
-                            alignItems: 'center',
+                              alignItems: 'center',
                               gap: '8px'
                             }}
                           >

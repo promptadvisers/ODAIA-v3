@@ -447,7 +447,7 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                     cursor: 'pointer'
                   }}
                 >
-                  Objective 1 Name
+                  Odaiazol Objective
                 </button>
                 <button
                   onClick={() => setActiveTab('objective2')}
@@ -463,7 +463,7 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                     cursor: 'pointer'
                   }}
                 >
-                  Objective 2 Name
+                  Vectoral Objective
                 </button>
               </div>
 
@@ -583,8 +583,8 @@ export const CurationAdvancedConfigDialog: React.FC = () => {
                     { label: 'New writer identified for Odaiazol', checked: true },
                     { label: 'Significant increase in Odaiazol writing', checked: true },
                     { label: 'Significant decrease in Odaiazol writing', checked: true },
-                    { label: 'New writer identified for Pixeltron', checked: true },
-                    { label: 'Significant increase in Pixeltron writing', checked: true }
+                    { label: 'New writer identified for Vectoral', checked: true },
+                    { label: 'Significant increase in Vectoral writing', checked: true }
                   ].map((item, i) => (
                     <div key={i} style={{ marginBottom: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

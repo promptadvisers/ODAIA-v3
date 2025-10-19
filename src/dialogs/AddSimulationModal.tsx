@@ -1,7 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { X, ChevronDown, ChevronUp, CheckCircle2, Circle, Database } from 'lucide-react';
 import { Button } from '../components/Button';
-import { useAppStore, MOCK_PRODUCTS, type Product, type SimulationScenario } from '../store/appStore';
+import {
+  useAppStore,
+  MOCK_PRODUCTS,
+  type Product,
+  type SimulationScenario,
+  selectActiveObjective,
+  mapObjectiveMetricsToSimulation
+} from '../store/appStore';
 
 interface AddSimulationModalProps {
   isOpen: boolean;
@@ -99,7 +106,7 @@ const MetricRow: React.FC<{ name: string; weight: number; visualize: boolean }> 
 );
 
 export const AddSimulationModal: React.FC<AddSimulationModalProps> = ({ isOpen, onClose }) => {
-  const { addSimulation, simulations, productConfig, selectedWorkflow } = useAppStore();
+  const { addSimulation, simulations, selectedWorkflow, projectName, objectives, activeObjectiveId } = useAppStore();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [template, setTemplate] = useState<ConfigurationTemplate>('copy');
   const [simulationName, setSimulationName] = useState('');
@@ -118,15 +125,16 @@ export const AddSimulationModal: React.FC<AddSimulationModalProps> = ({ isOpen, 
   const canSubmit = Boolean(selectedProduct && simulationName.trim());
 
   const freshMetrics = useMemo(() => START_FRESH_DEFAULTS.valueEngine.metrics, []);
+  const activeObjective = objectives[activeObjectiveId];
 
   const copySummary = useMemo(
     () => [
-      { label: 'Product', value: productConfig.product },
-      { label: 'Therapeutic Area', value: productConfig.therapeuticArea },
-      { label: 'Indication', value: productConfig.indication },
-      { label: 'Basket Weight', value: productConfig.basketWeight }
+      { label: 'Objective', value: activeObjective?.basketName ?? '—' },
+      { label: 'Project', value: projectName },
+      { label: 'Indication Path', value: activeObjective?.indicationPath ?? '—' },
+      { label: 'Basket Weight', value: activeObjective ? `${activeObjective.basketWeight}` : '—' }
     ],
-    [productConfig]
+    [activeObjective, projectName]
   );
 
   const freshSummary = useMemo(
@@ -140,7 +148,7 @@ export const AddSimulationModal: React.FC<AddSimulationModalProps> = ({ isOpen, 
   );
 
   const handleAddSimulation = () => {
-    if (!selectedProduct || !simulationName.trim()) return;
+    if (!selectedProduct || !simulationName.trim() || !activeObjective) return;
 
     const isCopy = template === 'copy';
 
@@ -148,19 +156,20 @@ export const AddSimulationModal: React.FC<AddSimulationModalProps> = ({ isOpen, 
       name: simulationName.trim(),
       product: selectedProduct,
       valueEngine: isCopy
-        ? {
-            product: productConfig.product,
-            therapeuticArea: productConfig.therapeuticArea,
-            indication: productConfig.indication,
-            metrics: [...productConfig.metrics],
-            basketWeight: productConfig.basketWeight
-          }
+        ? mapObjectiveMetricsToSimulation(activeObjective, projectName)
         : {
-            product: selectedProduct.name,
+            objectiveId: activeObjectiveId,
+            projectName,
+            basketName: selectedProduct.name,
+            basketWeight: Number(START_FRESH_DEFAULTS.valueEngine.basketWeight),
             therapeuticArea: selectedProduct.therapeuticArea,
             indication: selectedProduct.indication,
-            metrics: [...freshMetrics],
-            basketWeight: START_FRESH_DEFAULTS.valueEngine.basketWeight
+            metrics: freshMetrics.map((metric) => ({
+              id: metric.name,
+              name: metric.name,
+              weight: metric.weight,
+              visualize: metric.visualize
+            }))
           },
       curationEngine:
         selectedWorkflow === 'sales'

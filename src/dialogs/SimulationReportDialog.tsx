@@ -326,7 +326,7 @@ export const SimulationReportDialog: React.FC = () => {
                 }}>
                   <Check size={16} style={{ color: 'var(--accent-green)', flexShrink: 0, marginTop: '2px' }} />
                   <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                    10% importance on competitive brand PixelTron, XPO NBRx
+                    10% importance on competitive brand Vectoral, XPO NBRx
                   </span>
                 </div>
               </div>

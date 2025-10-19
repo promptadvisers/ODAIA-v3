@@ -1,8 +1,65 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, Check } from 'lucide-react';
 import { Button } from '../components/Button';
 import { useAppStore } from '../store/appStore';
+
+const OBJECTIVE_OPTIONS = ['Odaiazol Objective', 'Vectoral Objective'];
+
+interface ObjectiveDataset {
+  weightLabel: string;
+  portfolioPercent: number;
+  potentialPercent: number;
+  competitivePercent: number;
+  portfolioDescription: string;
+  portfolioBullets: string[];
+  competitiveBullets: string[];
+  patientBullets: string[];
+}
+
+const ODAIAZOL_DATASET: ObjectiveDataset = {
+  weightLabel: '70/30',
+  portfolioPercent: 70,
+  potentialPercent: 30,
+  competitivePercent: 80,
+  portfolioDescription: 'Portfolio performance of Odaiazol based on historic TRx and PSP influence.',
+  portfolioBullets: [
+    '90% Odaiazol, Breast Cancer, HRE2+ 2L Therapy, XPO TRx Volume',
+    'OncoThera Copay Card PSP Claims'
+  ],
+  competitiveBullets: [
+    '20% emphasis on 2L Therapy HER+ Overall Market, XPO TRx',
+    '50% emphasis on 2L Therapy HER+ submarket 1, XPO TRx',
+    '30% emphasis on 2L Therapy HER+ submarket 2, XPO TRx',
+    '10% emphasis on competitive brand Vectoral, XPO NBRx'
+  ],
+  patientBullets: ['20% PSP Claims', '80% Payer mix, Medicaid, Medicare']
+};
+
+const VECTORAL_DATASET: ObjectiveDataset = {
+  weightLabel: '60/40',
+  portfolioPercent: 60,
+  potentialPercent: 40,
+  competitivePercent: 65,
+  portfolioDescription: 'Portfolio performance of Vectoral capturing emerging prescriber shifts.',
+  portfolioBullets: [
+    '75% Vectoral, Respiratory Specialist Share, XPO TRx Volume',
+    '15% Vectoral PSP Conversion Rate',
+    '10% Vectoral Sample to TRx Ratio'
+  ],
+  competitiveBullets: [
+    '30% emphasis on 1L Competitive Benchmark Set, NBRx',
+    '25% emphasis on 2L Competitive Overlap, TRx',
+    '15% emphasis on Market Basket Uptake, Claims',
+    '10% emphasis on Adjacent Class Launch, TRx'
+  ],
+  patientBullets: ['25% PSP Claims', '55% Payer mix, Commercial Plans', '20% Payer mix, Medicaid']
+};
+
+const DATASET_BY_OBJECTIVE: Record<string, ObjectiveDataset> = {
+  [OBJECTIVE_OPTIONS[0]]: ODAIAZOL_DATASET,
+  [OBJECTIVE_OPTIONS[1]]: VECTORAL_DATASET
+};
 
 export const ValueEngineReviewDialog: React.FC = () => {
   const {
@@ -15,6 +72,8 @@ export const ValueEngineReviewDialog: React.FC = () => {
     simulations
   } = useAppStore();
   const isOpen = activeModal === 'value-engine-review';
+  const [selectedObjective, setSelectedObjective] = useState<string>(OBJECTIVE_OPTIONS[0]);
+  const dataset = useMemo(() => DATASET_BY_OBJECTIVE[selectedObjective] ?? ODAIAZOL_DATASET, [selectedObjective]);
 
   const handleApprove = () => {
     setSetupApproval('valueEngine', true);
@@ -37,6 +96,27 @@ export const ValueEngineReviewDialog: React.FC = () => {
   const handleEdit = () => {
     setActiveModal('value-engine-edit');
   };
+
+  const renderBulletList = (items: string[], emphasizePSP?: boolean) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {items.map((bullet) => (
+        <div
+          key={bullet}
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '8px',
+            animation: emphasizePSP ? 'slideIn 0.3s ease-out' : 'none'
+          }}
+        >
+          <Check size={15} style={{ color: '#10b981', flexShrink: 0, marginTop: '1px' }} />
+          <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+            {bullet}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && setActiveModal(null)}>
@@ -182,7 +262,7 @@ export const ValueEngineReviewDialog: React.FC = () => {
                   lineHeight: '1',
                   marginBottom: '6px'
                 }}>
-                  70/30
+                  {dataset.weightLabel}
                 </div>
                 <div style={{
                   fontSize: '12px',
@@ -204,7 +284,8 @@ export const ValueEngineReviewDialog: React.FC = () => {
             </h3>
 
             <select
-              defaultValue="Odaiazol"
+              value={selectedObjective}
+              onChange={(event) => setSelectedObjective(event.target.value)}
               style={{
                 padding: '7px 14px',
                 backgroundColor: 'var(--bg-card)',
@@ -217,7 +298,11 @@ export const ValueEngineReviewDialog: React.FC = () => {
                 marginBottom: '14px'
               }}
             >
-              <option value="Odaiazol">Odaiazol</option>
+              {OBJECTIVE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
             </select>
 
             <p style={{
@@ -252,47 +337,23 @@ export const ValueEngineReviewDialog: React.FC = () => {
           }}>
             {/* Current Value */}
             <div>
-              <h4 style={{
+              <div style={{
                 fontSize: '14px',
                 fontWeight: '600',
                 color: 'var(--text-primary)',
                 marginBottom: '10px'
               }}>
-                Current Value: 70%
-              </h4>
+                Portfolio Products: {dataset.portfolioPercent}%
+              </div>
               <p style={{
                 fontSize: '12px',
                 color: 'var(--text-secondary)',
                 marginBottom: '18px',
                 lineHeight: '1.6'
               }}>
-                Current value of an HCP based on historical writing of Odaiazol
+                {dataset.portfolioDescription}
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '8px'
-                }}>
-                  <Check size={15} style={{ color: '#10b981', flexShrink: 0, marginTop: '1px' }} />
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                    {pspMetricAdded ? '80%' : '90%'} Odaiazol, Breast Cancer, HRE2+ 2L Therapy, XPO TRx Volume
-                  </span>
-                </div>
-                {pspMetricAdded && (
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '8px',
-                    animation: 'slideIn 0.3s ease-out'
-                  }}>
-                    <Check size={15} style={{ color: '#10b981', flexShrink: 0, marginTop: '1px' }} />
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                      10% OncoThera Copay Card PSP Claims
-                    </span>
-                  </div>
-                )}
-              </div>
+              {renderBulletList(dataset.portfolioBullets, selectedObjective === 'Vectoral Objective' || pspMetricAdded)}
               <style>{`
                 @keyframes slideIn {
                   from {
@@ -309,109 +370,27 @@ export const ValueEngineReviewDialog: React.FC = () => {
 
             {/* Potential */}
             <div>
-              <h4 style={{
-                fontSize: '14px',
+              <div style={{
+                fontSize: '13px',
                 fontWeight: '600',
                 color: 'var(--text-primary)',
                 marginBottom: '10px'
               }}>
-                Potential: 30%
-              </h4>
-              <p style={{
-                fontSize: '12px',
-                color: 'var(--text-secondary)',
-                marginBottom: '18px',
-                lineHeight: '1.6'
-              }}>
-                Potential based on HCPs competitive writing and patient mix.
-              </p>
-
-              {/* Competitive Strategy */}
-              <div style={{ marginBottom: '20px' }}>
-                <h5 style={{
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  color: 'var(--text-primary)',
-                  marginBottom: '10px'
-                }}>
-                  Competitive Strategy: 80%
-                </h5>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '8px'
-                  }}>
-                    <Check size={15} style={{ color: '#10b981', flexShrink: 0, marginTop: '1px' }} />
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                      20% importance on 2L Therapy HER+ Overall Market, XPO TRx
-                    </span>
-                  </div>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '8px'
-                  }}>
-                    <Check size={15} style={{ color: '#10b981', flexShrink: 0, marginTop: '1px' }} />
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                      50% importance on 2L Therapy HER+ submarket 1, XPO TRx
-                    </span>
-                  </div>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '8px'
-                  }}>
-                    <Check size={15} style={{ color: '#10b981', flexShrink: 0, marginTop: '1px' }} />
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                      30% importance on 2L Therapy HER+ submarket 2, XPO TRx
-                    </span>
-                  </div>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '8px'
-                  }}>
-                    <Check size={15} style={{ color: '#10b981', flexShrink: 0, marginTop: '1px' }} />
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                      10% importance on competitive brand PixelTron, XPO NBRx
-                    </span>
-                  </div>
-                </div>
+                Competitive Potential: {dataset.competitivePercent}%
               </div>
+              {renderBulletList(dataset.competitiveBullets)}
 
               {/* Patient Potential */}
               <div>
-                <h5 style={{
+                <div style={{
                   fontSize: '13px',
                   fontWeight: '600',
                   color: 'var(--text-primary)',
                   marginBottom: '10px'
                 }}>
-                  Patient Potential: 20%
-                </h5>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '8px'
-                  }}>
-                    <Check size={15} style={{ color: '#10b981', flexShrink: 0, marginTop: '1px' }} />
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                      20% PSP Claims
-                    </span>
-                  </div>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '8px'
-                  }}>
-                    <Check size={15} style={{ color: '#10b981', flexShrink: 0, marginTop: '1px' }} />
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                      80% Payer mix, Medicaid, Medicare
-                    </span>
-                  </div>
+                  Patient Potential: {dataset.potentialPercent}%
                 </div>
+                {renderBulletList(dataset.patientBullets)}
               </div>
             </div>
           </div>

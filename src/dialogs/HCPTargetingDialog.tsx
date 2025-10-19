@@ -16,7 +16,7 @@ export const HCPTargetingDialog: React.FC<HCPTargetingDialogProps> = ({ isOpen, 
     { id: 1, label: '20% importance on 2L Therapy HER+ Overall Market, XPO TRx', checked: true },
     { id: 2, label: '50% importance on 2L Therapy HER+ submarket 1, XPO TRx', checked: true },
     { id: 3, label: '30% importance on 2L Therapy HER+ submarket 2, XPO TRx', checked: true },
-    { id: 4, label: '10% importance on competitive brand PixelTron, XPO NBRx', checked: true }
+    { id: 4, label: '10% importance on competitive brand Vectoral, XPO NBRx', checked: true }
   ];
 
   const patientMix = [

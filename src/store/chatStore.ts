@@ -410,11 +410,18 @@ Would you like me to help configure any of these items?`;
               });
               
               // Actually update the metric in the store
-              const currentMetrics = appStore.productConfig.metrics;
-              const updatedMetrics = currentMetrics.map((m: any) =>
-                m.name === 'XPO TRx Volume' ? { ...m, weight: 50 } : m
-              );
-              appStore.updateProductConfig({ metrics: updatedMetrics });
+              const odaiazolState = appStore.objectives['odaiazol'];
+              if (odaiazolState) {
+                const updatedMetrics = odaiazolState.metricsByLevel.hcp.map((metric) =>
+                  metric.id === 'xpo_trx' ? { ...metric, weight: 50 } : metric
+                );
+                appStore.updateObjectiveState('odaiazol', {
+                  metricsByLevel: {
+                    ...odaiazolState.metricsByLevel,
+                    hcp: updatedMetrics
+                  }
+                });
+              }
               
               // Show next prompt options
               setPrePrompts([
@@ -452,10 +459,18 @@ Would you like me to help configure any of these items?`;
               });
               
               // Add the metric to the store
-              const currentMetrics = appStore.productConfig.metrics;
-              appStore.updateProductConfig({
-                metrics: [...currentMetrics, { name: 'xpo_dollars', weight: 0, visualize: false }]
-              });
+              const odaiazolState = appStore.objectives['odaiazol'];
+              if (odaiazolState) {
+                appStore.updateObjectiveState('odaiazol', {
+                  metricsByLevel: {
+                    ...odaiazolState.metricsByLevel,
+                    hcp: [
+                      ...odaiazolState.metricsByLevel.hcp,
+                      { id: 'xpo_dollars', weight: 0, visualize: false }
+                    ]
+                  }
+                });
+              }
               
               // Show next prompt options
               setPrePrompts([
@@ -492,11 +507,18 @@ Would you like me to help configure any of these items?`;
                 response = 'Updated. XPO dollars now has a weight of 0.2. Your PowerScore algorithm has been recalibrated to include this metric in HCP targeting calculations.';
                 
                 // Update the metric weight
-                const currentMetrics = appStore.productConfig.metrics;
-                const updatedMetrics = currentMetrics.map((m: any) =>
-                  m.name === 'xpo_dollars' ? { ...m, weight: 20 } : m
-                );
-                appStore.updateProductConfig({ metrics: updatedMetrics });
+                const odaiazolState = appStore.objectives['odaiazol'];
+                if (odaiazolState) {
+                  const updatedMetrics = odaiazolState.metricsByLevel.hcp.map((metric) =>
+                    metric.id === 'xpo_dollars' ? { ...metric, weight: 20 } : metric
+                  );
+                  appStore.updateObjectiveState('odaiazol', {
+                    metricsByLevel: {
+                      ...odaiazolState.metricsByLevel,
+                      hcp: updatedMetrics
+                    }
+                  });
+                }
               } else {
                 response = 'Understood. XPO dollars will remain in the basket with no weight. It will be tracked but won\'t influence the PowerScore calculations.';
               }
@@ -626,13 +648,20 @@ Would you like me to help configure any of these items?`;
               });
               
               // Update configuration with winning parameters
-              const currentMetrics = appStore.productConfig.metrics;
-              const updatedMetrics = currentMetrics.map((m: any) => {
-                if (m.name === 'xpo_dollars') return { ...m, weight: 40 };
-                if (m.name === 'XPO TRx Volume') return { ...m, weight: 30 };
-                return m;
-              });
-              appStore.updateProductConfig({ metrics: updatedMetrics });
+              const odaiazolState = appStore.objectives['odaiazol'];
+              if (odaiazolState) {
+                const updatedMetrics = odaiazolState.metricsByLevel.hcp.map((metric) => {
+                  if (metric.id === 'xpo_dollars') return { ...metric, weight: 40 };
+                  if (metric.id === 'xpo_trx') return { ...metric, weight: 30 };
+                  return metric;
+                });
+                appStore.updateObjectiveState('odaiazol', {
+                  metricsByLevel: {
+                    ...odaiazolState.metricsByLevel,
+                    hcp: updatedMetrics
+                  }
+                });
+              }
               
               setCurrentStep(7);
             }, applyConfigTime);

@@ -40,8 +40,8 @@ const SIMULATION_DATA = {
     metricDiffTable: [
       { date: '2025-09-16 15:26:11', metric: 'Current Value (target)', type: 'XPO TRx Volume', origWeight: 0.9, simWeight: 0.9, diff: 0 },
       { date: '2025-09-16 15:26:11', metric: 'Current Value (target)', type: 'OncoThera Copay Card PSP Claims', origWeight: 0.1, simWeight: 0.1, diff: 0 },
-      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand PixelTron - XPO TRx', origWeight: 0.9, simWeight: 0.2, diff: -1 },
-      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand PixelTron - XPO NBRx', origWeight: 0.2, simWeight: 0.8, diff: 0 },
+      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand Vectoral - XPO TRx', origWeight: 0.9, simWeight: 0.2, diff: -1 },
+      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand Vectoral - XPO NBRx', origWeight: 0.2, simWeight: 0.8, diff: 0 },
       { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: '2L Therapy HER+ Overall Market - XPO TRx', origWeight: 0.8, simWeight: 0.8, diff: 0.6 },
       { date: '2025-09-16 15:26:11', metric: 'Patient Potential (Precursor)', type: 'PSP Claims', origWeight: 0.2, simWeight: 0.2, diff: 0 },
       { date: '2025-09-16 15:26:11', metric: 'Patient Potential (Precursor)', type: 'Payer mix, Medicaid, Medicare', origWeight: 0.8, simWeight: 0.8, diff: 0 }
@@ -196,8 +196,8 @@ const SIMULATION_DATA = {
     metricDiffTable: [
       { date: '2025-09-16 15:26:11', metric: 'Current Value (target)', type: 'XPO TRx Volume', origWeight: 0.6, simWeight: 0.9, diff: 0 },
       { date: '2025-09-16 15:26:11', metric: 'Current Value (target)', type: 'OncoThera Copay Card PSP Claims', origWeight: 0.1, simWeight: 0.1, diff: 0 },
-      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand PixelTron - XPO TRx', origWeight: 0.9, simWeight: 0.2, diff: -3 },
-      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand PixelTron - XPO NBRx', origWeight: 0.2, simWeight: 0.8, diff: 0 },
+      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand Vectoral - XPO TRx', origWeight: 0.9, simWeight: 0.2, diff: -3 },
+      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand Vectoral - XPO NBRx', origWeight: 0.2, simWeight: 0.8, diff: 0 },
       { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: '2L Therapy HER+ Overall Market - XPO TRx', origWeight: 0.8, simWeight: 0.4, diff: -1 },
       { date: '2025-09-16 15:26:11', metric: 'Patient Potential (Precursor)', type: 'Payer mix, Medicaid, Medicare', origWeight: 0.9, simWeight: 0.8, diff: 0.9 }
     ],
@@ -351,9 +351,9 @@ const SIMULATION_DATA = {
     metricDiffTable: [
       { date: '2025-09-16 15:26:11', metric: 'Current Value (target)', type: 'XPO TRx Volume', origWeight: 0.8, simWeight: 0.9, diff: -0.1 },
       { date: '2025-09-16 15:26:11', metric: 'Current Value (target)', type: 'OncoThera Copay Card PSP Claims', origWeight: 0.2, simWeight: 0.1, diff: 0 },
-      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand PixelTron - XPO TRx', origWeight: 0.9, simWeight: 0.2, diff: -3.1 },
+      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand Vectoral - XPO TRx', origWeight: 0.9, simWeight: 0.2, diff: -3.1 },
       { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: '2L Therapy HER+ Overall Market - XPO TRx', origWeight: 0.8, simWeight: 0.4, diff: 0 },
-      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand Pix: Breast Market', origWeight: 0.2, simWeight: 0.4, diff: -1 },
+      { date: '2025-09-16 15:26:11', metric: 'Competitive Potential', type: 'Competitive brand Vectoral: Breast Market', origWeight: 0.2, simWeight: 0.4, diff: -1 },
       { date: '2025-09-16 15:26:11', metric: 'Patient Potential (Precursor)', type: 'Payer mix, Medicaid, Medicare', origWeight: 0.9, simWeight: 0.8, diff: 0.9 }
     ],
     scoreDistribution: {
@@ -482,10 +482,10 @@ export const ReportTab: React.FC = () => {
   // Control Panel state
   const [selectedClientDB, setSelectedClientDB] = useState('p3s_globcubes_curated');
   const [selectedClientName, setSelectedClientName] = useState('p3kesimDd');
-  const [selectedMarket, setSelectedMarket] = useState('P3: SPCA (NUCALA)');
+  const [selectedMarket, setSelectedMarket] = useState('P3: US XL');
   const [selectedDateRange, setSelectedDateRange] = useState('09/23/2025 - 09/23/2025');
   const [selectedSimulation, setSelectedSimulation] = useState('Simulation (Odaiazol 70/30)');
-  const [selectedProject, setSelectedProject] = useState('Odaiazol (Sept 16, 2025)');
+  const [selectedProject, setSelectedProject] = useState('P3: US XL (Odaiazol)');
   const [selectedObjective, setSelectedObjective] = useState('Odaiazol vs 2L Therapy HER+');
   const [selectedRegion, setSelectedRegion] = useState('National');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
@@ -820,7 +820,7 @@ const NAV_WIDTH = 72;
                 cursor: 'pointer'
               }}
             >
-              <option value="P3: SPCA (NUCALA)">P3: SPCA (NUCALA)</option>
+              <option value="P3: US XL">P3: US XL</option>
               <option value="US Market - Oncology">US Market - Oncology</option>
             </select>
           </div>
@@ -906,6 +906,7 @@ const NAV_WIDTH = 72;
               }}
             >
               <option value="Odaiazol (Sept 16, 2025)">Odaiazol (Sept 16, 2025)</option>
+              <option value="P3: US XL (Odaiazol)">P3: US XL (Odaiazol)</option>
             </select>
           </div>
 
@@ -934,6 +935,7 @@ const NAV_WIDTH = 72;
               }}
             >
               <option value="Odaiazol vs 2L Therapy HER+">Odaiazol vs 2L Therapy HER+</option>
+              <option value="Vectoral vs Guideline Cohort">Vectoral vs Guideline Cohort</option>
             </select>
           </div>
         </div>

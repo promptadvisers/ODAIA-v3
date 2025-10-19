@@ -1,4 +1,72 @@
 import { create } from 'zustand';
+import {
+  type AudienceLevel,
+  VALUE_ENGINE_CONFIG
+} from '../data/valueEngineConfig';
+
+interface MetricState {
+  id: string;
+  weight: number;
+  visualize: boolean;
+}
+
+export interface ObjectiveState {
+  presetId: string;
+  basketName: string;
+  basketWeight: number;
+  specialties: string;
+  selectedProductIds: string[];
+  metricsByLevel: Record<AudienceLevel, MetricState[]>;
+  competitiveSections: Record<string, Record<AudienceLevel, MetricState[]>>;
+  patientSections: Record<string, Record<AudienceLevel, MetricState[]>>;
+  indicationPath: string;
+}
+
+const toMetricState = (
+  items: Array<{ id: string; weight: number; visualize: boolean }>
+): MetricState[] => items.map((item) => ({ ...item }));
+
+interface SectionMetricsByLevel {
+  [level in AudienceLevel]?: Array<{ id: string; weight: number; visualize: boolean }>;
+}
+
+const buildSectionState = (
+  sections: Record<string, SectionMetricsByLevel>
+): Record<string, Record<AudienceLevel, MetricState[]>> =>
+  Object.entries(sections).reduce<Record<string, Record<AudienceLevel, MetricState[]>>>(
+    (acc, [sectionId, levels]) => {
+      acc[sectionId] = Object.entries(levels).reduce<Record<AudienceLevel, MetricState[]>>(
+        (levelAcc, [level, metrics]) => {
+          levelAcc[level as AudienceLevel] = toMetricState(metrics ?? []);
+          return levelAcc;
+        },
+        {}
+      );
+      return acc;
+    },
+    {}
+  );
+
+const initializeObjectiveState = (): Record<string, ObjectiveState> =>
+  VALUE_ENGINE_CONFIG.objectives.reduce<Record<string, ObjectiveState>>((acc, preset) => {
+    acc[preset.id] = {
+      presetId: preset.id,
+      basketName: preset.basketName,
+      basketWeight: preset.basketWeight,
+      specialties: preset.specialties,
+      selectedProductIds: [...preset.selectedProductIds],
+      metricsByLevel: Object.entries(preset.metricsByLevel).reduce<
+        Record<AudienceLevel, MetricState[]>
+      >((levelAcc, [level, metrics]) => {
+        levelAcc[level as AudienceLevel] = toMetricState(metrics);
+        return levelAcc;
+      }, {}),
+      competitiveSections: buildSectionState(preset.competitiveSections),
+      patientSections: buildSectionState(preset.patientSections),
+      indicationPath: preset.indicationPath
+    };
+    return acc;
+  }, {});
 
 interface UploadedFile {
   id: string;
@@ -50,23 +118,6 @@ interface BrandConfig {
   };
 }
 
-interface ProductConfiguration {
-  basketName: string;
-  basketWeight: string;
-  therapeuticArea: string;
-  product: string;
-  indication: string;
-  specialties: string;
-  metrics: Array<{
-    name: string;
-    weight: number;
-    visualize: boolean;
-  }>;
-  competitiveOpportunities: any[];
-  precursor: any[];
-  analog: any[];
-}
-
 export interface Product {
   id: string;
   name: string;
@@ -80,15 +131,18 @@ export interface SimulationScenario {
   name: string;
   product: Product;
   valueEngine: {
-    product: string;
+    objectiveId: string;
+    projectName: string;
+    basketName: string;
+    basketWeight: number;
     therapeuticArea: string;
     indication: string;
     metrics: Array<{
+      id: string;
       name: string;
       weight: number;
       visualize: boolean;
     }>;
-    basketWeight: string;
   };
   curationEngine?: {
     suggestionsPerWeek: string;
@@ -119,9 +173,12 @@ interface AppState {
   approveBrandItem: (item: keyof BrandConfig) => void;
   updateBrandItem: (item: keyof BrandConfig, data: any) => void;
   
-  // Product configuration (new)
-  productConfig: ProductConfiguration;
-  updateProductConfig: (data: Partial<ProductConfiguration>) => void;
+  // Value Engine configuration state
+  projectName: string;
+  objectives: Record<string, ObjectiveState>;
+  activeObjectiveId: string;
+  setActiveObjective: (objectiveId: string) => void;
+  updateObjectiveState: (objectiveId: string, data: Partial<ObjectiveState>) => void;
   
   // UI State
   activeModal: string | null;
@@ -207,7 +264,7 @@ export const MOCK_PRODUCTS: Product[] = [
 
 const SIMULATIONS_STORAGE_KEY = 'setupSimulations';
 const STORAGE_VERSION_KEY = 'appStorageVersion';
-const CURRENT_STORAGE_VERSION = '2'; // Increment this to clear all localStorage
+const CURRENT_STORAGE_VERSION = '3'; // Increment this to clear all localStorage
 
 const loadStoredSimulations = (): SimulationScenario[] => {
   try {
@@ -249,6 +306,27 @@ const persistSimulations = (simulations: SimulationScenario[]) => {
     console.error('Failed to persist simulations:', error);
   }
 };
+
+export const selectActiveObjective = (state: AppState): ObjectiveState =>
+  state.objectives[state.activeObjectiveId];
+
+export const mapObjectiveMetricsToSimulation = (
+  objective: ObjectiveState,
+  projectName: string
+): SimulationScenario['valueEngine'] => ({
+  objectiveId: objective.presetId,
+  projectName,
+  basketName: objective.basketName,
+  basketWeight: objective.basketWeight,
+  therapeuticArea: VALUE_ENGINE_CONFIG.therapeuticArea,
+  indication: objective.indicationPath,
+  metrics: objective.metricsByLevel.hcp.map((metric) => ({
+    id: metric.id,
+    name: metric.id,
+    weight: metric.weight,
+    visualize: metric.visualize
+  }))
+});
 
 export const useAppStore = create<AppState>((set): AppState => ({
   // File management
@@ -353,29 +431,20 @@ export const useAppStore = create<AppState>((set): AppState => ({
   })),
   updateBrandConfig: (config) => set({ brandConfig: config }),
   
-  // Product configuration (new)
-  productConfig: {
-    basketName: 'Odaiazol',
-    basketWeight: '7',
-    therapeuticArea: 'Oncology',
-    product: 'Odaiazol',
-    indication: '2L Therapy HER+',
-    specialties: '',
-    metrics: [
-      { name: 'XPO TRx Volume', weight: 100, visualize: true },
-      { name: 'XPO NRx Volume', weight: 0, visualize: false },
-      { name: 'XPO NBRx Volume', weight: 0, visualize: false }
-    ],
-    competitiveOpportunities: [],
-    precursor: [],
-    analog: []
-  },
-  updateProductConfig: (data) => set((state) => ({
-    productConfig: {
-      ...state.productConfig,
-      ...data
-    }
-  })),
+  projectName: 'P3: US XL',
+  objectives: initializeObjectiveState(),
+  activeObjectiveId: VALUE_ENGINE_CONFIG.objectives[0].id,
+  setActiveObjective: (objectiveId) => set({ activeObjectiveId: objectiveId }),
+  updateObjectiveState: (objectiveId, data) =>
+    set((state) => ({
+      objectives: {
+        ...state.objectives,
+        [objectiveId]: {
+          ...state.objectives[objectiveId],
+          ...data
+        }
+      }
+    })),
   
   // UI State
   activeModal: null,

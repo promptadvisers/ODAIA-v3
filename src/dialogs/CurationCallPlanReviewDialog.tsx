@@ -209,7 +209,7 @@ export const CurationCallPlanReviewDialog: React.FC = () => {
                       fontSize: '14px',
                       color: 'var(--text-primary)'
                     }}>
-                      New writer identified for Odaiazol
+                      New writer identified for Vectoral
                     </span>
                   </div>
 
@@ -225,7 +225,7 @@ export const CurationCallPlanReviewDialog: React.FC = () => {
                       fontSize: '14px',
                       color: 'var(--text-primary)'
                     }}>
-                      Significant increase in Odaiazol writing
+                      Significant increase in Vectoral writing
                     </span>
                   </div>
                 </div>
@@ -270,7 +270,7 @@ export const CurationCallPlanReviewDialog: React.FC = () => {
                       fontSize: '14px',
                       color: 'var(--text-primary)'
                     }}>
-                      New writer identified for Pixeltron
+                      New writer identified for Vectoral
                     </span>
                   </div>
 
@@ -286,7 +286,7 @@ export const CurationCallPlanReviewDialog: React.FC = () => {
                       fontSize: '14px',
                       color: 'var(--text-primary)'
                     }}>
-                      Significant increase in Pixeltron writing
+                      Significant increase in Vectoral writing
                     </span>
                   </div>
                 </div>

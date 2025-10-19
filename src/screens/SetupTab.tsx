@@ -3,6 +3,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { AddSimulationModal } from '../dialogs/AddSimulationModal';
+import { OrchestrationWizard } from '../components/Setup/OrchestrationWizard';
+import type { OrchestrationWizardState } from '../components/Setup/OrchestrationWizard';
 import { useAppStore } from '../store/appStore';
 import { useChatStore } from '../store/chatStore';
 
@@ -32,6 +34,8 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
   const [showAddSimulationModal, setShowAddSimulationModal] = useState(false);
   const [editingSimulationId, setEditingSimulationId] = useState<string | null>(null);
   const [editingSimulationName, setEditingSimulationName] = useState('');
+  const [isOrchestrationWizardOpen, setIsOrchestrationWizardOpen] = useState(false);
+  const [orchestrationConfig, setOrchestrationConfig] = useState<OrchestrationWizardState | null>(null);
 
   const isOrchestrationEnabled = selectedWorkflow === 'marketing';
   const isCurationEnabled = selectedWorkflow === 'sales';
@@ -313,7 +317,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                       fontWeight: '500',
                       borderRadius: '4px'
                     }}>
-                      5-10 Suggestions per week
+                      {orchestrationConfig?.objective ?? 'Odaiazol Objective'}
                     </span>
                     <span style={{
                       padding: '4px 8px',
@@ -323,7 +327,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                       fontWeight: '500',
                       borderRadius: '4px'
                     }}>
-                      12 Signals
+                      {`${orchestrationConfig?.personas.length ?? 5} Personas`}
                     </span>
                     <span style={{
                       padding: '4px 8px',
@@ -333,7 +337,17 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                       fontWeight: '500',
                       borderRadius: '4px'
                     }}>
-                      Reach & Frequency
+                      {`${orchestrationConfig?.stages.length ?? 5} Stages`}
+                    </span>
+                    <span style={{
+                      padding: '4px 8px',
+                      backgroundColor: 'var(--border-primary)',
+                      color: 'var(--text-secondary)',
+                      fontSize: '11px',
+                      fontWeight: '500',
+                      borderRadius: '4px'
+                    }}>
+                      {`${orchestrationConfig?.tactics.length ?? 16} Tactics`}
                     </span>
                   </div>
                 </div>
@@ -344,8 +358,46 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
             </CardHeader>
             <CardContent>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.5' }}>
-                Define what, how and how often you would like our suggestions delivered to your sales reps.
+                Configure orchestration tactics, journey stages, and marketing cadence before launch.
               </p>
+              <div style={{
+                display: 'grid',
+                gap: '16px',
+                marginBottom: orchestrationConfig ? '24px' : '0',
+                backgroundColor: orchestrationConfig ? 'rgba(15, 23, 42, 0.55)' : 'transparent',
+                borderRadius: orchestrationConfig ? '8px' : '0',
+                border: orchestrationConfig ? '1px solid var(--border-subtle)' : 'none',
+                padding: orchestrationConfig ? '16px' : '0'
+              }}>
+                {orchestrationConfig && (
+                  <>
+                    <div>
+                      <h4 style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>Selected Personas</h4>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {orchestrationConfig.personas.map((persona) => (
+                          <span key={persona} style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{persona}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>Journey Stages</h4>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {orchestrationConfig.stages.map((stage) => (
+                          <span key={stage} style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{stage}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>Selling Teams</h4>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {orchestrationConfig.sellingTeams.map((team) => (
+                          <span key={team} style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{team}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <Button
                   variant="primary"
@@ -355,7 +407,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                 </Button>
                 <Button
                   variant="secondary"
-                  onClick={() => setActiveModal('curation-edit')}
+                  onClick={() => setIsOrchestrationWizardOpen(true)}
                 >
                   Edit
                 </Button>
@@ -738,6 +790,12 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
       <AddSimulationModal
         isOpen={showAddSimulationModal}
         onClose={() => setShowAddSimulationModal(false)}
+      />
+      <OrchestrationWizard
+        isOpen={isOrchestrationWizardOpen}
+        onClose={() => setIsOrchestrationWizardOpen(false)}
+        onSave={(config) => setOrchestrationConfig(config)}
+        initialState={orchestrationConfig}
       />
 
 

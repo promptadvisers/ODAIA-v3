@@ -173,7 +173,7 @@ export const CurationReviewDialog: React.FC = () => {
                       }}
                     >
                       <option value="odaiazol">Odaiazol</option>
-                      <option value="pixeltron">Pixeltron</option>
+                      <option value="vectoral">Vectoral</option>
                     </select>
                   </div>
 

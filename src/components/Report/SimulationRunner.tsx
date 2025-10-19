@@ -36,7 +36,7 @@ interface SimulationRunnerProps {
 }
 
 export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations: initialSimulations, configuredScenarios: _configuredScenarios }) => {
-  const { productConfig, simulations: setupSimulations } = useAppStore();
+  const { projectName, objectives, activeObjectiveId, simulations: setupSimulations } = useAppStore();
   const { simulationTriggered, setSimulationTriggered } = useChatStore();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -80,7 +80,7 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
         status: 'pending',
         progress: 0,
         config: {
-          establishedProduct: productConfig.product || 'Odaiazol',
+          establishedProduct: projectName,
           labels: [
             'Established Product',
             '70/30 Value Weighting'
@@ -95,7 +95,7 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
         status: 'pending',
         progress: 0,
         config: {
-          establishedProduct: productConfig.product || 'Odaiazol',
+          establishedProduct: projectName,
           labels: [
             'Established Product',
             '70/30 Value Weighting',
