@@ -107,9 +107,10 @@ export const ValueEngineEditDialog: React.FC = () => {
     setActiveObjective,
     updateObjectiveState,
     selectedWorkflow,
+    canAccessValueEngineEdit,
     projectName
   } = useAppStore();
-  const isOpen = activeModal === 'value-engine-edit' && selectedWorkflow === 'sales';
+  const isOpen = activeModal === 'value-engine-edit' && canAccessValueEngineEdit(selectedWorkflow);
 
   const productTree = VALUE_ENGINE_CONFIG.productTree;
   const { nodeMap, parentMap } = useMemo(() => buildProductMaps(productTree), [productTree]);
