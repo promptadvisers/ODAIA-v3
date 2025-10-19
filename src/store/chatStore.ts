@@ -773,7 +773,7 @@ Would you like me to help configure any of these items?`;
                   if (!hasMetric) {
                     const updatedMetrics = [
                       ...simulation.valueEngine.metrics,
-                      { name: 'XPO dollars', weight: 30, visualize: true }
+                      { id: 'xpo_dollars', name: 'XPO dollars', weight: 30, visualize: true }
                     ];
                     appStore.updateSimulation(targetSimId, {
                       valueEngine: { ...simulation.valueEngine, metrics: updatedMetrics }

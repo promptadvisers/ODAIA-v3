@@ -36,7 +36,7 @@ interface SimulationRunnerProps {
 }
 
 export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations: initialSimulations, configuredScenarios: _configuredScenarios }) => {
-  const { projectName, objectives, activeObjectiveId, simulations: setupSimulations } = useAppStore();
+  const { projectName, simulations: setupSimulations } = useAppStore();
   const { simulationTriggered, setSimulationTriggered } = useChatStore();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);

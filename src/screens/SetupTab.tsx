@@ -589,7 +589,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                   <div>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Product</div>
                     <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500' }}>
-                      {simulation.valueEngine.product}
+                      {simulation.valueEngine.basketName}
                     </div>
                   </div>
                   <div>

@@ -4,8 +4,9 @@ import {
   VALUE_ENGINE_CONFIG
 } from '../data/valueEngineConfig';
 
-interface MetricState {
+export interface MetricState {
   id: string;
+  label?: string;
   weight: number;
   visualize: boolean;
 }
@@ -26,9 +27,7 @@ const toMetricState = (
   items: Array<{ id: string; weight: number; visualize: boolean }>
 ): MetricState[] => items.map((item) => ({ ...item }));
 
-interface SectionMetricsByLevel {
-  [level in AudienceLevel]?: Array<{ id: string; weight: number; visualize: boolean }>;
-}
+type SectionMetricsByLevel = Partial<Record<AudienceLevel, Array<{ id: string; weight: number; visualize: boolean }>>>;
 
 const buildSectionState = (
   sections: Record<string, SectionMetricsByLevel>
@@ -40,7 +39,7 @@ const buildSectionState = (
           levelAcc[level as AudienceLevel] = toMetricState(metrics ?? []);
           return levelAcc;
         },
-        {}
+        { hcp: [], fsa: [], regional: [] } as Record<AudienceLevel, MetricState[]>
       );
       return acc;
     },
@@ -60,7 +59,7 @@ const initializeObjectiveState = (): Record<string, ObjectiveState> =>
       >((levelAcc, [level, metrics]) => {
         levelAcc[level as AudienceLevel] = toMetricState(metrics);
         return levelAcc;
-      }, {}),
+      }, { hcp: [], fsa: [], regional: [] } as Record<AudienceLevel, MetricState[]>),
       competitiveSections: buildSectionState(preset.competitiveSections),
       patientSections: buildSectionState(preset.patientSections),
       indicationPath: preset.indicationPath

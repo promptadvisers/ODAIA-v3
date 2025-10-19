@@ -2,10 +2,11 @@ import React, { useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, ChevronRight, ChevronDown } from 'lucide-react';
 import { Button } from '../components/Button';
-import { useAppStore } from '../store/appStore';
+import { useAppStore, type MetricState } from '../store/appStore';
 import {
   type AudienceLevel,
   type ProductNode,
+  type BasketSectionDefinition,
   VALUE_ENGINE_CONFIG,
   DEFAULT_AUDIENCE_TABS,
   audienceLabelMap
@@ -74,6 +75,28 @@ const OBJECTIVE_TABS = [
 ];
 
 const MAX_WEIGHT = 100;
+
+const enrichMetricsWithLabels = (
+  section: BasketSectionDefinition,
+  sectionState: Record<AudienceLevel, MetricState[]>
+): Record<AudienceLevel, Array<{ id: string; label: string; weight: number; visualize: boolean }>> => {
+  const result = {} as Record<AudienceLevel, Array<{ id: string; label: string; weight: number; visualize: boolean }>>;
+
+  for (const level of ['hcp', 'fsa', 'regional'] as AudienceLevel[]) {
+    const metrics = sectionState[level] ?? [];
+    result[level] = metrics.map(metric => {
+      const definition = section.metricsByLevel[level]?.find(m => m.id === metric.id);
+      return {
+        id: metric.id,
+        label: definition?.label ?? metric.id,
+        weight: metric.weight,
+        visualize: metric.visualize
+      };
+    });
+  }
+
+  return result;
+};
 
 export const ValueEngineEditDialog: React.FC = () => {
   const {
@@ -212,7 +235,7 @@ export const ValueEngineEditDialog: React.FC = () => {
       sectionId === competitiveSection.id
         ? activeObjective.competitiveSections
         : activeObjective.patientSections;
-    const metrics = sectionState[level] ?? [];
+    const metrics = sectionState[sectionId]?.[level] ?? [];
     const updatedMetrics = metrics.map((metric) => {
       if (metric.id !== metricId) return metric;
       return {
@@ -223,8 +246,8 @@ export const ValueEngineEditDialog: React.FC = () => {
     });
 
       const updatedSectionState = {
-        ...sectionState,
-        [sectionId]: updatedMetrics
+        ...sectionState[sectionId],
+        [level]: updatedMetrics
       };
 
       if (sectionId === competitiveSection.id) {
@@ -837,7 +860,7 @@ export const ValueEngineEditDialog: React.FC = () => {
 
               {renderSection(
                 competitiveSection,
-                objectiveCompetitive,
+                enrichMetricsWithLabels(competitiveSection, objectiveCompetitive),
                 competitiveSection.id,
                 competitiveLevel,
                 setCompetitiveLevel,
@@ -847,7 +870,7 @@ export const ValueEngineEditDialog: React.FC = () => {
 
               {renderSection(
                 patientSection,
-                objectivePatient,
+                enrichMetricsWithLabels(patientSection, objectivePatient),
                 patientSection.id,
                 patientLevel,
                 setPatientLevel,

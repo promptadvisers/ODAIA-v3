@@ -6,7 +6,6 @@ import {
   MOCK_PRODUCTS,
   type Product,
   type SimulationScenario,
-  selectActiveObjective,
   mapObjectiveMetricsToSimulation
 } from '../store/appStore';
 
