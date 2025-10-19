@@ -60,17 +60,140 @@ export const ProductTreeModal: React.FC<ProductTreeModalProps> = ({
 
   const productTree: TreeNode[] = [
     {
-      id: 'tumor-agnostic',
-      label: 'Tumor-Agnostic Indications',
+      id: 'tot-oncology-mkt',
+      label: 'TOT ONCOLOGY MKT',
       children: [
-        { id: 'odaiazol', label: 'Odaiazol' },
-        { id: 'ntrk-fusion', label: 'NTRK fusion' }
+        {
+          id: 'breast-cancer-mkt',
+          label: 'BREAST CANCER MKT',
+          children: [
+            {
+              id: 'cdk46-inhibitors',
+              label: 'CDK4/6 INHIBITORS',
+              children: [
+                { id: 'ibrance', label: 'IBRANCE' },
+                { id: 'kisqali', label: 'KISQALI' },
+                { id: 'verzenio', label: 'VERZENIO' },
+                { id: 'dalpiciclib', label: 'DALPICICLIB' },
+                { id: 'trilaciclib', label: 'TRILACICLIB' }
+              ]
+            },
+            {
+              id: 'her2-therapies',
+              label: 'HER2+ THERAPIES',
+              children: [
+                { id: 'odaiazol', label: 'ODAIAZOL' },
+                { id: 'perjeta', label: 'PERJETA' },
+                { id: 'kadcyla', label: 'KADCYLA' },
+                { id: 'enhertu', label: 'ENHERTU' }
+              ]
+            },
+            {
+              id: 'parp-inhibitors',
+              label: 'PARP INHIBITORS',
+              children: [
+                { id: 'lynparza', label: 'LYNPARZA' },
+                { id: 'talzenna', label: 'TALZENNA' }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'lung-cancer-mkt',
+          label: 'LUNG CANCER MKT',
+          children: [
+            {
+              id: 'egfr-inhibitors',
+              label: 'EGFR INHIBITORS',
+              children: [
+                { id: 'iressa', label: 'Iressa'.toUpperCase() },
+                { id: 'tarceva', label: 'Tarceva'.toUpperCase() },
+                { id: 'gilotrif', label: 'Gilotrif'.toUpperCase() },
+                { id: 'vizimpro', label: 'VIZIMPRO' },
+                { id: 'tagrisso', label: 'TAGRISSO' },
+                { id: 'exkivity', label: 'EXKIVITY' },
+                { id: 'lazcluze', label: 'LAZCLUZE' },
+                { id: 'rybrevant', label: 'RYBREVANT' },
+                { id: 'datroway', label: 'DATROWAY' }
+              ]
+            },
+            {
+              id: 'alk-inhibitors',
+              label: 'ALK INHIBITORS',
+              children: [
+                { id: 'alecensa', label: 'ALECENSA' },
+                { id: 'alunbrig', label: 'ALUNBRIG' },
+                { id: 'xalkori', label: 'XALKORI' },
+                { id: 'lorbrena', label: 'LORBRENA' },
+                { id: 'ceritinib', label: 'CERITINIB' }
+              ]
+            },
+            {
+              id: 'immunotherapies-io',
+              label: 'IMMUNOTHERAPIES (IO)',
+              children: [
+                { id: 'keytruda', label: 'KEYTRUDA' },
+                { id: 'opdivo', label: 'OPDIVO' },
+                { id: 'tecentriq', label: 'TECENTRIQ' },
+                { id: 'imfinzi', label: 'IMFINZI' },
+                { id: 'libtayo', label: 'LIBTAYO' }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'hematological-mkt',
+          label: 'HEMATOLOGICAL MKT',
+          children: [
+            {
+              id: 'btk-inhibitors',
+              label: 'BTK INHIBITORS',
+              children: [
+                { id: 'imbruvica', label: 'IMBRUVICA' },
+                { id: 'calquence', label: 'CALQUENCE' },
+                { id: 'brukinsa', label: 'BRUKINSA' }
+              ]
+            },
+            {
+              id: 'bcl2-inhibitors',
+              label: 'BCL-2 INHIBITORS',
+              children: [
+                { id: 'venclxta', label: 'VENCLXTA' }
+              ]
+            },
+            {
+              id: 'other-hematological-therapies',
+              label: 'OTHER HEMATOLOGICAL THERAPIES',
+              children: [
+                { id: 'velcade', label: 'VELCADE' },
+                { id: 'darzalex', label: 'DARZALEX' }
+              ]
+            },
+            {
+              id: 'cart-bispecifics',
+              label: 'CAR-T / BISPECIFICS',
+              children: []
+            }
+          ]
+        },
+        { id: 'categorical-metric', label: 'CATEGORICAL METRIC', children: [] },
+        { id: 'competitive-set', label: 'COMPETITIVE SET', children: [] },
+        { id: 'underlying-treatment', label: 'UNDERLYING TREATMENT', children: [] },
+        { id: 'analogue', label: 'ANALOGUE', children: [] },
+        {
+          id: 'precursor',
+          label: 'PRECURSOR',
+          children: []
+        },
+        {
+          id: 'claims',
+          label: 'CLAIMS',
+          children: [
+            { id: 'aplddx-procedures', label: 'APLDDX PROCEDURES' },
+            { id: 'aplddx-diagnosis', label: 'APLDDX DIAGNOSIS' }
+          ]
+        }
       ]
-    },
-    {
-      id: 'braf-v600e',
-      label: 'BRAF V600E-mutant tumors',
-      children: []
     }
   ];
 

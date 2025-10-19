@@ -61,7 +61,6 @@ export interface ValueEngineConfiguration {
 // Metrics that are broadly used across HCP-level analysis
 const CORE_HCP_METRICS: MetricDefinition[] = [
   { id: 'xpo_trx', name: 'XPO TRx Volume', defaultWeight: 50, visualize: true },
-  { id: 'xpo_nbrx', name: 'XPO NBRx Volume', defaultWeight: 30, visualize: true },
   { id: 'psp_enrollment', name: 'OncoThera PSP Enrollment Rate', defaultWeight: 20, visualize: true }
 ];
 
@@ -326,14 +325,13 @@ export const VALUE_ENGINE_CONFIG: ValueEngineConfiguration = {
     {
       id: 'odaiazol',
       label: 'Odaiazol Objective',
-      basketName: 'Odaiazol',
+      basketName: 'Odaiazol Objective',
       basketWeight: 7,
       specialties: 'Oncology',
       selectedProductIds: ['odaiazol'],
       metricsByLevel: {
         hcp: [
           { id: 'xpo_trx', weight: 55, visualize: true },
-          { id: 'xpo_nbrx', weight: 30, visualize: true },
           { id: 'psp_enrollment', weight: 15, visualize: true }
         ],
         fsa: [
@@ -393,7 +391,6 @@ export const VALUE_ENGINE_CONFIG: ValueEngineConfiguration = {
       metricsByLevel: {
         hcp: [
           { id: 'xpo_trx', weight: 50, visualize: true },
-          { id: 'xpo_nbrx', weight: 35, visualize: true },
           { id: 'psp_enrollment', weight: 15, visualize: true }
         ],
         fsa: [

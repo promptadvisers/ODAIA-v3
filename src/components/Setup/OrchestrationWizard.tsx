@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../Button';
 import { Toggle } from '../Toggle';
+import './OrchestrationWizard.css';
 
 export interface OrchestrationWizardState {
   objective: string;
@@ -26,10 +27,10 @@ const PERSONA_OPTIONS = [
   'New Writer Persona',
   'Loyalist Persona',
   'Defector Persona',
-  'New-to-Goal Persona'
+  'New Grad Persona'
 ];
 
-const STAGE_OPTIONS = ['Awareness', 'Intended', 'Deciding', 'Writing', 'Advocating'];
+const STAGE_OPTIONS = ['Awareness', 'Interested', 'Deciding', 'Writing', 'Advocating'];
 
 const TACTIC_OPTIONS = [
   'sales rep - driven email',
@@ -71,44 +72,84 @@ const DEFAULT_STATE: OrchestrationWizardState = {
   adjustForMarket: false
 };
 
-const sectionContainerStyle: React.CSSProperties = {
-  borderRadius: '12px',
-  border: '1px solid rgba(100,116,139,0.25)',
-  background: 'rgba(10, 13, 20, 0.85)',
-  overflow: 'hidden'
-};
+const PersonaPill: React.FC<{ label: string }> = ({ label }) => <span className="wizard-chip">{label}</span>;
 
-const sectionHeaderStyle: React.CSSProperties = {
-  width: '100%',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: '14px 18px',
-  background: 'rgba(17, 24, 39, 0.9)',
-  color: 'var(--text-primary)',
-  borderBottom: '1px solid rgba(100,116,139,0.25)',
-  cursor: 'pointer',
-  fontSize: '13px'
-};
+const ObjectiveSelect: React.FC<{
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}> = ({ value, options, onChange }) => {
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
-const sectionSummaryStyle: React.CSSProperties = {
-  fontSize: '12px',
-  color: 'var(--text-secondary)'
-};
+  useEffect(() => {
+    const handleClick = (event: MouseEvent) => {
+      if (!open) return;
+      const target = event.target as Node;
+      if (triggerRef.current?.contains(target) || menuRef.current?.contains(target)) {
+        return;
+      }
+      setOpen(false);
+    };
 
-const dropdownTagStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  padding: '4px 10px',
-  borderRadius: '999px',
-  background: 'rgba(37,99,235,0.12)',
-  border: '1px solid rgba(59,130,246,0.35)',
-  fontSize: '11px',
-  color: 'rgba(191,219,254,0.9)',
-  textTransform: 'capitalize'
-};
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
 
-const PersonaPill: React.FC<{ label: string }> = ({ label }) => <span style={dropdownTagStyle}>{label}</span>;
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [open]);
+
+  const selectedLabel = value || 'Select an objective...';
+
+  return (
+    <div className="wizard-select">
+      <button
+        ref={triggerRef}
+        type="button"
+        className={`wizard-select-trigger${open ? ' is-open' : ''}`}
+        onClick={() => setOpen((prev) => !prev)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span className={value ? '' : 'wizard-select-placeholder-text'}>{selectedLabel}</span>
+        <span className="wizard-select-icon">{open ? '▴' : '▾'}</span>
+      </button>
+      {open && (
+        <div className="wizard-select-menu" role="listbox" ref={menuRef}>
+          {options.map((option) => {
+            const isActive = option === value;
+            return (
+              <button
+                key={option}
+                type="button"
+                className={`wizard-select-option${isActive ? ' is-active' : ''}`}
+                onClick={() => {
+                  onChange(option);
+                  setOpen(false);
+                  setTimeout(() => triggerRef.current?.focus(), 0);
+                }}
+                role="option"
+                aria-selected={isActive}
+              >
+                <span>{option}</span>
+                {isActive && <span className="wizard-select-check">✓</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const OrchestrationWizard: React.FC<OrchestrationWizardProps> = ({ isOpen, onClose, onSave, initialState }) => {
   const [state, setState] = useState<OrchestrationWizardState>(initialState || DEFAULT_STATE);
@@ -117,7 +158,7 @@ export const OrchestrationWizard: React.FC<OrchestrationWizardProps> = ({ isOpen
   const [tacticsOpen, setTacticsOpen] = useState(false);
   const objectiveOptions = useMemo(() => OBJECTIVE_OPTIONS, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       setState(initialState || DEFAULT_STATE);
       setPersonasOpen(false);
@@ -164,48 +205,26 @@ export const OrchestrationWizard: React.FC<OrchestrationWizardProps> = ({ isOpen
     summary: string,
     content: React.ReactNode
   ) => (
-    <div style={sectionContainerStyle}>
-      <button type="button" onClick={onToggle} style={sectionHeaderStyle}>
+    <div className="wizard-section">
+      <button type="button" onClick={onToggle} className="wizard-section-toggle">
         <span>{title}</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={sectionSummaryStyle}>{summary}</span>
-          <span style={{ fontSize: '16px', color: 'var(--text-secondary)' }}>{isOpen ? '▴' : '▾'}</span>
+        <div className="wizard-section-meta">
+          <span className="wizard-section-summary">{summary}</span>
+          <span className="wizard-section-chevron">{isOpen ? '▴' : '▾'}</span>
         </div>
       </button>
-      {isOpen && (
-        <div
-          style={{
-            padding: '18px 20px',
-            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.85) 60%, rgba(12, 18, 31, 0.92) 100%)'
-          }}
-        >
-          {content}
-        </div>
-      )}
+      {isOpen && <div className="wizard-section-content">{content}</div>}
     </div>
   );
 
   const renderCheckboxGrid = (options: string[], selected: string[], onToggle: (value: string) => void) => (
-    <div style={{ display: 'grid', gap: '12px' }}>
+    <div className="wizard-checkbox-grid">
       {options.map((option) => {
         const checked = selected.includes(option);
         return (
-          <label
-            key={option}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '10px 14px',
-              borderRadius: '10px',
-              border: checked ? '1px solid rgba(59,130,246,0.55)' : '1px solid rgba(100,116,139,0.35)',
-              background: checked ? 'rgba(37, 99, 235, 0.18)' : 'rgba(15, 23, 42, 0.35)',
-              color: 'var(--text-primary)',
-              cursor: 'pointer'
-            }}
-          >
+          <label key={option} className={`wizard-checkbox-card${checked ? ' is-checked' : ''}`}>
             <span>{option}</span>
-            <input type="checkbox" checked={checked} onChange={() => onToggle(option)} style={{ width: 16, height: 16 }} />
+            <input type="checkbox" checked={checked} onChange={() => onToggle(option)} />
           </label>
         );
       })}
@@ -213,66 +232,19 @@ export const OrchestrationWizard: React.FC<OrchestrationWizardProps> = ({ isOpen
   );
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 1200,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'rgba(2, 6, 23, 0.78)',
-        backdropFilter: 'blur(4px)'
-      }}
-    >
-      <div
-        style={{
-          width: '94vw',
-          maxWidth: '1280px',
-          maxHeight: '92vh',
-          background: 'linear-gradient(155deg, rgba(8, 12, 24, 0.97) 10%, rgba(13, 18, 32, 0.96) 90%)',
-          borderRadius: '18px',
-          border: '1px solid rgba(100,116,139,0.35)',
-          boxShadow: '0 40px 90px rgba(3, 10, 26, 0.7)',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
-      >
-        <div
-          style={{
-            padding: '20px 28px',
-            borderBottom: '1px solid rgba(100,116,139,0.28)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <button
-              onClick={onClose}
-              aria-label="Close wizard"
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: '999px',
-                border: '1px solid rgba(148,163,184,0.4)',
-                background: 'transparent',
-                color: 'var(--text-secondary)',
-                fontSize: '18px',
-                cursor: 'pointer'
-              }}
-            >
+    <div className="wizard-overlay">
+      <div className="wizard-container">
+        <div className="wizard-header">
+          <div className="wizard-header-start">
+            <button onClick={onClose} aria-label="Close wizard" className="wizard-close-btn">
               ×
             </button>
             <div>
-              <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Guided Configuration Wizard</h2>
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '6px 0 0' }}>
-                Follow these steps to configure your complete Maptual project and curation settings
-              </p>
+              <h2 className="wizard-title">Guided Configuration Wizard</h2>
+              <p className="wizard-subtitle">Follow these steps to configure your complete Maptual project and curation settings</p>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="wizard-action-group">
             <Button variant="ghost" onClick={handleReset}>
               Reset
             </Button>
@@ -285,93 +257,48 @@ export const OrchestrationWizard: React.FC<OrchestrationWizardProps> = ({ isOpen
           </div>
         </div>
 
-        <div style={{ padding: '18px 32px', borderBottom: '1px solid rgba(100,116,139,0.18)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            {['Project Template', 'Score Simulations', 'Campaign Setup', 'Review & Save'].map((step, index) => {
-              const status = index < 2 ? 'complete' : index === 2 ? 'active' : 'upcoming';
-              const colors =
-                status === 'complete'
-                  ? { bg: 'rgba(34,197,94,0.25)', border: '1px solid rgba(34,197,94,0.6)', color: '#22c55e' }
-                  : status === 'active'
-                  ? { bg: 'rgba(59,130,246,0.28)', border: '1px solid rgba(59,130,246,0.7)', color: '#60a5fa' }
-                  : { bg: 'rgba(100,116,139,0.15)', border: '1px solid rgba(100,116,139,0.35)', color: 'rgba(148,163,184,0.9)' };
-              return (
-                <React.Fragment key={step}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                    <div
-                      style={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: colors.bg,
-                        border: colors.border,
-                        color: colors.color,
-                        fontWeight: 600
-                      }}
-                    >
-                      {status === 'complete' ? '✓' : index + 1}
-                    </div>
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{step}</span>
+        <div className="wizard-progress">
+          <div className="wizard-stepper">
+            {['Project Template', 'Score Simulations', 'Campaign Setup', 'Review & Save'].map((step, index) => (
+              <React.Fragment key={step}>
+                <div className="wizard-step">
+                  <div className={`wizard-step-circle ${index < 2 ? 'complete' : index === 2 ? 'active' : 'upcoming'}`}>
+                    {index < 2 ? '✓' : index + 1}
                   </div>
-                  {index < 3 && <div style={{ flex: 1, height: 1, background: 'rgba(71,85,105,0.35)' }} />}
-                </React.Fragment>
-              );
-            })}
+                  <span className="wizard-step-label">{step}</span>
+                </div>
+                {index < 3 && <div className="wizard-step-divider" />}
+              </React.Fragment>
+            ))}
           </div>
-          <div style={{ textAlign: 'center', marginTop: 14 }}>
-            <h3 style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 600, margin: 0 }}>Step 3: Campaign Setup</h3>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: 4 }}>Tactics and Sequencing settings</p>
+          <div className="wizard-stepper-title">
+            <h3>Step 3: Campaign Setup</h3>
+            <p>Tactics and Sequencing settings</p>
           </div>
         </div>
 
-        <div style={{ padding: '26px 32px', overflowY: 'auto' }}>
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: 8 }}>Select an objective</label>
-            <select
-              value={state.objective}
-              onChange={(event) => setState((prev) => ({ ...prev, objective: event.target.value }))}
-              style={{
-                width: '100%',
-                maxWidth: 460,
-                padding: '12px 16px',
-                borderRadius: '10px',
-                border: '1px solid rgba(148,163,184,0.4)',
-                background: 'linear-gradient(135deg, rgba(17,24,39,0.92), rgba(15,23,42,0.85))',
-                color: 'var(--text-primary)',
-                fontSize: '13px',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="" disabled>
-                Select an objective...
-              </option>
-              {objectiveOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+        <div className="wizard-body">
+          <div className="wizard-field-group">
+            <label className="wizard-label">Select an objective</label>
+            <ObjectiveSelect value={state.objective} options={objectiveOptions} onChange={(value) => setState((prev) => ({ ...prev, objective: value }))} />
           </div>
 
-          <div style={{ display: 'grid', gap: '20px' }}>
+          <div className="wizard-grid">
             {renderSection(
               'Personas',
               personasOpen,
               () => setPersonasOpen((prev) => !prev),
               `${state.personas.length} selected`,
-              <div style={{ display: 'grid', gap: '14px' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+              <>
+                <div className="wizard-chip-row">
                   {state.personas.length === 0 ? (
-                    <span style={{ color: 'var(--text-secondary)' }}>No personas selected</span>
+                    <span className="wizard-empty-state">No personas selected</span>
                   ) : (
                     state.personas.map((persona) => <PersonaPill key={persona} label={persona} />)
                   )}
                 </div>
                 {renderCheckboxGrid(PERSONA_OPTIONS, state.personas, handlePersonaToggle)}
-              </div>
+              </>
             )}
 
             {renderSection(
@@ -387,28 +314,17 @@ export const OrchestrationWizard: React.FC<OrchestrationWizardProps> = ({ isOpen
               tacticsOpen,
               () => setTacticsOpen((prev) => !prev),
               `${state.tactics.length} tactics selected`,
-              <div style={{ maxHeight: 260, overflowY: 'auto' }}>{renderCheckboxGrid(TACTIC_OPTIONS, state.tactics, handleTacticToggle)}</div>
+              <div className="wizard-section-scroll">{renderCheckboxGrid(TACTIC_OPTIONS, state.tactics, handleTacticToggle)}</div>
             )}
 
             <div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 600 }}>Associated Odaiazol Selling Team</span>
-                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  Sequencing will be adjusted based on the following selling teams activity.
-                </span>
+              <div className="wizard-section-header">
+                <span className="wizard-section-heading">Associated Odaiazol Selling Team</span>
+                <span className="wizard-section-subtitle">Sequencing will be adjusted based on the following selling teams activity.</span>
               </div>
-              <div
-                style={{
-                  display: 'grid',
-                  gap: '10px',
-                  padding: '18px',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(148,163,184,0.35)',
-                  background: 'rgba(11, 17, 29, 0.85)'
-                }}
-              >
+              <div className="wizard-selling-team">
                 {SELLING_TEAM_OPTIONS.map((team) => (
-                  <label key={team.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-primary)', fontSize: '13px' }}>
+                  <label key={team.id}>
                     <input type="checkbox" checked={state.sellingTeams.includes(team.id)} onChange={() => handleTeamToggle(team.id)} />
                     <span>{team.id}</span>
                   </label>
@@ -416,48 +332,35 @@ export const OrchestrationWizard: React.FC<OrchestrationWizardProps> = ({ isOpen
               </div>
             </div>
 
-            <div
-              style={{
-                borderRadius: '12px',
-                border: '1px solid rgba(148,163,184,0.3)',
-                background: 'rgba(13, 19, 33, 0.85)',
-                padding: '20px'
-              }}
-            >
-              <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '14px' }}>
-                Campaign Settings
+            <div className="wizard-card">
+              <div className="wizard-card-title">Campaign Settings</div>
+              <div>
+                <div className="wizard-range-label">Campaign Length</div>
+                <div className="wizard-range-value">{state.campaignLength} week{state.campaignLength > 1 ? 's' : ''}</div>
+                <input
+                  type="range"
+                  min={1}
+                  max={26}
+                  value={state.campaignLength}
+                  onChange={(event) => setState((prev) => ({ ...prev, campaignLength: parseInt(event.target.value, 10) }))}
+                  style={{ width: '100%' }}
+                />
+                <div className="wizard-range-scale">
+                  <span>1 week</span>
+                  <span>26 weeks</span>
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                <div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: 8 }}>Campaign Length</div>
-                  <div style={{ fontSize: '26px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 10 }}>
-                    {state.campaignLength} week{state.campaignLength > 1 ? 's' : ''}
-                  </div>
-                  <input
-                    type="range"
-                    min={1}
-                    max={26}
-                    value={state.campaignLength}
-                    onChange={(event) => setState((prev) => ({ ...prev, campaignLength: parseInt(event.target.value, 10) }))}
-                    style={{ width: '100%' }}
-                  />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)', marginTop: 6 }}>
-                    <span>1 week</span>
-                    <span>26 weeks</span>
-                  </div>
+              <div className="wizard-toggle-row">
+                <div className="wizard-toggle-copy">
+                  <span className="wizard-toggle-title">Adjust to changing Market Conditions</span>
+                  <span className="wizard-toggle-subtitle">Automatically recalibrate cadence when new signals appear.</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div>
-                    <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>Adjust to changing Market Conditions</div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Automatically recalibrate cadence when new signals appear.</div>
-                  </div>
-                  <Toggle
-                    checked={state.adjustForMarket}
-                    onChange={(checked) => setState((prev) => ({ ...prev, adjustForMarket: checked }))}
-                    size="md"
-                    ariaLabel="Adjust to changing Market Conditions"
-                  />
-                </div>
+                <Toggle
+                  checked={state.adjustForMarket}
+                  onChange={(checked) => setState((prev) => ({ ...prev, adjustForMarket: checked }))}
+                  size="md"
+                  ariaLabel="Adjust to changing Market Conditions"
+                />
               </div>
             </div>
           </div>

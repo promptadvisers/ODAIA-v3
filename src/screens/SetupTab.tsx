@@ -244,7 +244,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                     fontWeight: '500',
                     borderRadius: '4px'
                   }}>
-                    Odaiazol
+                    Odaiazol Objective
                   </span>
                   <span style={{
                     padding: '4px 8px',
