@@ -55,7 +55,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
     },
     {
       title: 'Brand Access Strategy',
-      tags: ['Target Product Nacida', `Score: ${brandConfig.medicalObjectives.basketScore}/10`, ...brandConfig.medicalObjectives.indications],
+      tags: ['Target Product Nacida', `Score: ${brandConfig.medicalObjectives.basketScore}/10`],
       description: `Configure primary objectives for ${brandConfig.medicalObjectives.basketName || 'medical products'}. This includes therapeutic area targeting, indication selection, and scoring weight configurations for optimal HCP targeting and engagement strategies.`,
       status: brandConfig.medicalObjectives.status,
       approved: brandConfig.medicalObjectives.approved
@@ -505,7 +505,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
                       }
                       
                       const itemKey = item.title === 'Brand' ? 'brand' : 
-                                     item.title === 'Brand Access Strategy' ? 'brandAccess' :
+                                     (item.title === 'Brand Access Strategy' || item.title === 'EME Signal Identification') ? 'brandAccess' :
                                      item.title === 'Sales Goals' ? 'salesGoals' :
                                      item.title === 'Competitive Landscape' ? 'competitiveLandscape' :
                                      item.title === 'Medical Objectives' ? 'medicalObjectives' : null;

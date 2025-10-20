@@ -510,17 +510,19 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
                     <CardTitle>{simulation.name}</CardTitle>
-                    <span style={{
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      color: 'var(--text-secondary)',
-                      padding: '3px 10px',
-                      backgroundColor: 'var(--bg-secondary)',
-                      borderRadius: '4px',
-                      border: '1px solid var(--border-subtle)'
-                    }}>
-                      {simulation.product.name}
-                    </span>
+                    {!simulation.createdAt && (
+                      <span style={{
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        color: 'var(--text-secondary)',
+                        padding: '3px 10px',
+                        backgroundColor: 'var(--bg-secondary)',
+                        borderRadius: '4px',
+                        border: '1px solid var(--border-subtle)'
+                      }}>
+                        {simulation.product.name}
+                      </span>
+                    )}
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
                     <span style={{
@@ -589,7 +591,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
                   <div>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Product</div>
                     <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500' }}>
-                      {simulation.valueEngine.basketName}
+                      {simulation.createdAt ? '—' : simulation.valueEngine.basketName}
                     </div>
                   </div>
                   <div>

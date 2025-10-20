@@ -57,14 +57,14 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
   };
 
   // Convert configured scenarios from SetupTab into simulations
-  const scenariosToSimulations = (scenarios: any[]): Simulation[] => {
-    return scenarios.map((scenario, index) => ({
+const scenariosToSimulations = (scenarios: any[]): Simulation[] => {
+  return scenarios.map((scenario, index) => ({
       id: scenario.id || `sim-${index + 1}`,
       name: scenario.name || `Simulation ${index + 1}`,
       status: 'pending' as const,
       progress: 0,
       config: {
-        establishedProduct: scenario.product?.name || scenario.valueEngine?.product || 'Default Product',
+        establishedProduct: '',
         parameters: []
       }
     }));

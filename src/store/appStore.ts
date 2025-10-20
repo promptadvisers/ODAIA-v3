@@ -12,6 +12,7 @@ export interface MetricState {
 }
 
 export interface ObjectiveState {
+  id: string;
   presetId: string;
   basketName: string;
   basketWeight: number;
@@ -22,6 +23,23 @@ export interface ObjectiveState {
   patientSections: Record<string, Record<AudienceLevel, MetricState[]>>;
   indicationPath: string;
 }
+
+const createBlankObjective = (id: string): ObjectiveState => ({
+  id,
+  presetId: 'custom',
+  basketName: '',
+  basketWeight: 5,
+  specialties: '',
+  selectedProductIds: [],
+  metricsByLevel: {
+    hcp: [],
+    fsa: [],
+    regional: []
+  },
+  competitiveSections: {},
+  patientSections: {},
+  indicationPath: ''
+});
 
 const toMetricState = (
   items: Array<{ id: string; weight: number; visualize: boolean }>
@@ -46,24 +64,35 @@ const buildSectionState = (
     {}
   );
 
+const createObjectiveFromPreset = (presetId: string): ObjectiveState => {
+  const preset = VALUE_ENGINE_CONFIG.objectives.find((objective) => objective.id === presetId);
+  if (!preset) {
+    const blankId = `custom-${presetId}`;
+    return createBlankObjective(blankId);
+  }
+
+  return {
+    id: preset.id,
+    presetId: preset.id,
+    basketName: preset.basketName,
+    basketWeight: preset.basketWeight,
+    specialties: preset.specialties,
+    selectedProductIds: [...preset.selectedProductIds],
+    metricsByLevel: Object.entries(preset.metricsByLevel).reduce<
+      Record<AudienceLevel, MetricState[]>
+    >((levelAcc, [level, metrics]) => {
+      levelAcc[level as AudienceLevel] = toMetricState(metrics);
+      return levelAcc;
+    }, { hcp: [], fsa: [], regional: [] } as Record<AudienceLevel, MetricState[]>),
+    competitiveSections: buildSectionState(preset.competitiveSections),
+    patientSections: buildSectionState(preset.patientSections),
+    indicationPath: preset.indicationPath
+  };
+};
+
 const initializeObjectiveState = (): Record<string, ObjectiveState> =>
   VALUE_ENGINE_CONFIG.objectives.reduce<Record<string, ObjectiveState>>((acc, preset) => {
-    acc[preset.id] = {
-      presetId: preset.id,
-      basketName: preset.basketName,
-      basketWeight: preset.basketWeight,
-      specialties: preset.specialties,
-      selectedProductIds: [...preset.selectedProductIds],
-      metricsByLevel: Object.entries(preset.metricsByLevel).reduce<
-        Record<AudienceLevel, MetricState[]>
-      >((levelAcc, [level, metrics]) => {
-        levelAcc[level as AudienceLevel] = toMetricState(metrics);
-        return levelAcc;
-      }, { hcp: [], fsa: [], regional: [] } as Record<AudienceLevel, MetricState[]>),
-      competitiveSections: buildSectionState(preset.competitiveSections),
-      patientSections: buildSectionState(preset.patientSections),
-      indicationPath: preset.indicationPath
-    };
+    acc[preset.id] = createObjectiveFromPreset(preset.id);
     return acc;
   }, {});
 
@@ -178,6 +207,9 @@ interface AppState {
   activeObjectiveId: string;
   setActiveObjective: (objectiveId: string) => void;
   updateObjectiveState: (objectiveId: string, data: Partial<ObjectiveState>) => void;
+  addTemporaryObjective: () => string;
+  removeTemporaryObjective: (objectiveId: string) => void;
+  isTemporaryObjective: (objectiveId: string) => boolean;
   
   // UI State
   activeModal: string | null;
@@ -444,6 +476,34 @@ export const useAppStore = create<AppState>((set): AppState => ({
         }
       }
     })),
+  addTemporaryObjective: () => {
+    const id = `custom-${Date.now().toString(36)}`;
+    set((state) => ({
+      objectives: {
+        ...state.objectives,
+        [id]: createBlankObjective(id)
+      },
+      activeObjectiveId: id
+    }));
+    return id;
+  },
+  removeTemporaryObjective: (objectiveId) =>
+    set((state) => {
+      if (!state.objectives[objectiveId] || !state.objectives[objectiveId].id.startsWith('custom-')) {
+        return state;
+      }
+
+      const updatedObjectives = { ...state.objectives };
+      delete updatedObjectives[objectiveId];
+
+      const fallbackId = VALUE_ENGINE_CONFIG.objectives[0]?.id ?? Object.keys(updatedObjectives)[0] ?? '';
+
+      return {
+        objectives: updatedObjectives,
+        activeObjectiveId: fallbackId || ''
+      };
+    }),
+  isTemporaryObjective: (objectiveId) => objectiveId.startsWith('custom-'),
   
   // UI State
   activeModal: null,

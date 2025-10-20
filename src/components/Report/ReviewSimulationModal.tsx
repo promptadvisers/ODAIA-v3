@@ -43,11 +43,11 @@ export const ReviewSimulationModal: React.FC<ReviewSimulationModalProps> = ({
   }
   console.log('Modal is open, rendering content');
 
-  const defaultSimulation: SimulationDetails = {
+  const sim = simulation ?? {
     name: 'Value Engine: HCP Targeting Option 1',
     status: 'completed',
     configuration: {
-      establishedProduct: 'Odaiazol - 70/30 Value Weighting',
+      establishedProduct: '',
       parameters: [
         'XPO TRx Weight: 0.5',
         'XPO NRx Weight: 0.2',
@@ -66,8 +66,6 @@ export const ReviewSimulationModal: React.FC<ReviewSimulationModalProps> = ({
       targetingEfficiency: '91%'
     }
   };
-
-  const sim = simulation || defaultSimulation;
 
   return (
     <div 
@@ -188,22 +186,24 @@ export const ReviewSimulationModal: React.FC<ReviewSimulationModalProps> = ({
               borderRadius: '8px',
               padding: '16px'
             }}>
-              <div style={{ marginBottom: '12px' }}>
-                <span style={{
-                  fontSize: '12px',
-                  color: '#64748b',
-                  display: 'block',
-                  marginBottom: '4px'
-                }}>
-                  Established Product
-                </span>
-                <span style={{
-                  fontSize: '13px',
-                  color: '#ffffff'
-                }}>
-                  {sim.configuration.establishedProduct}
-                </span>
-              </div>
+              {sim.configuration.establishedProduct && (
+                <div style={{ marginBottom: '12px' }}>
+                  <span style={{
+                    fontSize: '12px',
+                    color: '#64748b',
+                    display: 'block',
+                    marginBottom: '4px'
+                  }}>
+                    Established Product
+                  </span>
+                  <span style={{
+                    fontSize: '13px',
+                    color: '#ffffff'
+                  }}>
+                    {sim.configuration.establishedProduct}
+                  </span>
+                </div>
+              )}
               
               <div style={{ marginBottom: '12px' }}>
                 <span style={{

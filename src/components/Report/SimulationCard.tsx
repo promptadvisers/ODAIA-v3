@@ -38,7 +38,9 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({ simulation }) =>
             fontSize: '13px',
             color: '#94a3b8'
           }}>
-            <span>Established Product: {simulation.config.establishedProduct}</span>
+            {simulation.config.establishedProduct && (
+              <span>Established Product: {simulation.config.establishedProduct}</span>
+            )}
             {simulation.config.parameters.map((param, idx) => (
               <span key={idx}>• {param}</span>
             ))}

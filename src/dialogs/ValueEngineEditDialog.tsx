@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X, ChevronRight, ChevronDown } from 'lucide-react';
-import { Button } from '../components/Button';
+import { X, ChevronRight, ChevronDown, Plus } from 'lucide-react';
 import { useAppStore, type MetricState } from '../store/appStore';
 import {
   type AudienceLevel,
@@ -106,6 +105,9 @@ export const ValueEngineEditDialog: React.FC = () => {
     activeObjectiveId,
     setActiveObjective,
     updateObjectiveState,
+    addTemporaryObjective,
+    removeTemporaryObjective,
+    isTemporaryObjective,
     projectName
   } = useAppStore();
   const isOpen = activeModal === 'value-engine-edit';
@@ -113,7 +115,19 @@ export const ValueEngineEditDialog: React.FC = () => {
   const productTree = VALUE_ENGINE_CONFIG.productTree;
   const { nodeMap, parentMap } = useMemo(() => buildProductMaps(productTree), [productTree]);
 
-  const availableTabs = OBJECTIVE_TABS.filter((tab) => Boolean(objectives[tab.id]));
+  const availableTabs = React.useMemo(() => {
+    const baseTabs = OBJECTIVE_TABS.filter((tab) => Boolean(objectives[tab.id]));
+    const additionalDrafts = Object.values(objectives)
+      .filter((objective) => objective.id.startsWith('custom-'))
+      .map((objective) => ({ id: objective.id, label: 'Draft Objective' }));
+    const merged = [...baseTabs];
+    additionalDrafts.forEach((draft) => {
+      if (!merged.find((tab) => tab.id === draft.id)) {
+        merged.push(draft);
+      }
+    });
+    return merged;
+  }, [objectives]);
 
   const [activeTab, setActiveTab] = useState<string>(() => {
     if (objectives[activeObjectiveId]) return activeObjectiveId;
@@ -122,11 +136,20 @@ export const ValueEngineEditDialog: React.FC = () => {
 
   const activeObjective = objectives[activeTab];
 
-  useMemo(() => {
-    if (objectives[activeTab]) {
-      setActiveObjective(activeTab as typeof activeObjectiveId);
+  React.useEffect(() => {
+    if (!activeTab) {
+      const defaultTab = availableTabs[0]?.id;
+      if (defaultTab) {
+        setActiveTab(defaultTab);
+        setActiveObjective(defaultTab);
+      }
+      return;
     }
-  }, [activeTab, objectives, setActiveObjective, activeObjectiveId]);
+
+    if (objectives[activeTab]) {
+      setActiveObjective(activeTab);
+    }
+  }, [activeTab, objectives, availableTabs, setActiveObjective]);
 
   const [expandedNodeIds, setExpandedNodeIds] = useState<string[]>(() => {
     if (!activeObjective) return ['tot-oncology'];
@@ -140,10 +163,24 @@ export const ValueEngineEditDialog: React.FC = () => {
   const [activeMetricLevel, setActiveMetricLevel] = useState<AudienceLevel>('hcp');
   const [competitiveLevel, setCompetitiveLevel] = useState<AudienceLevel>('hcp');
   const [patientLevel, setPatientLevel] = useState<AudienceLevel>('hcp');
+  const [showDraftNotice, setShowDraftNotice] = useState(false);
 
   if (!isOpen || !activeObjective) {
     return null;
   }
+
+  const isDraft = isTemporaryObjective(activeObjectiveId);
+
+  const handleAddObjective = () => {
+    const newId = addTemporaryObjective();
+    setActiveObjective(newId);
+    setShowDraftNotice(true);
+  };
+
+  const handleCloseDraft = () => {
+    removeTemporaryObjective(activeObjectiveId);
+    setShowDraftNotice(false);
+  };
 
   const currentMetrics = activeObjective.metricsByLevel[activeMetricLevel] ?? [];
   const competitiveSection = VALUE_ENGINE_CONFIG.competitiveSections[0];
@@ -157,16 +194,13 @@ export const ValueEngineEditDialog: React.FC = () => {
 
     if (deselect) {
       leafIds.forEach((leaf) => nextSelection.delete(leaf));
-      if (nextSelection.size === 0) {
-        return;
-      }
     } else {
       leafIds.forEach((leaf) => nextSelection.add(leaf));
     }
 
-    updateObjectiveState(activeTab as typeof activeObjectiveId, {
+    updateObjectiveState(activeTab, {
       selectedProductIds: Array.from(nextSelection),
-      indicationPath: getPathFromNode(Array.from(nextSelection)[0], nodeMap, parentMap)
+      indicationPath: nextSelection.size > 0 ? getPathFromNode(Array.from(nextSelection)[0], nodeMap, parentMap) : ''
     });
 
     const expanded = new Set(expandedNodeIds);
@@ -175,11 +209,10 @@ export const ValueEngineEditDialog: React.FC = () => {
   };
 
   const handleRemoveProduct = (productId: string) => {
-    if (activeObjective.selectedProductIds.length <= 1) return;
     const remaining = activeObjective.selectedProductIds.filter((id) => id !== productId);
-    updateObjectiveState(activeTab as typeof activeObjectiveId, {
+    updateObjectiveState(activeTab, {
       selectedProductIds: remaining,
-      indicationPath: getPathFromNode(remaining[0], nodeMap, parentMap)
+      indicationPath: remaining.length > 0 ? getPathFromNode(remaining[0], nodeMap, parentMap) : ''
     });
   };
 
@@ -201,7 +234,7 @@ export const ValueEngineEditDialog: React.FC = () => {
       metric.id === metricId ? { ...metric, weight: clamp(weight, 0, MAX_WEIGHT) } : metric
     );
 
-    updateObjectiveState(activeTab as typeof activeObjectiveId, {
+    updateObjectiveState(activeTab, {
       metricsByLevel: {
         ...activeObjective.metricsByLevel,
         [level]: updatedMetrics
@@ -215,7 +248,38 @@ export const ValueEngineEditDialog: React.FC = () => {
       metric.id === metricId ? { ...metric, visualize: !metric.visualize } : metric
     );
 
-    updateObjectiveState(activeTab as typeof activeObjectiveId, {
+    updateObjectiveState(activeTab, {
+      metricsByLevel: {
+        ...activeObjective.metricsByLevel,
+        [level]: updatedMetrics
+      }
+    });
+  };
+
+  const addMetricRow = (level: AudienceLevel) => {
+    const metrics = activeObjective.metricsByLevel[level] ?? [];
+    const newMetric = {
+      id: `metric-${Date.now().toString(36)}`,
+      label: 'New Metric',
+      weight: 0,
+      visualize: true
+    };
+
+    updateObjectiveState(activeTab, {
+      metricsByLevel: {
+        ...activeObjective.metricsByLevel,
+        [level]: [...metrics, newMetric]
+      }
+    });
+  };
+
+  const updateMetricId = (level: AudienceLevel, metricId: string, nextId: string) => {
+    const metrics = activeObjective.metricsByLevel[level] ?? [];
+    const updatedMetrics = metrics.map((metric) =>
+      metric.id === metricId ? { ...metric, id: nextId, label: nextId } : metric
+    );
+
+    updateObjectiveState(activeTab, {
       metricsByLevel: {
         ...activeObjective.metricsByLevel,
         [level]: updatedMetrics
@@ -250,14 +314,14 @@ export const ValueEngineEditDialog: React.FC = () => {
       };
 
       if (sectionId === competitiveSection.id) {
-        updateObjectiveState(activeTab as typeof activeObjectiveId, {
+        updateObjectiveState(activeTab, {
           competitiveSections: {
             ...activeObjective.competitiveSections,
             [sectionId]: updatedSectionState
           }
         });
       } else {
-        updateObjectiveState(activeTab as typeof activeObjectiveId, {
+        updateObjectiveState(activeTab, {
           patientSections: {
             ...activeObjective.patientSections,
             [sectionId]: updatedSectionState
@@ -529,7 +593,7 @@ export const ValueEngineEditDialog: React.FC = () => {
             zIndex: 1001
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
             <div>
               <Dialog.Title style={{ fontSize: '18px', fontWeight: 600, color: '#f8fafc', marginBottom: '4px' }}>
                 {projectName}: {availableTabs.find((tab) => tab.id === activeTab)?.label ?? 'Objective'}
@@ -539,6 +603,27 @@ export const ValueEngineEditDialog: React.FC = () => {
               </p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button
+                onClick={handleAddObjective}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 12px',
+                  background: 'rgba(56, 189, 248, 0.18)',
+                  border: '1px solid rgba(56, 189, 248, 0.35)',
+                  color: '#38bdf8',
+                  borderRadius: '999px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'background-color 0.15s ease'
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(56, 189, 248, 0.28)')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(56, 189, 248, 0.18)')}
+              >
+                <Plus size={14} /> New Objective
+              </button>
               <div
                 style={{
                   display: 'inline-flex',
@@ -569,7 +654,13 @@ export const ValueEngineEditDialog: React.FC = () => {
                 ))}
               </div>
               <button
-                onClick={() => setActiveModal(null)}
+                onClick={() => {
+                  if (isDraft) {
+                    handleCloseDraft();
+                  } else {
+                    setActiveModal(null);
+                  }
+                }}
                 style={{
                   width: '32px',
                   height: '32px',
@@ -584,6 +675,37 @@ export const ValueEngineEditDialog: React.FC = () => {
               </button>
             </div>
           </div>
+          {isDraft && (
+            <div
+              style={{
+                marginBottom: '24px',
+                padding: '12px 16px',
+                borderRadius: '10px',
+                border: '1px solid rgba(56, 189, 248, 0.35)',
+                background: 'rgba(56, 189, 248, 0.12)',
+                color: '#e0f2fe',
+                fontSize: '12px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '12px'
+              }}
+            >
+              <span>Draft objective – add basket details, products, and metrics. Close to discard.</span>
+              <button
+                onClick={() => setActiveModal(null)}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  color: '#38bdf8',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Exit
+              </button>
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: '32px' }}>
             <div style={{ flex: 0.42, display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -595,7 +717,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                     <input
                       value={activeObjective.basketName}
                       onChange={(e) =>
-                        updateObjectiveState(activeTab as typeof activeObjectiveId, {
+                        updateObjectiveState(activeTab, {
                           basketName: e.target.value
                         })
                       }
@@ -618,7 +740,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                       max={10}
                       value={activeObjective.basketWeight}
                       onChange={(e) =>
-                        updateObjectiveState(activeTab as typeof activeObjectiveId, {
+                        updateObjectiveState(activeTab, {
                           basketWeight: Number.isNaN(Number(e.target.value)) ? activeObjective.basketWeight : Number(e.target.value)
                         })
                       }
@@ -717,7 +839,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                     <input
                       value={activeObjective.indicationPath}
                       onChange={(e) =>
-                        updateObjectiveState(activeTab as typeof activeObjectiveId, {
+                        updateObjectiveState(activeTab, {
                           indicationPath: e.target.value
                         })
                       }
@@ -737,7 +859,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                     <select
                       value={activeObjective.specialties}
                       onChange={(e) =>
-                        updateObjectiveState(activeTab as typeof activeObjectiveId, {
+                        updateObjectiveState(activeTab, {
                           specialties: e.target.value
                         })
                       }
@@ -776,9 +898,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                       Adjust weights and visibility for the metrics surfaced by the selected products.
                     </p>
                   </div>
-                  {renderTabs(DEFAULT_AUDIENCE_TABS, activeMetricLevel, setActiveMetricLevel, (level) =>
-                    (activeObjective.metricsByLevel[level] ?? []).length > 0
-                  )}
+                  {renderTabs(DEFAULT_AUDIENCE_TABS, activeMetricLevel, setActiveMetricLevel, () => true)}
                 </div>
 
                 <div
@@ -797,7 +917,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {currentMetrics.map((metric) => (
+                      {(currentMetrics.length > 0 ? currentMetrics : []).map((metric) => (
                         <tr key={`${activeMetricLevel}-${metric.id}`}>
                           <td style={{ padding: '14px 16px', fontSize: '13px', color: '#f1f5f9', fontWeight: 500 }}>
                             {metric.id.replace(/_/g, ' ')}
@@ -879,22 +999,37 @@ export const ValueEngineEditDialog: React.FC = () => {
             </div>
           </div>
 
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '12px',
-              marginTop: '28px',
-              borderTop: '1px solid rgba(148, 163, 184, 0.15)',
-              paddingTop: '20px'
-            }}
-          >
-            <Button variant="secondary" onClick={() => setActiveModal(null)}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '28px', borderTop: '1px solid rgba(148, 163, 184, 0.15)', paddingTop: '20px' }}>
+            <button
+              onClick={() => setActiveModal(null)}
+              style={{
+                padding: '10px 18px',
+                borderRadius: '10px',
+                border: '1px solid rgba(148, 163, 184, 0.3)',
+                background: 'transparent',
+                color: '#e2e8f0',
+                fontSize: '13px',
+                fontWeight: 500,
+                cursor: 'pointer'
+              }}
+            >
               Cancel
-            </Button>
-            <Button variant="primary" onClick={() => setActiveModal(null)}>
+            </button>
+            <button
+              onClick={() => setActiveModal(null)}
+              style={{
+                padding: '10px 18px',
+                borderRadius: '10px',
+                border: 'none',
+                background: '#38bdf8',
+                color: '#0f172a',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
               Save Configuration
-            </Button>
+            </button>
           </div>
         </Dialog.Content>
       </Dialog.Portal>
