@@ -156,13 +156,6 @@ export interface SimulationScenario {
 
 type SetupApprovalKey = 'valueEngine' | 'orchestration' | 'curation';
 
-type Workflow = 'sales' | 'marketing';
-
-const VALUE_ENGINE_EDIT_ACCESS: Record<Workflow, boolean> = {
-  sales: true,
-  marketing: true
-};
-
 interface AppState {
   // File management
   uploadedFiles: UploadedFile[];
@@ -201,14 +194,13 @@ interface AppState {
   setActiveSidebarItem: (item: string) => void;
 
   // Workflow
-  selectedWorkflow: Workflow;
-  setSelectedWorkflow: (workflow: Workflow) => void;
+  selectedWorkflow: 'sales' | 'marketing';
+  setSelectedWorkflow: (workflow: 'sales' | 'marketing') => void;
   setupReady: boolean;
   setSetupReady: (ready: boolean) => void;
   setupApprovals: Record<SetupApprovalKey, boolean>;
   setSetupApproval: (item: SetupApprovalKey, approved: boolean) => void;
-  approveAllSetup: (workflow: Workflow) => void;
-  canAccessValueEngineEdit: (workflow?: Workflow) => boolean;
+  approveAllSetup: (workflow: 'sales' | 'marketing') => void;
 
   // Simulations
   simulations: SimulationScenario[];
@@ -504,7 +496,6 @@ export const useAppStore = create<AppState>((set): AppState => ({
         simulations: updatedSimulations
       };
     }),
-  canAccessValueEngineEdit: (workflow) => VALUE_ENGINE_EDIT_ACCESS[workflow ?? useAppStore.getState().selectedWorkflow],
 
   // Simulations
   simulations: loadStoredSimulations(),

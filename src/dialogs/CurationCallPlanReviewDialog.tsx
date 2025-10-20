@@ -68,6 +68,21 @@ export const CurationCallPlanReviewDialog: React.FC = () => {
               }}>
                 Curation: Call Plan
               </Dialog.Title>
+              <span
+                style={{
+                  padding: '4px 12px',
+                  background: 'rgba(148, 163, 184, 0.14)',
+                  border: '1px solid rgba(148, 163, 184, 0.28)',
+                  borderRadius: '999px',
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: '#e2e8f0'
+                }}
+              >
+                P3: US XL
+              </span>
               <span style={{
                 padding: '4px 12px',
                 backgroundColor: '#f59e0b',

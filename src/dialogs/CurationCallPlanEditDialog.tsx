@@ -783,6 +783,22 @@ export const CurationCallPlanEditDialog: React.FC = () => {
                 <span style={{ fontSize: '12px', color: '#64748b', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                   Sales · Call Plan Objective
                 </span>
+                <span
+                  style={{
+                    padding: '4px 12px',
+                    background: 'rgba(148, 163, 184, 0.12)',
+                    border: '1px solid rgba(148, 163, 184, 0.28)',
+                    borderRadius: '999px',
+                    fontSize: '10px',
+                    fontWeight: 600,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: '#e2e8f0',
+                    alignSelf: 'flex-start'
+                  }}
+                >
+                  P3: US XL
+                </span>
               </div>
             </div>
             <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>

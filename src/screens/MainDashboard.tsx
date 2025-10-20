@@ -32,7 +32,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
       approved: brandConfig.brand.approved
     },
     {
-      title: 'Brand Access Strategy',
+      title: 'EME Signal Identification',
       tags: ['OncoConnect PSP', 'OncoThera Copay Card', 'OncoPortal web'],
       description: 'The access strategy for OncoThera includes the OncoConnect PSP to streamline patient access, the OncoThera Copay Card for eligible patients, and the OncoPortal web platform for real-time prior authorization and patient tracking.',
       status: brandConfig.brandAccess.status,
@@ -54,7 +54,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
       approved: brandConfig.competitiveLandscape.approved
     },
     {
-      title: 'Medical Objectives',
+      title: 'Brand Access Strategy',
       tags: ['Target Product Nacida', `Score: ${brandConfig.medicalObjectives.basketScore}/10`, ...brandConfig.medicalObjectives.indications],
       description: `Configure primary objectives for ${brandConfig.medicalObjectives.basketName || 'medical products'}. This includes therapeutic area targeting, indication selection, and scoring weight configurations for optimal HCP targeting and engagement strategies.`,
       status: brandConfig.medicalObjectives.status,
@@ -329,6 +329,23 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
                       <option value="sales">Sales</option>
                       <option value="marketing">Marketing</option>
                     </select>
+                  )}
+                  {allItemsReady && (
+                    <span
+                      style={{
+                        padding: '4px 12px',
+                        background: 'rgba(148, 163, 184, 0.14)',
+                        border: '1px solid rgba(148, 163, 184, 0.28)',
+                        borderRadius: '999px',
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        color: 'var(--text-primary)'
+                      }}
+                    >
+                      P3: US XL
+                    </span>
                   )}
                   <Button
                     onClick={handleRunSetup}

@@ -234,7 +234,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
           <CardHeader>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
               <div>
-                <CardTitle>Value Engine: HCP Targeting</CardTitle>
+                <CardTitle>Value Engine: Targeting</CardTitle>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
                   <span style={{
                     padding: '4px 8px',
@@ -275,7 +275,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
           </CardHeader>
           <CardContent>
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.5' }}>
-              This defines how we value HCPs for scoring.
+              This defines how we value Target Entities for scoring.
             </p>
             <div style={{ display: 'flex', gap: '12px' }}>
               <Button

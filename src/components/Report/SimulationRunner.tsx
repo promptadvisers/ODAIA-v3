@@ -76,7 +76,7 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
     const originalSimulations: Simulation[] = [
       {
         id: 'value-engine-option-1',
-        name: 'Value Engine: HCP Targeting Option 1',
+        name: 'P3: US XL · Simulation 1',
         status: 'pending',
         progress: 0,
         config: {
@@ -91,7 +91,7 @@ export const SimulationRunner: React.FC<SimulationRunnerProps> = ({ simulations:
       },
       {
         id: 'value-engine-option-2',
-        name: 'Value Engine: HCP Targeting Option 2',
+        name: 'P3: US XL · Simulation 2',
         status: 'pending',
         progress: 0,
         config: {

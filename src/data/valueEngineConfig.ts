@@ -384,7 +384,7 @@ export const VALUE_ENGINE_CONFIG: ValueEngineConfiguration = {
     {
       id: 'vectoral',
       label: 'Vectoral Objective',
-      basketName: 'Vectoral Respiratory',
+      basketName: 'Vectoral Objective',
       basketWeight: 6,
       specialties: 'Pulmonology',
       selectedProductIds: ['tagrisso', 'keytruda'],
