@@ -163,7 +163,6 @@ export const ValueEngineEditDialog: React.FC = () => {
   const [activeMetricLevel, setActiveMetricLevel] = useState<AudienceLevel>('hcp');
   const [competitiveLevel, setCompetitiveLevel] = useState<AudienceLevel>('hcp');
   const [patientLevel, setPatientLevel] = useState<AudienceLevel>('hcp');
-  const [showDraftNotice, setShowDraftNotice] = useState(false);
 
   if (!isOpen || !activeObjective) {
     return null;
@@ -174,12 +173,10 @@ export const ValueEngineEditDialog: React.FC = () => {
   const handleAddObjective = () => {
     const newId = addTemporaryObjective();
     setActiveObjective(newId);
-    setShowDraftNotice(true);
   };
 
   const handleCloseDraft = () => {
     removeTemporaryObjective(activeObjectiveId);
-    setShowDraftNotice(false);
   };
 
   const currentMetrics = activeObjective.metricsByLevel[activeMetricLevel] ?? [];
@@ -256,36 +253,6 @@ export const ValueEngineEditDialog: React.FC = () => {
     });
   };
 
-  const addMetricRow = (level: AudienceLevel) => {
-    const metrics = activeObjective.metricsByLevel[level] ?? [];
-    const newMetric = {
-      id: `metric-${Date.now().toString(36)}`,
-      label: 'New Metric',
-      weight: 0,
-      visualize: true
-    };
-
-    updateObjectiveState(activeTab, {
-      metricsByLevel: {
-        ...activeObjective.metricsByLevel,
-        [level]: [...metrics, newMetric]
-      }
-    });
-  };
-
-  const updateMetricId = (level: AudienceLevel, metricId: string, nextId: string) => {
-    const metrics = activeObjective.metricsByLevel[level] ?? [];
-    const updatedMetrics = metrics.map((metric) =>
-      metric.id === metricId ? { ...metric, id: nextId, label: nextId } : metric
-    );
-
-    updateObjectiveState(activeTab, {
-      metricsByLevel: {
-        ...activeObjective.metricsByLevel,
-        [level]: updatedMetrics
-      }
-    });
-  };
 
   const updateSectionMetric = (
     level: AudienceLevel,
