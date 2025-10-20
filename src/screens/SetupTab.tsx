@@ -234,7 +234,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
           <CardHeader>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
               <div>
-                <CardTitle>Value Engine: Targeting</CardTitle>
+                <CardTitle>Value Engine: Segmentation</CardTitle>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
                   <span style={{
                     padding: '4px 8px',
