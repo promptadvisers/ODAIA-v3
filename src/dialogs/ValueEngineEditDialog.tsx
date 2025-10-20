@@ -106,7 +106,6 @@ export const ValueEngineEditDialog: React.FC = () => {
     activeObjectiveId,
     setActiveObjective,
     updateObjectiveState,
-    selectedWorkflow,
     projectName
   } = useAppStore();
   const isOpen = activeModal === 'value-engine-edit';
