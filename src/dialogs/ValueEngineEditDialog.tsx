@@ -108,7 +108,6 @@ export const ValueEngineEditDialog: React.FC = () => {
     addTemporaryObjective,
     removeTemporaryObjective,
     isTemporaryObjective,
-    projectName,
     valueEngineModalTitle,
     setValueEngineModalTitle
   } = useAppStore();
