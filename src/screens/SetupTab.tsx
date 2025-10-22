@@ -17,6 +17,7 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
     hasUploadedFiles,
     selectedWorkflow,
     setActiveModal,
+    setValueEngineModalTitle,
     simulations,
     setupApprovals,
     setSetupApproval,
@@ -280,13 +281,19 @@ export const SetupTab: React.FC<SetupTabProps> = ({ onNavigateToReport }) => {
             <div style={{ display: 'flex', gap: '12px' }}>
               <Button
                 variant="primary"
-                onClick={() => setActiveModal('value-engine-review')}
+                onClick={() => {
+                  setValueEngineModalTitle('Value Engine: Segmentation');
+                  setActiveModal('value-engine-review');
+                }}
               >
                 Review
               </Button>
               <Button
                 variant="secondary"
-                onClick={() => setActiveModal('value-engine-edit')}
+                onClick={() => {
+                  setValueEngineModalTitle('Value Engine: Segmentation');
+                  setActiveModal('value-engine-edit');
+                }}
               >
                 Edit
               </Button>

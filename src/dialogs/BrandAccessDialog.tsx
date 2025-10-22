@@ -8,23 +8,33 @@ interface BrandAccessDialogProps {
 }
 
 export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, onClose }) => {
-  const { updateBrandAccess, brandConfig } = useAppStore();
+  const { updateBrandAccess, brandConfig, brandAccessModalTitle, setBrandAccessModalTitle } = useAppStore();
   const [formData, setFormData] = useState({
     pspProgram: brandConfig.brandAccess.pspProgram || 'OncoConnect PSP',
     finicalSupport: brandConfig.brandAccess.finicalSupport || 'OncoThera Copay Card',
     webPortal: brandConfig.brandAccess.webPortal || 'AIM XR',
-    marketAccess: brandConfig.brandAccess.marketAccess || 'MITT Quarterly'
+    marketAccess: brandConfig.brandAccess.marketAccess || 'MMIT Quarterly'
   });
   const [editingWebPortal, setEditingWebPortal] = useState(false);
   const [editingMarketAccess, setEditingMarketAccess] = useState(false);
   const [webPortalConfirmed, setWebPortalConfirmed] = useState(false);
   const [marketAccessConfirmed, setMarketAccessConfirmed] = useState(false);
 
+  const resetTitle = () => {
+    setBrandAccessModalTitle('Brand Access Strategy');
+  };
+
   const handleSubmit = () => {
     updateBrandAccess({
       ...formData,
       status: formData.webPortal && formData.marketAccess ? 'Ready' : 'Missing info'
     });
+    resetTitle();
+    onClose();
+  };
+
+  const handleClose = () => {
+    resetTitle();
     onClose();
   };
 
@@ -67,7 +77,7 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
                 color: 'var(--text-muted)', 
                 cursor: 'pointer' 
               }}
-              onClick={onClose}
+              onClick={handleClose}
             />
             <h2 style={{
               fontSize: '16px',
@@ -75,7 +85,7 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
               color: 'var(--text-primary)',
               margin: 0
             }}>
-              Brand Access Strategy
+              {brandAccessModalTitle}
             </h2>
             <span style={{
               padding: '4px 12px',
@@ -104,7 +114,7 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
                 color: 'var(--text-muted)', 
                 cursor: 'pointer' 
               }}
-              onClick={onClose}
+              onClick={handleClose}
             />
           </div>
         </div>
@@ -373,7 +383,7 @@ export const BrandAccessDialog: React.FC<BrandAccessDialogProps> = ({ isOpen, on
               Done
             </button>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               style={{
                 padding: '10px 20px',
                 backgroundColor: 'transparent',

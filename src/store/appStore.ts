@@ -183,6 +183,8 @@ export interface SimulationScenario {
   approved: boolean;
 }
 
+export const DEFAULT_VALUE_ENGINE_MODAL_TITLE = 'Value Engine: Segmentation';
+
 type SetupApprovalKey = 'valueEngine' | 'orchestration' | 'curation';
 
 interface AppState {
@@ -216,6 +218,10 @@ interface AppState {
   setActiveModal: (modal: string | null) => void;
   editingCardType: 'medicalObjectives' | 'brandAccess' | 'salesGoals' | 'competitiveLandscape' | 'hcp-targeting' | 'call-plan' | null;
   setEditingCardType: (cardType: 'medicalObjectives' | 'brandAccess' | 'salesGoals' | 'competitiveLandscape' | 'hcp-targeting' | 'call-plan' | null) => void;
+  brandAccessModalTitle: string;
+  setBrandAccessModalTitle: (title: string) => void;
+  valueEngineModalTitle: string;
+  setValueEngineModalTitle: (title: string) => void;
   
   // Theme
   theme: 'dark' | 'light';
@@ -510,6 +516,10 @@ export const useAppStore = create<AppState>((set): AppState => ({
   setActiveModal: (modal) => set({ activeModal: modal }),
   editingCardType: null,
   setEditingCardType: (cardType) => set({ editingCardType: cardType }),
+  brandAccessModalTitle: 'Brand Access Strategy',
+  setBrandAccessModalTitle: (title) => set({ brandAccessModalTitle: title }),
+  valueEngineModalTitle: DEFAULT_VALUE_ENGINE_MODAL_TITLE,
+  setValueEngineModalTitle: (title) => set({ valueEngineModalTitle: title }),
   
   // Theme
   theme: 'dark',

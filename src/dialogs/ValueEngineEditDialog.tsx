@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, ChevronRight, ChevronDown, Plus } from 'lucide-react';
-import { useAppStore, type MetricState } from '../store/appStore';
+import { useAppStore, type MetricState, DEFAULT_VALUE_ENGINE_MODAL_TITLE } from '../store/appStore';
 import {
   type AudienceLevel,
   type ProductNode,
@@ -108,7 +108,9 @@ export const ValueEngineEditDialog: React.FC = () => {
     addTemporaryObjective,
     removeTemporaryObjective,
     isTemporaryObjective,
-    projectName
+    projectName,
+    valueEngineModalTitle,
+    setValueEngineModalTitle
   } = useAppStore();
   const isOpen = activeModal === 'value-engine-edit';
 
@@ -163,6 +165,11 @@ export const ValueEngineEditDialog: React.FC = () => {
   const [activeMetricLevel, setActiveMetricLevel] = useState<AudienceLevel>('hcp');
   const [competitiveLevel, setCompetitiveLevel] = useState<AudienceLevel>('hcp');
   const [patientLevel, setPatientLevel] = useState<AudienceLevel>('hcp');
+
+  const handleClose = () => {
+    setValueEngineModalTitle(DEFAULT_VALUE_ENGINE_MODAL_TITLE);
+    setActiveModal(null);
+  };
 
   if (!isOpen || !activeObjective) {
     return null;
@@ -532,7 +539,14 @@ export const ValueEngineEditDialog: React.FC = () => {
   };
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && setActiveModal(null)}>
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          handleClose();
+        }
+      }}
+    >
       <Dialog.Portal>
         <Dialog.Overlay
           style={{
@@ -563,7 +577,7 @@ export const ValueEngineEditDialog: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
             <div>
               <Dialog.Title style={{ fontSize: '18px', fontWeight: 600, color: '#f8fafc', marginBottom: '4px' }}>
-                {projectName}: {availableTabs.find((tab) => tab.id === activeTab)?.label ?? 'Objective'}
+                {valueEngineModalTitle}
               </Dialog.Title>
               <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>
                 Configure product selections and adjust metric weighting across HCP, FSA, and Regional views.
@@ -625,7 +639,7 @@ export const ValueEngineEditDialog: React.FC = () => {
                   if (isDraft) {
                     handleCloseDraft();
                   } else {
-                    setActiveModal(null);
+                    handleClose();
                   }
                 }}
                 style={{
@@ -968,7 +982,7 @@ export const ValueEngineEditDialog: React.FC = () => {
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '28px', borderTop: '1px solid rgba(148, 163, 184, 0.15)', paddingTop: '20px' }}>
             <button
-              onClick={() => setActiveModal(null)}
+              onClick={handleClose}
               style={{
                 padding: '10px 18px',
                 borderRadius: '10px',
@@ -983,7 +997,7 @@ export const ValueEngineEditDialog: React.FC = () => {
               Cancel
             </button>
             <button
-              onClick={() => setActiveModal(null)}
+              onClick={handleClose}
               style={{
                 padding: '10px 18px',
                 borderRadius: '10px',

@@ -17,7 +17,7 @@ interface MainDashboardProps {
 }
 
 export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, activeTab = 'brand', onEdit, onTabChange, onStartSimulation }) => {
-  const { uploadedFiles, brandConfig, setActiveModal, isProcessingFile, hasUploadedFiles, setEditingCardType, updateBrandConfig, selectedWorkflow, setSelectedWorkflow, setSetupReady } = useAppStore();
+  const { uploadedFiles, brandConfig, setActiveModal, isProcessingFile, hasUploadedFiles, setEditingCardType, updateBrandConfig, selectedWorkflow, setSelectedWorkflow, setSetupReady, setBrandAccessModalTitle } = useAppStore();
   const [editingCard, setEditingCard] = React.useState<string | null>(null);
   const [editValues, setEditValues] = React.useState<{ [key: string]: string }>({});
   const [originalValues, setOriginalValues] = React.useState<{ [key: string]: string }>({});
@@ -512,6 +512,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate, active
                       
                       // If Brand Access Strategy has missing info, open the form dialog
                       if (itemKey === 'brandAccess' && item.status === 'Missing info') {
+                        setBrandAccessModalTitle(item.title);
                         setActiveModal('brand-access');
                       }
                       // Otherwise route specific cards to the ProjectObjectiveDialog

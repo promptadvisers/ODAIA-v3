@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, Check } from 'lucide-react';
 import { Button } from '../components/Button';
-import { useAppStore } from '../store/appStore';
+import { useAppStore, DEFAULT_VALUE_ENGINE_MODAL_TITLE } from '../store/appStore';
 
 const OBJECTIVE_OPTIONS = ['Odaiazol Objective', 'Vectoral Objective'];
 
@@ -69,7 +69,9 @@ export const ValueEngineReviewDialog: React.FC = () => {
     setSetupApproval,
     setSetupReady,
     setupApprovals,
-    simulations
+    simulations,
+    valueEngineModalTitle,
+    setValueEngineModalTitle
   } = useAppStore();
   const isOpen = activeModal === 'value-engine-review';
   const [selectedObjective, setSelectedObjective] = useState<string>(OBJECTIVE_OPTIONS[0]);
@@ -118,8 +120,17 @@ export const ValueEngineReviewDialog: React.FC = () => {
     </div>
   );
 
+  const handleClose = () => {
+    setValueEngineModalTitle(DEFAULT_VALUE_ENGINE_MODAL_TITLE);
+    setActiveModal(null);
+  };
+
   return (
-    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && setActiveModal(null)}>
+    <Dialog.Root open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        handleClose();
+      }
+    }}>
       <Dialog.Portal>
         <Dialog.Overlay style={{
           position: 'fixed',
@@ -151,7 +162,7 @@ export const ValueEngineReviewDialog: React.FC = () => {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <button
-                onClick={() => setActiveModal(null)}
+                onClick={handleClose}
                 style={{
                   padding: '6px 8px',
                   backgroundColor: 'transparent',
@@ -170,7 +181,7 @@ export const ValueEngineReviewDialog: React.FC = () => {
                 color: 'var(--text-primary)',
                 margin: 0
               }}>
-                Value Engine: HCP Targeting
+              {valueEngineModalTitle}
               </Dialog.Title>
               <span
                 style={{
@@ -200,7 +211,7 @@ export const ValueEngineReviewDialog: React.FC = () => {
             </div>
             <div style={{ display: 'flex', gap: '6px' }}>
               <button
-                onClick={() => setActiveModal(null)}
+                onClick={handleClose}
                 style={{
                   padding: '6px 8px',
                   backgroundColor: 'transparent',
@@ -215,7 +226,7 @@ export const ValueEngineReviewDialog: React.FC = () => {
                 ✓
               </button>
               <button
-                onClick={() => setActiveModal(null)}
+                onClick={handleClose}
                 style={{
                   padding: '6px 8px',
                   backgroundColor: 'transparent',
